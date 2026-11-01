@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Cevi OS</string>
+    <string name="app_name">FireResponse</string>
     <string name="error_not_signed_in">Du bist nicht angemeldet. Bitte melde dich an.</string>
     <string name="error_forbidden">Das darfst du nicht.</string>
     <string name="error_not_found">Das gibt es nicht mehr, oder du darfst es nicht sehen.</string>
@@ -182,7 +182,7 @@
     <string name="lock_use_password">Mit Passwort anmelden</string>
     <string name="lock_failed">Das Entsperren hat nicht geklappt. Versuche es noch einmal.</string>
     <string name="lock_changed">Fingerabdruck oder Gesicht auf diesem Gerät haben sich geändert. Melde dich zur Sicherheit mit dem Passwort an.</string>
-    <string name="lock_prompt_title">Cevi OS entsperren</string>
+    <string name="lock_prompt_title">FireResponse entsperren</string>
     <string name="lock_enable_title">Entsperren einrichten</string>
     <string name="lock_cancel">Abbrechen</string>
     <string name="lock_switch">Mit Fingerabdruck oder Gesicht entsperren</string>

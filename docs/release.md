@@ -8,9 +8,9 @@ In `~/.gradle/gradle.properties`:
 
 | Schlüssel | Inhalt |
 | --- | --- |
-| `ceviApiBaseUrl` | Adresse des Servers (`https://…`), wird in die APK eingebrannt |
-| `ceviSigningStoreFile` | Pfad zur Schlüsseldatei (`.jks`, liegt ausserhalb des Repos) |
-| `ceviSigningStorePassword`, `ceviSigningKeyAlias`, `ceviSigningKeyPassword` | Zugang zum Schlüssel |
+| `fireresponseApiBaseUrl` | Adresse des Servers (`https://…`), wird in die APK eingebrannt |
+| `fireresponseSigningStoreFile` | Pfad zur Schlüsseldatei (`.jks`, liegt ausserhalb des Repos) |
+| `fireresponseSigningStorePassword`, `fireresponseSigningKeyAlias`, `fireresponseSigningKeyPassword` | Zugang zum Schlüssel |
 
 Ohne die Signierung-Angaben baut `assembleRelease` eine **unsignierte** APK (`app-release-unsigned.apk`): Sie lässt sich nicht installieren.
 

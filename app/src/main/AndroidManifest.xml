@@ -28,7 +28,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.CeviOS">
+        android:theme="@style/Theme.FireResponse">
         <!-- Kein Token beim Start: Die App holt es erst nach dem Anmelden (PushToken) und schaltet dann die Erneuerung ein. -->
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
@@ -46,7 +46,7 @@
         </service>
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.CeviOS.Starting"
+            android:theme="@style/Theme.FireResponse.Starting"
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"

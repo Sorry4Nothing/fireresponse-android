@@ -9,21 +9,21 @@ plugins {
 if (file("google-services.json").exists()) apply(plugin = "com.google.gms.google-services")
 
 android {
-    namespace = "io.github.sorry4nothing.cevios"
+    namespace = "ch.fireresponse.app"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "io.github.sorry4nothing.cevios"
+        applicationId = "ch.fireresponse.app"
         minSdk = 26
         targetSdk = 37
         // versionCode = Major·10000 + Minor·100 + Patch; versionName im Format x.y.z, das das Backend verlangt (sonst 426).
         versionCode = 900
         versionName = "0.9.0"
 
-        // Echte Adresse nur lokal (~/.gradle/gradle.properties oder -PceviApiBaseUrl), nie im Repo.
-        val apiBaseUrl = providers.gradleProperty("ceviApiBaseUrl").getOrElse("https://api.example.org")
+        // Echte Adresse nur lokal (~/.gradle/gradle.properties oder -PfireresponseApiBaseUrl), nie im Repo.
+        val apiBaseUrl = providers.gradleProperty("fireresponseApiBaseUrl").getOrElse("https://api.example.org")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
@@ -35,12 +35,12 @@ android {
     signingConfigs {
         // Schlüssel und Passwörter nur lokal (~/.gradle/gradle.properties), nie im Repo. Ohne sie bleibt die Release-Variante
         // unsigniert, damit CI und andere Rechner weiter bauen.
-        providers.gradleProperty("ceviSigningStoreFile").orNull?.let { storePath ->
+        providers.gradleProperty("fireresponseSigningStoreFile").orNull?.let { storePath ->
             create("release") {
                 storeFile = file(storePath)
-                storePassword = providers.gradleProperty("ceviSigningStorePassword").get()
-                keyAlias = providers.gradleProperty("ceviSigningKeyAlias").get()
-                keyPassword = providers.gradleProperty("ceviSigningKeyPassword").get()
+                storePassword = providers.gradleProperty("fireresponseSigningStorePassword").get()
+                keyAlias = providers.gradleProperty("fireresponseSigningKeyAlias").get()
+                keyPassword = providers.gradleProperty("fireresponseSigningKeyPassword").get()
             }
         }
     }

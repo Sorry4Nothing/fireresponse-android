@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Cevi OS"
+rootProject.name = "FireResponse"
 include(":app")
