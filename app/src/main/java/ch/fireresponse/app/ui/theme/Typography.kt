@@ -11,21 +11,32 @@ import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 
 /**
- * Archivo, mitgeliefert (variable Schrift, Open Font License, siehe `assets/licenses`). Es wird nichts nachgeladen.
- * Grössen in sp: Die Schriftgrösse des Systems greift bis 200 %.
+ * Barlow Condensed für Titel und Inter für Text, beide mitgeliefert (Open Font License, siehe `assets/licenses`). Es wird nichts
+ * nachgeladen. Grössen in sp: Die Schriftgrösse des Systems greift bis 200 %.
  */
-val Archivo = FontFamily(
-    listOf(400, 700, 800).map { weight ->
+val BarlowCondensed = FontFamily(Font(R.font.barlow_condensed_bold, weight = FontWeight.Bold))
+
+/** Inter ist eine variable Schrift; die Gewichte 400 und 700 genügen. */
+val Inter = FontFamily(
+    listOf(400, 700).map { weight ->
         Font(
-            R.font.archivo,
+            R.font.inter,
             weight = FontWeight(weight),
             variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
         )
     },
 )
 
-private fun textStyle(size: Int, lineHeight: Int, weight: Int, spacing: Float = 0f) = TextStyle(
-    fontFamily = Archivo,
+private fun title(size: Int, lineHeight: Int) = TextStyle(
+    fontFamily = BarlowCondensed,
+    fontSize = size.sp,
+    lineHeight = lineHeight.sp,
+    fontWeight = FontWeight.Bold,
+    letterSpacing = 0.005.em,
+)
+
+private fun text(size: Int, lineHeight: Int, weight: Int, spacing: Float = 0f) = TextStyle(
+    fontFamily = Inter,
     fontSize = size.sp,
     lineHeight = lineHeight.sp,
     fontWeight = FontWeight(weight),
@@ -34,22 +45,22 @@ private fun textStyle(size: Int, lineHeight: Int, weight: Int, spacing: Float = 
 
 /** Die Stile aus dem Design (`tokens.json`, `type`), den Material-Rollen zugeordnet. */
 internal val FireResponseTypography = Typography(
-    displayLarge = textStyle(40, 44, 800, -0.01f), // display: Begrüssung auf dem Login
-    displayMedium = textStyle(40, 44, 800, -0.01f),
-    displaySmall = textStyle(32, 38, 800),
-    headlineLarge = textStyle(32, 38, 800), // headline: Screen-Titel im Kopf
-    headlineMedium = textStyle(28, 34, 800), // headline-small: Titel auf Detail-Screens
-    headlineSmall = textStyle(28, 34, 800),
-    titleLarge = textStyle(22, 28, 800), // title-large: Dialog-Titel
-    titleMedium = textStyle(16, 22, 700), // title: Kartentitel, Namen, Abschnittstitel
-    titleSmall = textStyle(16, 22, 700),
-    bodyLarge = textStyle(16, 22, 400), // body
-    bodyMedium = textStyle(14, 20, 400), // body-small: Metadaten
-    bodySmall = textStyle(12, 16, 400), // caption
-    labelLarge = textStyle(15, 20, 700), // label: Buttons und Pillen
-    labelMedium = textStyle(12, 16, 700), // label-small: Footer, Chips, Zähler
-    labelSmall = textStyle(12, 16, 700),
+    displayLarge = title(48, 48), // display: Begrüssung auf dem Login
+    displayMedium = title(48, 48),
+    displaySmall = title(34, 36),
+    headlineLarge = title(34, 36), // headline: Screen-Titel im Kopf
+    headlineMedium = title(28, 32), // headline-small: Titel auf Detail-Screens
+    headlineSmall = title(28, 32),
+    titleLarge = title(22, 28), // title-large: Dialog-Titel
+    titleMedium = text(16, 22, 700), // title: Kartentitel, Namen, Abschnittstitel
+    titleSmall = text(16, 22, 700),
+    bodyLarge = text(16, 22, 400), // body
+    bodyMedium = text(14, 20, 400), // body-small: Metadaten
+    bodySmall = text(12, 16, 400), // caption
+    labelLarge = text(15, 20, 700), // label: Buttons und Pillen
+    labelMedium = text(12, 16, 700), // label-small: Footer, Chips, Zähler
+    labelSmall = text(12, 16, 700),
 )
 
 /** Überzeile über Titeln: in Grossbuchstaben setzen und in `accent` färben. */
-val Eyebrow: TextStyle = textStyle(13, 16, 700, 0.08f)
+val Eyebrow: TextStyle = text(13, 16, 700, 0.08f)
