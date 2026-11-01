@@ -11,13 +11,13 @@ data class Contact(
     val name: String,
     @SerialName("telefon") val phone: String? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
-    /** Cevi-Name (Spitzname); `null` oder leer ohne Angabe. */
+    /** Spitzname; `null` oder leer ohne Angabe. */
     val ceviName: String? = null,
 ) {
-    /** Titel der Karte: der Cevi-Name, ohne ihn der volle Name. */
+    /** Titel der Karte: der Spitzname, ohne ihn der volle Name. */
     val title get() = displayName(name, ceviName)
 
-    /** Der volle Name darunter; nur, wenn der Titel ein Cevi-Name ist. */
+    /** Der volle Name darunter; nur, wenn der Titel ein Spitzname ist. */
     val fullName get() = name.takeIf { title != name }
 }
 

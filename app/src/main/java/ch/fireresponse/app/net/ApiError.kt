@@ -13,7 +13,7 @@ enum class ApiError(@StringRes val text: Int) {
     REGISTRATION_CLOSED(R.string.error_registration_closed),
 
     /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Programme gehen noch). */
-    PROGRAM_STARTED(R.string.error_program_started),
+    APPOINTMENT_STARTED(R.string.error_appointment_started),
     NETWORK(R.string.error_network),
     UNKNOWN(R.string.error_unknown);
 
@@ -24,7 +24,7 @@ enum class ApiError(@StringRes val text: Int) {
             403 -> FORBIDDEN
             404 -> NOT_FOUND
             409 -> when (code) {
-                "PROGRAMM_BEGONNEN" -> PROGRAM_STARTED
+                "PROGRAMM_BEGONNEN" -> APPOINTMENT_STARTED
                 else -> REGISTRATION_CLOSED // sonst PROGRAMM_GESCHLOSSEN
             }
             426 -> APP_OUTDATED

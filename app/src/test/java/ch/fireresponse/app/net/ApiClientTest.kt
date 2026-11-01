@@ -189,9 +189,9 @@ class ApiClientTest {
     }
 
     @Test
-    fun startedProgramIsToldApartFromClosedProgram() {
+    fun startedAppointmentIsToldApartFromClosedAppointment() {
         server.enqueue(response(409, """{"code":"PROGRAMM_BEGONNEN","message":"x"}"""))
-        assertEquals(ApiResult.Failure(ApiError.PROGRAM_STARTED, "PROGRAMM_BEGONNEN"), runBlocking { client().get<Me>("/x") })
+        assertEquals(ApiResult.Failure(ApiError.APPOINTMENT_STARTED, "PROGRAMM_BEGONNEN"), runBlocking { client().get<Me>("/x") })
         server.enqueue(response(409, """{"code":"PROGRAMM_GESCHLOSSEN","message":"x"}"""))
         assertEquals(ApiResult.Failure(ApiError.REGISTRATION_CLOSED, "PROGRAMM_GESCHLOSSEN"), runBlocking { client().get<Me>("/x") })
     }

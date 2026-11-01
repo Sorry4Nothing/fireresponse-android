@@ -55,7 +55,7 @@ class ContrastTest {
         assertContrast("on-success-container auf success-container", p.extra.onSuccessContainer, p.extra.successContainer, 4.5, t)
         assertContrast("on-error-container auf error-container", p.scheme.onErrorContainer, p.scheme.errorContainer, 4.5, t)
         assertContrast("on-warning-container auf warning-container", p.extra.onWarningContainer, p.extra.warningContainer, 4.5, t)
-        assertContrast("on-stufe-container auf stufe-container", p.extra.onAgeGroupContainer, p.extra.ageGroupContainer, 4.5, t)
+        assertContrast("on-stufe-container auf stufe-container", p.extra.onSquadContainer, p.extra.squadContainer, 4.5, t)
         assertContrast("inverse-on-surface auf inverse-surface", p.scheme.inverseOnSurface, p.scheme.inverseSurface, 4.5, t)
     }
 
@@ -74,7 +74,7 @@ class ContrastTest {
     }
 
     @Test
-    fun bothThemesShareCeviRedAndCeviBlue() {
+    fun bothThemesShareRedAndBlue() {
         assertTrue(FireResponseNight.scheme.primary == FireResponseDay.scheme.primary)
         assertTrue(FireResponseNight.scheme.secondary == FireResponseDay.scheme.secondary)
     }

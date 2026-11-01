@@ -4,7 +4,7 @@ package ch.fireresponse.app.push
 sealed interface PushTarget {
     val id: String
 
-    data class Program(override val id: String) : PushTarget
+    data class Appointment(override val id: String) : PushTarget
 
     companion object {
         private val ID = Regex("^[0-9a-fA-F-]{36}$")
@@ -16,7 +16,7 @@ sealed interface PushTarget {
         fun from(type: String?, id: String?): PushTarget? {
             if (id == null || !ID.matches(id)) return null
             return when (type) {
-                "programm" -> Program(id)
+                "programm" -> Appointment(id)
                 else -> null
             }
         }

@@ -1,8 +1,8 @@
 <resources>
-    <!-- Splash ab Android 12: Farbe der App, das Logo baut sich Band für Band auf (ic_splash_animated). -->
+    <!-- Splash ab Android 12: Farbe der App, das Logo steht still. -->
     <style name="Theme.FireResponse.Starting" parent="Theme.FireResponse">
         <item name="android:windowSplashScreenBackground">@color/window_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_animated</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
         <item name="android:windowSplashScreenAnimationDuration">800</item>
     </style>
 </resources>

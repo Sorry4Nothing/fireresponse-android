@@ -12,7 +12,7 @@ data class PushTokenRequest(val token: String, @SerialName("plattform") val plat
 /** Genau ein Schalter pro Anfrage; der Server verlangt mindestens ein Feld, `null` bleibt weg. */
 @Serializable
 data class PushSwitchesRequest(
-    @SerialName("pushProgramme") val programs: Boolean? = null,
+    @SerialName("pushProgramme") val appointments: Boolean? = null,
     @SerialName("pushAnmeldungen") val registrations: Boolean? = null,
 )
 

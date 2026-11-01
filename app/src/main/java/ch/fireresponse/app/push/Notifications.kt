@@ -15,7 +15,7 @@ import ch.fireresponse.app.R
 
 object Notifications {
     /** Die Kanäle, die der Server in jedem Push nennt: Ein Kanal, den das Gerät nicht kennt, zeigt den Push nicht. */
-    const val PROGRAMS_CHANNEL = "programme"
+    const val APPOINTMENTS_CHANNEL = "programme"
     const val MESSAGES_CHANNEL = "mitteilungen"
 
     private const val PREFS = "push"
@@ -25,13 +25,13 @@ object Notifications {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannels(
             listOf(
-                NotificationChannel(PROGRAMS_CHANNEL, context.getString(R.string.channel_programs), NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(APPOINTMENTS_CHANNEL, context.getString(R.string.channel_appointments), NotificationManager.IMPORTANCE_DEFAULT),
                 NotificationChannel(MESSAGES_CHANNEL, context.getString(R.string.channel_messages), NotificationManager.IMPORTANCE_DEFAULT),
             ),
         )
     }
 
-    private val CHANNELS = setOf(PROGRAMS_CHANNEL, MESSAGES_CHANNEL)
+    private val CHANNELS = setOf(APPOINTMENTS_CHANNEL, MESSAGES_CHANNEL)
 
     /** Der Kanal aus dem Push, wenn die App ihn kennt, sonst «Mitteilungen». Der Inhalt kommt von aussen. */
     fun channelOf(channel: String?): String = channel?.takeIf { it in CHANNELS } ?: MESSAGES_CHANNEL

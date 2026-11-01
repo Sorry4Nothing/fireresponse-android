@@ -16,7 +16,7 @@ class ApiErrorTest {
 
     @Test
     fun conflictCodeDecidesTheText() {
-        assertEquals(ApiError.PROGRAM_STARTED, ApiError.from(409, "PROGRAMM_BEGONNEN"))
+        assertEquals(ApiError.APPOINTMENT_STARTED, ApiError.from(409, "PROGRAMM_BEGONNEN"))
         assertEquals(ApiError.REGISTRATION_CLOSED, ApiError.from(409, "PROGRAMM_GESCHLOSSEN"))
         assertEquals(ApiError.REGISTRATION_CLOSED, ApiError.from(409, null))
     }

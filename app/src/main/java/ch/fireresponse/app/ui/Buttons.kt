@@ -37,7 +37,7 @@ import ch.fireresponse.app.ui.theme.Pill
 import ch.fireresponse.app.ui.theme.fire
 
 /**
- * Die eine Hauptaktion pro Screen, in Cevi-Rot: 56 dp hoch, pillenförmig.
+ * Die eine Hauptaktion pro Screen, in Rot: 56 dp hoch, pillenförmig.
  * `loading`: Die Aktion läuft. Statt des Symbols dreht ein Ladekreis, der Knopf behält Farbe und Text, nimmt aber keinen
  * zweiten Tipp an, und der Screenreader hört `loadingText` (z. B. «Wird gespeichert»). `enabled` gilt nur für «darf gedrückt
  * werden»: Wer `loading` setzt, lässt `enabled` bei der Eingabe, sonst wird der Knopf grau.

@@ -151,7 +151,7 @@ class AuthApiTest {
         assertEquals("Marion Keller", profile.name)
         assertEquals("m.keller", profile.username)
         assertNull(profile.privacyReadAt)
-        assertEquals("Lena", profile.children.single().firstName)
+        assertEquals("Lena", profile.participants.single().firstName)
         assertEquals("/api/v1/personen/u/bild?v=3", profile.imageUrl)
     }
 

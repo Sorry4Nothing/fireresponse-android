@@ -51,7 +51,7 @@ fun ContactCard(contacts: List<Contact>, modifier: Modifier = Modifier) {
     ) {
         if (contacts.isEmpty()) {
             Text(
-                stringResource(R.string.contact_group_leaders),
+                stringResource(R.string.contact_commanders),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.heightIn(min = Sizes.touchTarget).padding(vertical = Spacing.s3),
             )

@@ -48,7 +48,7 @@ fun Header(
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     /** Stufen, deren Logo vor der Überzeile steht (dekorativ, der Name steht in der Überzeile). */
-    eyebrowStages: List<String> = emptyList(),
+    eyebrowSquads: List<String> = emptyList(),
     back: HeaderButton? = null,
     action: HeaderButton? = null,
     titleStyle: TextStyle = MaterialTheme.typography.headlineLarge,
@@ -68,9 +68,9 @@ fun Header(
         }
         if (title != null) {
             Column(Modifier.padding(horizontal = Spacing.s2), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                if (eyebrow != null || eyebrowStages.isNotEmpty()) {
+                if (eyebrow != null || eyebrowSquads.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
-                        eyebrowStages.forEach { StageLogo(it, size = 24.dp) }
+                        eyebrowSquads.forEach { SquadLogo(it, size = 24.dp) }
                         eyebrow?.let { Text(it.uppercase(), style = Eyebrow, color = MaterialTheme.fire.accent) }
                     }
                 }

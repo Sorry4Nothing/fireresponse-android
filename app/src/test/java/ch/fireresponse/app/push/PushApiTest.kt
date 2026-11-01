@@ -56,7 +56,7 @@ class PushApiTest {
         server.enqueue(reply(204))
         server.enqueue(reply(204))
         runBlocking {
-            push.setSwitches(PushSwitchesRequest(programs = false))
+            push.setSwitches(PushSwitchesRequest(appointments = false))
             push.setSwitches(PushSwitchesRequest(registrations = true))
         }
         val first = server.takeRequest()
@@ -68,7 +68,7 @@ class PushApiTest {
     @Test
     fun switchesFailWithTheErrorOfTheServer() {
         server.enqueue(reply(403, """{"code":"KEINE_BERECHTIGUNG","message":"x"}"""))
-        val result = runBlocking { push.setSwitches(PushSwitchesRequest(programs = true)) }
+        val result = runBlocking { push.setSwitches(PushSwitchesRequest(appointments = true)) }
         assertEquals(ApiError.FORBIDDEN, (result as ApiResult.Failure).error)
     }
 
@@ -76,9 +76,9 @@ class PushApiTest {
     fun theProfileCarriesTheSwitchesAndTheyAreOnByDefault() {
         val json = Json { ignoreUnknownKeys = true }
         val off = json.decodeFromString<Profile>("""{"id":"u1","pushProgramme":false}""")
-        assertEquals(false, off.pushPrograms)
+        assertEquals(false, off.pushAppointments)
         val plain = json.decodeFromString<Profile>("""{"id":"u1"}""")
-        assertTrue(plain.pushPrograms)
+        assertTrue(plain.pushAppointments)
     }
 
     @Test
@@ -101,9 +101,9 @@ class PushApiTest {
     }
 
     @Test
-    fun aPushLeadsToAProgram() {
+    fun aPushLeadsToAAppointment() {
         val id = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
-        assertEquals(PushTarget.Program(id), PushTarget.from("programm", id))
+        assertEquals(PushTarget.Appointment(id), PushTarget.from("programm", id))
     }
 
     @Test
@@ -117,7 +117,7 @@ class PushApiTest {
 
     @Test
     fun unknownChannelsFallBackToMessages() {
-        assertEquals(Notifications.PROGRAMS_CHANNEL, Notifications.channelOf("programme"))
+        assertEquals(Notifications.APPOINTMENTS_CHANNEL, Notifications.channelOf("programme"))
         assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf("chat"))
         assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf(null))
     }

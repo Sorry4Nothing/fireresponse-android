@@ -33,7 +33,7 @@
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="false" />
-        <!-- Kleines Symbol der Mitteilung, wenn das System sie zeigt: die weisse Silhouette des Cevi-Logos (Android färbt es selbst ein). -->
+        <!-- Kleines Symbol der Mitteilung, wenn das System sie zeigt: die weisse Silhouette des Logos (Android färbt es selbst ein). -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_stat_logo" />

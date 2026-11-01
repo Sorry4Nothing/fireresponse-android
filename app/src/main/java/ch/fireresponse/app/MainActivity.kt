@@ -66,8 +66,8 @@ import ch.fireresponse.app.images.LocalProfileImages
 import ch.fireresponse.app.images.ProfileImageApi
 import ch.fireresponse.app.images.ProfileImageEncoder
 import ch.fireresponse.app.images.ProfileImages
-import ch.fireresponse.app.images.LocalStageLogos
-import ch.fireresponse.app.images.StageLogos
+import ch.fireresponse.app.images.LocalSquadLogos
+import ch.fireresponse.app.images.SquadLogos
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
@@ -77,16 +77,16 @@ import ch.fireresponse.app.push.PushApi
 import ch.fireresponse.app.push.PushTarget
 import ch.fireresponse.app.push.PushToken
 import ch.fireresponse.app.push.PushViewModel
-import ch.fireresponse.app.programs.AssignmentRules
-import ch.fireresponse.app.programs.AssignmentScreen
-import ch.fireresponse.app.programs.ProgramDetailScreen
-import ch.fireresponse.app.programs.ProgramsApi
-import ch.fireresponse.app.programs.ProgramListScreen
-import ch.fireresponse.app.programs.RegistrationsRules
-import ch.fireresponse.app.programs.RegistrationsScreen
-import ch.fireresponse.app.programs.startDay
-import ch.fireresponse.app.programs.weekdayShort
-import ch.fireresponse.app.programs.ProgramsViewModel
+import ch.fireresponse.app.appointments.AssignmentRules
+import ch.fireresponse.app.appointments.AssignmentScreen
+import ch.fireresponse.app.appointments.AppointmentDetailScreen
+import ch.fireresponse.app.appointments.AppointmentsApi
+import ch.fireresponse.app.appointments.AppointmentListScreen
+import ch.fireresponse.app.appointments.RegistrationsRules
+import ch.fireresponse.app.appointments.RegistrationsScreen
+import ch.fireresponse.app.appointments.startDay
+import ch.fireresponse.app.appointments.weekdayShort
+import ch.fireresponse.app.appointments.AppointmentsViewModel
 import ch.fireresponse.app.ui.MainScaffold
 import ch.fireresponse.app.ui.Destination
 import ch.fireresponse.app.ui.BusyOverlay
@@ -212,10 +212,10 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 is AuthState.SignedIn -> CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
                     // Die Bilder der Sitzung liegen im Speicher der Sitzung und verschwinden mit ihr.
                     val images = viewModel { ProfileImages(ProfileImageApi(client)) }
-                    val stageLogos by viewModel { StageLogos(ProgramsApi(client)) }.paths.collectAsState()
-                    CompositionLocalProvider(LocalProfileImages provides images, LocalStageLogos provides stageLogos) {
+                    val squadLogos by viewModel { SquadLogos(AppointmentsApi(client)) }.paths.collectAsState()
+                    CompositionLocalProvider(LocalProfileImages provides images, LocalSquadLogos provides squadLogos) {
                         MainContent(
-                            ProgramsApi(client), PushApi(client), current.profile,
+                            AppointmentsApi(client), PushApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,
                             pushTarget, onPushTargetHandled,
                             onOpenPrivacy = openPrivacy,
@@ -249,14 +249,14 @@ private sealed interface Screen {
     data object Home : Screen { override val depth = 0 }
     data object Notifications : Screen { override val depth = 1 }
     data object Password : Screen { override val depth = 1 }
-    data class Program(val programId: String) : Screen { override val depth = 1 }
-    data class Registrations(val programId: String) : Screen { override val depth = 2 }
-    data class Assign(val programId: String) : Screen { override val depth = 2 }
+    data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
+    data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
+    data class Assign(val appointmentId: String) : Screen { override val depth = 2 }
 }
 
 @Composable
 private fun MainContent(
-    programsApi: ProgramsApi,
+    appointmentsApi: AppointmentsApi,
     pushApi: PushApi,
     account: Profile,
     passwordSaved: Boolean,
@@ -274,12 +274,12 @@ private fun MainContent(
 ) {
     val context = LocalContext.current
     val resolver = context.contentResolver
-    val programs = viewModel { ProgramsViewModel(programsApi) }
+    val appointments = viewModel { AppointmentsViewModel(appointmentsApi) }
     val push = viewModel { PushViewModel(pushApi, account) }
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var changingPassword by rememberSaveable { mutableStateOf(false) }
-    var destination by rememberSaveable { mutableStateOf(Destination.PROGRAMS) }
-    var openedProgram by rememberSaveable { mutableStateOf<String?>(null) }
+    var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
+    var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
     var assigning by rememberSaveable { mutableStateOf(false) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
 
@@ -298,27 +298,27 @@ private fun MainContent(
         val target = pushTarget ?: return@LaunchedEffect
         notificationsOpen = false; assigning = false; viewingRegistrations = false
         when (target) {
-            is PushTarget.Program -> { destination = Destination.PROGRAMS; openedProgram = target.id }
+            is PushTarget.Appointment -> { destination = Destination.APPOINTMENTS; openedAppointment = target.id }
         }
         onPushTargetHandled()
     }
     // Auch nach Drehen oder Prozess-Ende lädt das Offene neu: Daten bleiben nur im Arbeitsspeicher.
-    LaunchedEffect(openedProgram) { openedProgram?.let(programs::loadDetail) }
-    LaunchedEffect(assigning) { if (assigning) programs.loadAgeGroups() }
-    LaunchedEffect(viewingRegistrations, openedProgram) {
-        val id = openedProgram
-        if (viewingRegistrations && id != null) programs.loadRegistrations(id)
+    LaunchedEffect(openedAppointment) { openedAppointment?.let(appointments::loadDetail) }
+    LaunchedEffect(assigning) { if (assigning) appointments.loadSquads() }
+    LaunchedEffect(viewingRegistrations, openedAppointment) {
+        val id = openedAppointment
+        if (viewingRegistrations && id != null) appointments.loadRegistrations(id)
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     Surface(Modifier.fillMaxSize()) {
-        val programId = openedProgram
-        val detail by programs.detail.collectAsState()
-        val programProfile = (programs.profile.collectAsState().value as? ApiResult.Ok)?.value
-        val assignedProgram = (detail as? ApiResult.Ok)?.value?.takeIf { it.id == programId }
+        val appointmentId = openedAppointment
+        val detail by appointments.detail.collectAsState()
+        val appointmentProfile = (appointments.profile.collectAsState().value as? ApiResult.Ok)?.value
+        val assignedAppointment = (detail as? ApiResult.Ok)?.value?.takeIf { it.id == appointmentId }
         val target = when {
-            programId != null && assigning && assignedProgram != null -> Screen.Assign(programId)
-            programId != null && viewingRegistrations -> Screen.Registrations(programId)
-            programId != null -> Screen.Program(programId)
+            appointmentId != null && assigning && assignedAppointment != null -> Screen.Assign(appointmentId)
+            appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
+            appointmentId != null -> Screen.Appointment(appointmentId)
             notificationsOpen -> Screen.Notifications
             changingPassword -> Screen.Password
             else -> Screen.Home
@@ -331,55 +331,55 @@ private fun MainContent(
         ) { screen ->
             when (screen) {
                 is Screen.Assign -> {
-                    val programId = screen.programId
-                    val assigned = assignedProgram ?: return@AnimatedContent
-                    val leave = { assigning = false; programs.resetEdit() }
+                    val appointmentId = screen.appointmentId
+                    val assigned = assignedAppointment ?: return@AnimatedContent
+                    val leave = { assigning = false; appointments.resetEdit() }
                     BackHandler(onBack = leave)
-                    val edit = programs.edit.collectAsState().value
+                    val edit = appointments.edit.collectAsState().value
                     AssignmentScreen(
-                        assigned, programs.ageGroups.collectAsState().value, programProfile, edit,
-                        onSave = { request -> programs.saveAssignment(programId, request, leave) },
+                        assigned, appointments.squads.collectAsState().value, appointmentProfile, edit,
+                        onSave = { request -> appointments.saveAssignment(appointmentId, request, leave) },
                         onBack = leave,
-                        onRetry = programs::loadAgeGroups,
+                        onRetry = appointments::loadSquads,
                     )
                 }
                 is Screen.Registrations -> {
-                    val programId = screen.programId
+                    val appointmentId = screen.appointmentId
                     BackHandler { viewingRegistrations = false }
-                    val date = assignedProgram?.startDay()?.let { "${weekdayShort(it)} ${it.dayOfMonth}.${it.monthValue}." }
-                    MainScaffold(Destination.PROGRAMS, onDestination = { destination = it; openedProgram = null; viewingRegistrations = false }) {
+                    val date = assignedAppointment?.startDay()?.let { "${weekdayShort(it)} ${it.dayOfMonth}.${it.monthValue}." }
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null; viewingRegistrations = false }) {
                         RegistrationsScreen(
-                            eyebrow = listOfNotNull(assignedProgram?.title, date).joinToString(" · ").ifBlank { null },
-                            state = programs.registrations.collectAsState().value,
+                            eyebrow = listOfNotNull(assignedAppointment?.title, date).joinToString(" · ").ifBlank { null },
+                            state = appointments.registrations.collectAsState().value,
                             onBack = { viewingRegistrations = false },
-                            onRetry = { programs.loadRegistrations(programId) },
+                            onRetry = { appointments.loadRegistrations(appointmentId) },
                         )
                     }
                 }
-                is Screen.Program -> {
-                    val programId = screen.programId
-                    BackHandler { openedProgram = null }
-                    LaunchedEffect(programId) {
+                is Screen.Appointment -> {
+                    val appointmentId = screen.appointmentId
+                    BackHandler { openedAppointment = null }
+                    LaunchedEffect(appointmentId) {
                         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                             while (true) {
                                 delay(DETAIL_POLL_INTERVAL_MS)
-                                programs.refreshDetail()
+                                appointments.refreshDetail()
                             }
                         }
                     }
-                    MainScaffold(Destination.PROGRAMS, onDestination = { destination = it; openedProgram = null }) {
-                        ProgramDetailScreen(
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
+                        AppointmentDetailScreen(
                             detail,
-                            programs.rsvp.collectAsState().value,
-                            canAssign = AssignmentRules.mayAssign(programProfile),
-                            canSeeRegistrations = assignedProgram?.let { RegistrationsRules.maySee(it, programProfile) } == true,
-                            contacts = programs.contacts.collectAsState().value,
-                            onChild = { childId, attending -> programs.rsvpChild(programId, childId, attending) },
-                            onLeader = { attending -> programs.rsvpLeader(programId, attending) },
+                            appointments.rsvp.collectAsState().value,
+                            canAssign = AssignmentRules.mayAssign(appointmentProfile),
+                            canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
+                            contacts = appointments.contacts.collectAsState().value,
+                            onParticipant = { participantId, attending -> appointments.rsvpParticipant(appointmentId, participantId, attending) },
+                            onLeader = { attending -> appointments.rsvpLeader(appointmentId, attending) },
                             onAssign = { assigning = true },
                             onRegistrations = { viewingRegistrations = true },
-                            onBack = { openedProgram = null },
-                            onRetry = { programs.loadDetail(programId) },
+                            onBack = { openedAppointment = null },
+                            onRetry = { appointments.loadDetail(appointmentId) },
                         )
                     }
                 }
@@ -389,7 +389,7 @@ private fun MainContent(
                     NotificationsScreen(
                         switches = push.switches.collectAsState().value,
                         form = push.form.collectAsState().value,
-                        onPrograms = push::setPrograms,
+                        onAppointments = push::setAppointments,
                         onRegistrations = push::setRegistrations,
                         onBack = leave,
                     )
@@ -406,11 +406,11 @@ private fun MainContent(
                         transitionSpec = { fadeTransition(motion) },
                         label = "bereich",
                     ) { tab ->
-                        if (tab == Destination.PROGRAMS) {
-                            ProgramListScreen(
-                                programs.list.collectAsState().value,
-                                onOpen = { openedProgram = it },
-                                onRetry = programs::loadList,
+                        if (tab == Destination.APPOINTMENTS) {
+                            AppointmentListScreen(
+                                appointments.list.collectAsState().value,
+                                onOpen = { openedAppointment = it },
+                                onRetry = appointments::loadList,
                             )
                         } else if (tab == Destination.PROFILE) {
                             ProfileScreen(

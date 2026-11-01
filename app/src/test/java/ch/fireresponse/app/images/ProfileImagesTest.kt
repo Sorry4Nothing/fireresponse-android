@@ -48,7 +48,7 @@ class ProfileImagesTest {
     }
 
     @Test
-    fun stageLogoRouteIsAcceptedAndNothingElseOnTheStagePath() {
+    fun squadLogoRouteIsAcceptedAndNothingElseOnTheSquadPath() {
         assertTrue(isProfileImagePath("/api/v1/stufen/$id/logo"))
         assertTrue(isProfileImagePath("/api/v1/stufen/$id/logo?v=3"))
         assertFalse(isProfileImagePath("https://boese.example/api/v1/stufen/$id/logo"))

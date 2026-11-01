@@ -4,15 +4,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ProfileRole(@SerialName("stufeId") val ageGroupId: String, @SerialName("typ") val type: String)
+data class ProfileRole(@SerialName("stufeId") val squadId: String, @SerialName("typ") val type: String)
 
 @Serializable
-data class ProfileAgeGroup(val id: String, val name: String, @SerialName("kuerzel") val abbreviation: String = "")
+data class ProfileSquad(val id: String, val name: String, @SerialName("kuerzel") val abbreviation: String = "")
 
 @Serializable
-data class ProfileChild(
+data class ProfileParticipant(
     val id: String,
-    @SerialName("stufeId") val ageGroupId: String,
+    @SerialName("stufeId") val squadId: String,
     @SerialName("vorname") val firstName: String = "",
 )
 
@@ -23,8 +23,8 @@ data class Profile(
     val admin: Boolean = false,
     @SerialName("telefon") val phone: String? = null,
     @SerialName("rollen") val roles: List<ProfileRole> = emptyList(),
-    @SerialName("stufen") val ageGroups: List<ProfileAgeGroup> = emptyList(),
-    @SerialName("kinder") val children: List<ProfileChild> = emptyList(),
+    @SerialName("stufen") val squads: List<ProfileSquad> = emptyList(),
+    @SerialName("kinder") val participants: List<ProfileParticipant> = emptyList(),
     val name: String = "",
     @SerialName("benutzername") val username: String? = null,
     @SerialName("mussPasswortAendern") val mustChangePassword: Boolean = false,
@@ -32,16 +32,16 @@ data class Profile(
     @SerialName("datenschutzGelesenAm") val privacyReadAt: String? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
     /** Die Push-Schalter beim Server: Sie sind standardmässig an. */
-    @SerialName("pushProgramme") val pushPrograms: Boolean = true,
+    @SerialName("pushProgramme") val pushAppointments: Boolean = true,
     /** Der Server liefert ihn nur Personen mit Stufenrolle; `null`: kein Schalter anzeigen. */
     @SerialName("pushAnmeldungen") val pushRegistrations: Boolean? = null,
-    /** Cevi-Name (Spitzname); `null` oder leer ohne Angabe. */
+    /** Spitzname; `null` oder leer ohne Angabe. */
     val ceviName: String? = null,
 ) {
-    fun isGroupLeader(ageGroupId: String) = roles.any { it.type == "stufenleitung" && it.ageGroupId == ageGroupId }
+    fun isCommander(squadId: String) = roles.any { it.type == "stufenleitung" && it.squadId == squadId }
 }
 
-/** Cevi-Name, wenn einer da ist (nicht leer), sonst der volle Name. */
+/** Spitzname, wenn einer da ist (nicht leer), sonst der volle Name. */
 fun displayName(name: String, ceviName: String?): String = ceviName?.trim()?.takeIf { it.isNotEmpty() } ?: name
 
 /** Anfangsbuchstaben des ersten und des letzten Wortes des Namens, etwa «VN» für «Vorname Nachname». */

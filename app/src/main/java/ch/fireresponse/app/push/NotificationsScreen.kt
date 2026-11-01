@@ -58,7 +58,7 @@ import ch.fireresponse.app.ui.theme.fire
 fun NotificationsScreen(
     switches: PushViewModel.Switches,
     form: FormState,
-    onPrograms: (Boolean) -> Unit,
+    onAppointments: (Boolean) -> Unit,
     onRegistrations: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -88,8 +88,8 @@ fun NotificationsScreen(
             }
             SettingsCard {
                 SwitchRow(
-                    R.drawable.ic_calendar, stringResource(R.string.notifications_programs), stringResource(R.string.notifications_programs_hint),
-                    switches.programs, enabled = !form.running, onChange = onPrograms,
+                    R.drawable.ic_calendar, stringResource(R.string.notifications_appointments), stringResource(R.string.notifications_appointments_hint),
+                    switches.appointments, enabled = !form.running, onChange = onAppointments,
                 )
                 switches.registrations?.let {
                     SettingsDivider()

@@ -59,7 +59,7 @@ enum class ErrorPage {
             ApiError.FORBIDDEN -> NO_ACCESS
             ApiError.NOT_SIGNED_IN -> SESSION
             ApiError.APP_OUTDATED -> OUTDATED
-            ApiError.TOO_MANY_REQUESTS, ApiError.REGISTRATION_CLOSED, ApiError.PROGRAM_STARTED,
+            ApiError.TOO_MANY_REQUESTS, ApiError.REGISTRATION_CLOSED, ApiError.APPOINTMENT_STARTED,
             ApiError.UNKNOWN -> ERROR
         }
     }
@@ -114,14 +114,14 @@ fun StatePage(
 
 /**
  * Die Fehlerseite zu einem [ApiError]. Eine Aktion, die es nicht gibt, fehlt auch als Knopf: «Anmelden» erscheint nur, wo
- * `onSignIn` gesetzt ist (nach abgelaufener Sitzung), «Zu den Programmen» nur, wo `onToPrograms` gesetzt ist.
+ * `onSignIn` gesetzt ist (nach abgelaufener Sitzung), «Zu den Programmen» nur, wo `onToAppointments` gesetzt ist.
  */
 @Composable
 fun ErrorState(
     error: ApiError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    onToPrograms: (() -> Unit)? = null,
+    onToAppointments: (() -> Unit)? = null,
     onSignIn: (() -> Unit)? = null,
     @StringRes notFoundText: Int = R.string.state_404_text,
 ) {
@@ -134,11 +134,11 @@ fun ErrorState(
 
         ErrorPage.NOT_FOUND -> StatePage(
             R.drawable.ic_not_found, stringResource(R.string.state_404_title), stringResource(notFoundText), modifier,
-        ) { onToPrograms?.let { PrimaryButton(stringResource(R.string.to_programs), it) } }
+        ) { onToAppointments?.let { PrimaryButton(stringResource(R.string.to_appointments), it) } }
 
         ErrorPage.NO_ACCESS -> StatePage(
             R.drawable.ic_lock, stringResource(R.string.state_access_title), stringResource(R.string.state_access_text), modifier,
-        ) { onToPrograms?.let { PrimaryButton(stringResource(R.string.to_programs), it) } }
+        ) { onToAppointments?.let { PrimaryButton(stringResource(R.string.to_appointments), it) } }
 
         ErrorPage.SESSION -> StatePage(
             R.drawable.ic_clock, stringResource(R.string.state_session_title), stringResource(R.string.state_session_text), modifier,
@@ -154,7 +154,7 @@ fun ErrorState(
             circle = scheme.errorContainer, iconColor = scheme.onErrorContainer, error = true,
         ) {
             PrimaryButton(stringResource(R.string.retry), onRetry, icon = R.drawable.ic_refresh)
-            onToPrograms?.let { TextActionButton(stringResource(R.string.to_programs), it) }
+            onToAppointments?.let { TextActionButton(stringResource(R.string.to_appointments), it) }
         }
     }
 }

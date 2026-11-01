@@ -43,7 +43,7 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
         ChipKind.PENDING -> Color.Transparent to scheme.onSurfaceVariant
         ChipKind.REVIEW -> colors.warningContainer to colors.onWarningContainer
         ChipKind.UNASSIGNED -> scheme.secondaryContainer to scheme.onSecondaryContainer
-        ChipKind.AGE_GROUP -> colors.ageGroupContainer to colors.onAgeGroupContainer
+        ChipKind.AGE_GROUP -> colors.squadContainer to colors.onSquadContainer
     }
     Row(
         modifier

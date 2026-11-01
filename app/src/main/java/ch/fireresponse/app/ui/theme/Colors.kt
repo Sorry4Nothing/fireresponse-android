@@ -11,7 +11,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Rollen, die Material 3 nicht kennt (Design System «Cevi App», `tokens.json`).
+ * Rollen, die Material 3 nicht kennt (Design System «FireResponse», `tokens.json`).
  * Kein Zustand nur über Farbe: Jede dieser Farben steht immer mit Icon und Wort.
  */
 @Immutable
@@ -25,8 +25,8 @@ data class FireResponseColors(
     val onSuccessContainer: Color,
     val warningContainer: Color,
     val onWarningContainer: Color,
-    val ageGroupContainer: Color,
-    val onAgeGroupContainer: Color,
+    val squadContainer: Color,
+    val onSquadContainer: Color,
     /** Fokusring: 3 dp, 2 dp Abstand. */
     val focus: Color,
 )
@@ -93,14 +93,14 @@ internal val FireResponseNight: Palette = run {
             onSuccessContainer = Color(0xFF6FD39A),
             warningContainer = Color(0xFF2A2312),
             onWarningContainer = Color(0xFFF2C063),
-            ageGroupContainer = Color(0xFF0F2A31),
-            onAgeGroupContainer = Color(0xFF7FD0E3),
+            squadContainer = Color(0xFF0F2A31),
+            onSquadContainer = Color(0xFF7FD0E3),
             focus = Color(0xFFA9ABF2),
         ),
     )
 }
 
-/** «Tag»: der Hellmodus. Cevi-Rot und Cevi-Blau bleiben gleich. */
+/** «Tag»: der Hellmodus. Rot und Blau bleiben gleich. */
 internal val FireResponseDay: Palette = run {
     val surface = Color(0xFFF7F7FC)
     val container = Color(0xFFECECF8)
@@ -150,8 +150,8 @@ internal val FireResponseDay: Palette = run {
             onSuccessContainer = Color(0xFF17703A),
             warningContainer = Color(0xFFFFF4D6),
             onWarningContainer = Color(0xFF8A5A00),
-            ageGroupContainer = Color(0xFFE3F2F6),
-            onAgeGroupContainer = Color(0xFF1D6274),
+            squadContainer = Color(0xFFE3F2F6),
+            onSquadContainer = Color(0xFF1D6274),
             focus = FireResponseBlue,
         ),
     )

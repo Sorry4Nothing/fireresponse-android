@@ -187,7 +187,7 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
                 modifier = Modifier.semantics { heading() },
             )
             profile.ceviName?.trim()?.takeIf { it.isNotEmpty() }?.let {
-                Text(stringResource(R.string.profile_cevi_name, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.profile_nickname, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             roleLine(profile).takeIf { it.isNotEmpty() }?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -203,11 +203,11 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
 @Composable
 private fun roleLine(profile: Profile): String {
     val parts = buildList {
-        if (profile.roles.any { it.type == "stufenleitung" }) add(stringResource(R.string.role_group_leader))
+        if (profile.roles.any { it.type == "stufenleitung" }) add(stringResource(R.string.role_commander))
         else if (profile.roles.any { it.type == "leitung" }) add(stringResource(R.string.role_leader))
-        if (profile.children.isNotEmpty()) {
+        if (profile.participants.isNotEmpty()) {
             add(stringResource(R.string.role_parent))
-            add(profile.children.mapNotNull { it.firstName.takeIf(String::isNotBlank) }.joinToString(", "))
+            add(profile.participants.mapNotNull { it.firstName.takeIf(String::isNotBlank) }.joinToString(", "))
         }
     }
     return parts.filter { it.isNotEmpty() }.joinToString(" · ")

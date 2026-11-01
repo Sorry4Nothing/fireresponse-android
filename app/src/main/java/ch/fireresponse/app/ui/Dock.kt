@@ -44,7 +44,7 @@ import ch.fireresponse.app.ui.theme.Sizes
 
 /** Die Hauptziele des Docks. */
 enum class Destination(@StringRes val text: Int, @DrawableRes val icon: Int) {
-    PROGRAMS(R.string.tab_programs, R.drawable.ic_calendar),
+    APPOINTMENTS(R.string.tab_appointments, R.drawable.ic_calendar),
     PROFILE(R.string.tab_profile, R.drawable.ic_profile),
 }
 
@@ -95,7 +95,7 @@ private fun Dock(active: Destination, onDestination: (Destination) -> Unit, vert
     }
 }
 
-/** Ein Ziel über die ganze Fläche (mindestens 48 dp): aktiv Cevi-Blau mit weissem Wort, inaktiv ruhig. Das Wort steht immer da. */
+/** Ein Ziel über die ganze Fläche (mindestens 48 dp): aktiv Blau mit weissem Wort, inaktiv ruhig. Das Wort steht immer da. */
 @Composable
 private fun DockDestination(destination: Destination, active: Boolean, onDestination: (Destination) -> Unit, modifier: Modifier) {
     val color = if (active) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
