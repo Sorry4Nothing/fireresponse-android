@@ -43,6 +43,7 @@ class ContrastTest {
         listOf("surface" to p.scheme.surface, "surface-container-low" to p.scheme.surfaceContainerLow).forEach { (n, background) ->
             assertContrast("primary-text auf $n", p.extra.primaryText, background, 4.5, t)
             assertContrast("accent auf $n", p.extra.accent, background, 4.5, t)
+            assertContrast("accent-text auf $n", p.extra.accentText, background, 4.5, t)
         }
     }
 
@@ -55,7 +56,7 @@ class ContrastTest {
         assertContrast("on-success-container auf success-container", p.extra.onSuccessContainer, p.extra.successContainer, 4.5, t)
         assertContrast("on-error-container auf error-container", p.scheme.onErrorContainer, p.scheme.errorContainer, 4.5, t)
         assertContrast("on-warning-container auf warning-container", p.extra.onWarningContainer, p.extra.warningContainer, 4.5, t)
-        assertContrast("on-stufe-container auf stufe-container", p.extra.onSquadContainer, p.extra.squadContainer, 4.5, t)
+        assertContrast("on-accent-fill auf accent-fill", p.extra.onAccentFill, p.extra.accentFill, 4.5, t)
         assertContrast("inverse-on-surface auf inverse-surface", p.scheme.inverseOnSurface, p.scheme.inverseSurface, 4.5, t)
     }
 
@@ -64,6 +65,7 @@ class ContrastTest {
         surfaces(p).forEach { (n, background) ->
             assertContrast("outline auf $n", p.scheme.outline, background, 3.0, t)
             assertContrast("focus auf $n", p.extra.focus, background, 3.0, t)
+            assertContrast("switch-on auf $n", p.extra.switchOn, background, 3.0, t)
         }
     }
 
@@ -74,8 +76,8 @@ class ContrastTest {
     }
 
     @Test
-    fun bothThemesShareRedAndBlue() {
+    fun bothThemesShareSignalRed() {
         assertTrue(FireResponseNight.scheme.primary == FireResponseDay.scheme.primary)
-        assertTrue(FireResponseNight.scheme.secondary == FireResponseDay.scheme.secondary)
+        assertTrue(FireResponseNight.extra.accentFill == FireResponseDay.extra.accentFill)
     }
 }

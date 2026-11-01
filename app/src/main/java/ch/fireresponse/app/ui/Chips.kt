@@ -23,13 +23,12 @@ import ch.fireresponse.app.ui.theme.Pill
 import ch.fireresponse.app.ui.theme.fire
 
 /** Zustand eines Etiketts. Immer Icon und Wort: Ein Zustand steht nie nur als Farbe da. */
-enum class ChipKind(@DrawableRes val icon: Int?) {
+enum class ChipKind(@DrawableRes val icon: Int) {
     YES(R.drawable.ic_check),
     NO(R.drawable.ic_cross),
     PENDING(R.drawable.ic_question),
     REVIEW(R.drawable.ic_warning),
     UNASSIGNED(R.drawable.ic_unlinked),
-    AGE_GROUP(null),
 }
 
 /** Kleines Etikett für einen Zustand. Nicht bedienbar; bedienbar ist die Karte, auf der es sitzt. */
@@ -43,7 +42,6 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
         ChipKind.PENDING -> Color.Transparent to scheme.onSurfaceVariant
         ChipKind.REVIEW -> colors.warningContainer to colors.onWarningContainer
         ChipKind.UNASSIGNED -> scheme.secondaryContainer to scheme.onSecondaryContainer
-        ChipKind.AGE_GROUP -> colors.squadContainer to colors.onSquadContainer
     }
     Row(
         modifier
@@ -54,7 +52,7 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s1),
     ) {
-        kind.icon?.let { Icon(painterResource(it), contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp)) }
+        kind.icon.let { Icon(painterResource(it), contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp)) }
         Text(text, style = MaterialTheme.typography.labelMedium, color = contentColor)
     }
 }

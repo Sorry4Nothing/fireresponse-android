@@ -11,24 +11,31 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Rollen, die Material 3 nicht kennt (Design System «FireResponse», `tokens.json`).
+ * Rollen, die Material 3 nicht kennt (Design System «Fire-Response Android», `tokens.json`).
  * Kein Zustand nur über Farbe: Jede dieser Farben steht immer mit Icon und Wort.
  */
 @Immutable
 data class FireResponseColors(
-    /** Links, Überzeilen und Icons in Detailzeilen. */
+    /** App-Akzent: Zurück-Pfeil, aktiver Dock-Punkt, Links, Überzeilen, Symbole in Listen. Nacht Warngelb, Tag Signalrot. */
     val accent: Color,
-    /** Rot als Text oder Linie; `primary` ist nur als Fläche gedacht. */
+    /** Gelb als Text auf hellem Grund ist zu schwach: dort Ocker. Für gelb gesetzte Schrift, nicht für den App-Akzent. */
+    val accentText: Color,
+    /** Gelbe Flächen; sie tragen dunklen Text ([onAccentFill]). */
+    val accentFill: Color,
+    val onAccentFill: Color,
+    /** Rot als Text oder Symbol (z. B. «Abmelden»); `primary` ist nur als Fläche gedacht. */
     val primaryText: Color,
     val onSecondaryMuted: Color,
     val successContainer: Color,
     val onSuccessContainer: Color,
     val warningContainer: Color,
     val onWarningContainer: Color,
-    val squadContainer: Color,
-    val onSquadContainer: Color,
     /** Fokusring: 3 dp, 2 dp Abstand. */
     val focus: Color,
+    /** Schalter eingeschaltet. */
+    val switchOn: Color,
+    /** Fläche des aktiven Dock-Punkts, mit [accent] als Icon und Wort. */
+    val tabSelected: Color,
 )
 
 val LocalFireResponseColors = staticCompositionLocalOf { FireResponseNight.extra }
@@ -39,100 +46,103 @@ val MaterialTheme.fire: FireResponseColors
 
 internal class Palette(val scheme: ColorScheme, val extra: FireResponseColors)
 
-private val FireResponseRed = Color(0xFFC41333)
-private val FireResponseBlue = Color(0xFF323394)
+private val SignalRed = Color(0xFFC8141A)
 private val PureWhite = Color(0xFFFFFFFF)
 
-/** «Nacht»: blau getöntes Dunkel, die Hauptrichtung. */
+/** «Nacht»: warmes Graphit, die Hauptrichtung. Akzent Warngelb. */
 internal val FireResponseNight: Palette = run {
-    val surface = Color(0xFF161620)
-    val container = Color(0xFF1E1F38)
-    val containerHigh = Color(0xFF23244A)
+    val surface = Color(0xFF0F1114)
+    val containerLow = Color(0xFF181B20)
+    val container = Color(0xFF22262D)
+    val containerHigh = Color(0xFF2B3039)
     Palette(
         scheme = darkColorScheme(
-            primary = FireResponseRed,
+            primary = SignalRed,
             onPrimary = PureWhite,
-            primaryContainer = FireResponseRed,
+            primaryContainer = SignalRed,
             onPrimaryContainer = PureWhite,
-            inversePrimary = Color(0xFFFF7A8A),
-            secondary = FireResponseBlue,
+            inversePrimary = Color(0xFFFF8A82),
+            secondary = Color(0xFF465060),
             onSecondary = PureWhite,
             secondaryContainer = containerHigh,
-            onSecondaryContainer = Color(0xFFDCDDF9),
-            tertiary = FireResponseBlue,
+            onSecondaryContainer = Color(0xFFE3E6EB),
+            tertiary = Color(0xFF465060),
             onTertiary = PureWhite,
             background = surface,
-            onBackground = Color(0xFFEDEDEB),
+            onBackground = Color(0xFFF2F3F5),
             surface = surface,
-            onSurface = Color(0xFFEDEDEB),
+            onSurface = Color(0xFFF2F3F5),
             surfaceVariant = containerHigh,
-            onSurfaceVariant = Color(0xFFABABA6),
+            onSurfaceVariant = Color(0xFF9BA0AA),
             surfaceTint = Color.Transparent,
-            inverseSurface = Color(0xFFEDEDEB),
+            inverseSurface = Color(0xFFF2F3F5),
             inverseOnSurface = surface,
-            error = Color(0xFFFF8E9A),
-            onError = Color(0xFF2E1519),
-            errorContainer = Color(0xFF2E1519),
-            onErrorContainer = Color(0xFFFF8E9A),
-            outline = Color(0xFF8A8A90),
-            outlineVariant = Color(0xFF2C2C44),
+            error = Color(0xFFFF8A86),
+            onError = Color(0xFF3A1214),
+            errorContainer = Color(0xFF3A1214),
+            onErrorContainer = Color(0xFFFF8A86),
+            outline = Color(0xFF7D8493),
+            outlineVariant = Color(0xFF323741),
             scrim = Color.Black,
             surfaceBright = containerHigh,
             surfaceDim = surface,
             surfaceContainerLowest = surface,
-            surfaceContainerLow = Color(0xFF17172A),
+            surfaceContainerLow = containerLow,
             surfaceContainer = container,
             surfaceContainerHigh = containerHigh,
             surfaceContainerHighest = containerHigh,
         ),
         extra = FireResponseColors(
-            accent = Color(0xFFA9ABF2),
-            primaryText = Color(0xFFFF7A8A),
-            onSecondaryMuted = Color(0xFFDCDDF9),
-            successContainer = Color(0xFF16271D),
-            onSuccessContainer = Color(0xFF6FD39A),
-            warningContainer = Color(0xFF2A2312),
-            onWarningContainer = Color(0xFFF2C063),
-            squadContainer = Color(0xFF0F2A31),
-            onSquadContainer = Color(0xFF7FD0E3),
-            focus = Color(0xFFA9ABF2),
+            accent = Color(0xFFFFD21F),
+            accentText = Color(0xFFFFD21F),
+            accentFill = Color(0xFFFFC400),
+            onAccentFill = Color(0xFF1A1B1E),
+            primaryText = Color(0xFFFF8A82),
+            onSecondaryMuted = Color(0xFFDADEE5),
+            successContainer = Color(0xFF10301F),
+            onSuccessContainer = Color(0xFF34D17A),
+            warningContainer = Color(0xFF3A3000),
+            onWarningContainer = Color(0xFFFFD21F),
+            focus = Color(0xFFFFD21F),
+            switchOn = Color(0xFFF2B800),
+            tabSelected = Color(0x29FFD21F),
         ),
     )
 }
 
-/** «Tag»: der Hellmodus. Rot und Blau bleiben gleich. */
+/** «Tag»: der Hellmodus, warmes Grau. Akzent Signalrot. */
 internal val FireResponseDay: Palette = run {
-    val surface = Color(0xFFF7F7FC)
-    val container = Color(0xFFECECF8)
-    val containerHigh = Color(0xFFDFDFF3)
+    val surface = Color(0xFFF5F3F0)
+    val container = Color(0xFFECE8E3)
+    val containerHigh = Color(0xFFE2DDD6)
     Palette(
         scheme = lightColorScheme(
-            primary = FireResponseRed,
+            primary = SignalRed,
             onPrimary = PureWhite,
-            primaryContainer = FireResponseRed,
+            primaryContainer = SignalRed,
             onPrimaryContainer = PureWhite,
-            inversePrimary = Color(0xFFA30F2A),
-            secondary = FireResponseBlue,
+            inversePrimary = Color(0xFFB30F15),
+            secondary = Color(0xFF3A3F49),
             onSecondary = PureWhite,
             secondaryContainer = container,
-            onSecondaryContainer = FireResponseBlue,
-            tertiary = FireResponseBlue,
+            onSecondaryContainer = Color(0xFF1A1B1E),
+            tertiary = Color(0xFF3A3F49),
             onTertiary = PureWhite,
             background = surface,
-            onBackground = Color(0xFF141412),
+            onBackground = Color(0xFF1A1B1E),
             surface = surface,
-            onSurface = Color(0xFF141412),
+            onSurface = Color(0xFF1A1B1E),
             surfaceVariant = containerHigh,
-            onSurfaceVariant = Color(0xFF5C5C57),
+            onSurfaceVariant = Color(0xFF5E6066),
             surfaceTint = Color.Transparent,
-            inverseSurface = Color(0xFF141412),
+            inverseSurface = Color(0xFF1A1B1E),
             inverseOnSurface = surface,
-            error = Color(0xFF9E1B2C),
+            error = Color(0xFFA60F14),
             onError = PureWhite,
-            errorContainer = Color(0xFFFCE9EC),
-            onErrorContainer = Color(0xFF9E1B2C),
-            outline = Color(0xFF7A7A74),
-            outlineVariant = Color(0xFFE2E2EC),
+            errorContainer = Color(0xFFFDE7E8),
+            onErrorContainer = Color(0xFFA60F14),
+            outline = Color(0xFF7D7870),
+            outlineVariant = Color(0xFFD9D3CC),
             scrim = Color.Black,
             surfaceBright = PureWhite,
             surfaceDim = containerHigh,
@@ -143,16 +153,19 @@ internal val FireResponseDay: Palette = run {
             surfaceContainerHighest = containerHigh,
         ),
         extra = FireResponseColors(
-            accent = FireResponseBlue,
-            primaryText = Color(0xFFA30F2A),
-            onSecondaryMuted = Color(0xFFDCDDF9),
-            successContainer = Color(0xFFE7F4EC),
-            onSuccessContainer = Color(0xFF17703A),
-            warningContainer = Color(0xFFFFF4D6),
-            onWarningContainer = Color(0xFF8A5A00),
-            squadContainer = Color(0xFFE3F2F6),
-            onSquadContainer = Color(0xFF1D6274),
-            focus = FireResponseBlue,
+            accent = Color(0xFFB30F15),
+            accentText = Color(0xFF7A5A00),
+            accentFill = Color(0xFFFFC400),
+            onAccentFill = Color(0xFF1A1B1E),
+            primaryText = Color(0xFFB30F15),
+            onSecondaryMuted = Color(0xFFDADEE5),
+            successContainer = Color(0xFFE3F4EA),
+            onSuccessContainer = Color(0xFF136B3A),
+            warningContainer = Color(0xFFFFF1BF),
+            onWarningContainer = Color(0xFF5C4400),
+            focus = Color(0xFFB30F15),
+            switchOn = Color(0xFFB30F15),
+            tabSelected = Color(0x1AB30F15),
         ),
     )
 }
