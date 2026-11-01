@@ -36,7 +36,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import ch.fireresponse.app.R
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.Header

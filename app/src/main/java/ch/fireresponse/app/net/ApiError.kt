@@ -14,14 +14,6 @@ enum class ApiError(@StringRes val text: Int) {
 
     /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Programme gehen noch). */
     PROGRAM_STARTED(R.string.error_program_started),
-
-    /** 409 `ANWESENHEIT_GESCHLOSSEN`: Erfassen geht ab Beginn des Programms und bis 14 Tage danach. */
-
-    /** 404 beim Einzelchat: Der Server sagt nicht, ob die Stufe, das Elternteil oder das Recht fehlt. */
-    DIRECT_CHAT_UNAVAILABLE(R.string.error_direct_chat_unavailable),
-
-    /** 429 beim Senden einer Nachricht: höchstens 20 pro Minute. */
-    MESSAGE_TOO_FAST(R.string.error_message_too_fast),
     NETWORK(R.string.error_network),
     UNKNOWN(R.string.error_unknown);
 

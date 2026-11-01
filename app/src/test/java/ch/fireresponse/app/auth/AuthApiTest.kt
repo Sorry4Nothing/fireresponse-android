@@ -144,7 +144,7 @@ class AuthApiTest {
         reply(
             200,
             """{"id":"u","name":"Marion Keller","benutzername":"m.keller","mussPasswortAendern":false,"datenschutzGelesenAm":null,
-               "telefon":null,"bildUrl":"/api/v1/personen/u/bild?v=3","pushChat":true,"pushProgramme":true,"admin":false,"zweiterFaktor":false,
+               "telefon":null,"bildUrl":"/api/v1/personen/u/bild?v=3","pushProgramme":true,"admin":false,"zweiterFaktor":false,
                "rollen":[],"stufen":[],"kinder":[{"id":"k","vorname":"Lena","nachname":"Keller","stufeId":"s"}]}""",
         )
         val profile = (runBlocking { auth.profile() } as ApiResult.Ok).value

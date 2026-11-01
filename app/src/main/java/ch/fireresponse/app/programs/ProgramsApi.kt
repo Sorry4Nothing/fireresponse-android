@@ -1,6 +1,6 @@
 package ch.fireresponse.app.programs
 
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.contacts.ContactList
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiResult

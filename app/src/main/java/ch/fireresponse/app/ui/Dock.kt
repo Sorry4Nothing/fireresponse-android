@@ -45,7 +45,6 @@ import ch.fireresponse.app.ui.theme.Sizes
 /** Die Hauptziele des Docks. */
 enum class Destination(@StringRes val text: Int, @DrawableRes val icon: Int) {
     PROGRAMS(R.string.tab_programs, R.drawable.ic_calendar),
-    CHAT(R.string.tab_chat, R.drawable.ic_chat),
     PROFILE(R.string.tab_profile, R.drawable.ic_profile),
 }
 

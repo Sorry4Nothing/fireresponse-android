@@ -1,7 +1,5 @@
 package ch.fireresponse.app.contacts
 
-import ch.fireresponse.app.chat.Profile
-import ch.fireresponse.app.chat.ProfileRole
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,19 +29,5 @@ class PhoneRulesTest {
         assertEquals("tel:+41790000001", PhoneRules.dialUri("+41 79 000 00 01"))
         assertEquals("tel:0790000001", PhoneRules.dialUri("(079) 000-00.01"))
         assertEquals("tel:0440000000", PhoneRules.dialUri("044/000 00 00"))
-    }
-
-    @Test
-    fun onlyGroupLeadersSetANumberButAnyoneWithOneMayRemoveIt() {
-        val groupLeader = Profile("l", roles = listOf(ProfileRole("s1", "stufenleitung")))
-        val leader = Profile("m", roles = listOf(ProfileRole("s1", "leitung")))
-        val formerLeaderWithNumber = Profile("f", phone = "+41 79 000 00 01")
-        val parent = Profile("e")
-        assertTrue(PhoneRules.maySet(groupLeader) && PhoneRules.mayEdit(groupLeader))
-        assertFalse(PhoneRules.maySet(leader) || PhoneRules.mayEdit(leader))
-        assertFalse("ohne Rolle nur entfernen", PhoneRules.maySet(formerLeaderWithNumber))
-        assertTrue(PhoneRules.mayEdit(formerLeaderWithNumber))
-        assertFalse(PhoneRules.mayEdit(parent) || PhoneRules.mayEdit(null))
-        assertFalse("leerer Text zählt nicht als Nummer", PhoneRules.mayEdit(Profile("x", phone = "  ")))
     }
 }

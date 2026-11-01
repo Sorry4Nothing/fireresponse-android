@@ -460,7 +460,6 @@ fun WelcomeScreen(
             Column(Modifier.padding(top = Spacing.s3), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 WelcomePoint(R.drawable.ic_calendar, R.string.welcome_programs, R.string.welcome_programs_text)
                 WelcomePoint(R.drawable.ic_check, R.string.welcome_rsvp, R.string.welcome_rsvp_text)
-                WelcomePoint(R.drawable.ic_chat, R.string.welcome_chat, R.string.welcome_chat_text)
             }
         },
         bottom = {

@@ -1,7 +1,7 @@
 package ch.fireresponse.app.programs
 
-import ch.fireresponse.app.chat.Profile
-import ch.fireresponse.app.chat.ProfileRole
+import ch.fireresponse.app.profile.Profile
+import ch.fireresponse.app.profile.ProfileRole
 import ch.fireresponse.app.ui.ChipKind
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals

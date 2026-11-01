@@ -61,25 +61,17 @@ import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.ProfileScreen
 import ch.fireresponse.app.auth.StartScreen
 import ch.fireresponse.app.auth.WelcomeScreen
-import ch.fireresponse.app.chat.ChatApi
-import ch.fireresponse.app.chat.ChatListScreen
-import ch.fireresponse.app.chat.ChatConversationScreen
-import ch.fireresponse.app.chat.ChatViewModel
-import ch.fireresponse.app.chat.Profile
-import ch.fireresponse.app.chat.chatTitle
-import ch.fireresponse.app.contacts.PhoneRules
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.images.LocalProfileImages
 import ch.fireresponse.app.images.ProfileImageApi
 import ch.fireresponse.app.images.ProfileImageEncoder
 import ch.fireresponse.app.images.ProfileImages
 import ch.fireresponse.app.images.LocalStageLogos
 import ch.fireresponse.app.images.StageLogos
-import ch.fireresponse.app.contacts.PhoneScreen
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.push.Notifications
-import ch.fireresponse.app.push.OpenChat
 import ch.fireresponse.app.push.NotificationsScreen
 import ch.fireresponse.app.push.PushApi
 import ch.fireresponse.app.push.PushTarget
@@ -104,13 +96,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-/** So oft fragt ein offener Chat den Server nach neuen Nachrichten, solange die App im Vordergrund ist (Takt laut API). */
-private const val CHAT_POLL_INTERVAL_MS = 5_000L
-
-/** So oft fragt die sichtbare Chatliste nach: So kommen die Zähler «ungelesen» an (Takt laut API). */
-private const val LIST_POLL_INTERVAL_MS = 30_000L
-
-/** So oft liest das offene Programm Stand und Kontakte still neu. */
+/** So oft liest der offene Termin Stand und Kontakte still neu. */
 private const val DETAIL_POLL_INTERVAL_MS = 15_000L
 
 class MainActivity : FragmentActivity() {
@@ -229,7 +215,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                     val stageLogos by viewModel { StageLogos(ProgramsApi(client)) }.paths.collectAsState()
                     CompositionLocalProvider(LocalProfileImages provides images, LocalStageLogos provides stageLogos) {
                         MainContent(
-                            ProgramsApi(client), ChatApi(client), PushApi(client), current.profile,
+                            ProgramsApi(client), PushApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,
                             pushTarget, onPushTargetHandled,
                             onOpenPrivacy = openPrivacy,
@@ -261,11 +247,9 @@ private sealed interface Screen {
     val depth: Int
 
     data object Home : Screen { override val depth = 0 }
-    data object Phone : Screen { override val depth = 1 }
     data object Notifications : Screen { override val depth = 1 }
     data object Password : Screen { override val depth = 1 }
     data class Program(val programId: String) : Screen { override val depth = 1 }
-    data class Chat(val chatId: String) : Screen { override val depth = 1 }
     data class Registrations(val programId: String) : Screen { override val depth = 2 }
     data class Assign(val programId: String) : Screen { override val depth = 2 }
 }
@@ -273,7 +257,6 @@ private sealed interface Screen {
 @Composable
 private fun MainContent(
     programsApi: ProgramsApi,
-    chatApi: ChatApi,
     pushApi: PushApi,
     account: Profile,
     passwordSaved: Boolean,
@@ -292,14 +275,11 @@ private fun MainContent(
     val context = LocalContext.current
     val resolver = context.contentResolver
     val programs = viewModel { ProgramsViewModel(programsApi) }
-    val chat = viewModel { ChatViewModel(chatApi) }
     val push = viewModel { PushViewModel(pushApi, account) }
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var changingPassword by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.PROGRAMS) }
     var openedProgram by rememberSaveable { mutableStateOf<String?>(null) }
-    var openedChat by rememberSaveable { mutableStateOf<String?>(null) }
-    var phoneOpen by rememberSaveable { mutableStateOf(false) }
     var assigning by rememberSaveable { mutableStateOf(false) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
 
@@ -313,13 +293,12 @@ private fun MainContent(
             askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
-    // Das Tippen auf einen Push öffnet den Chat oder das Programm und schliesst, was davor offen war.
+    // Das Tippen auf einen Push öffnet das Programm und schliesst, was davor offen war.
     LaunchedEffect(pushTarget) {
         val target = pushTarget ?: return@LaunchedEffect
-        notificationsOpen = false; phoneOpen = false; assigning = false; viewingRegistrations = false
+        notificationsOpen = false; assigning = false; viewingRegistrations = false
         when (target) {
-            is PushTarget.Chat -> { destination = Destination.CHAT; openedProgram = null; openedChat = target.id }
-            is PushTarget.Program -> { destination = Destination.PROGRAMS; openedChat = null; openedProgram = target.id }
+            is PushTarget.Program -> { destination = Destination.PROGRAMS; openedProgram = target.id }
         }
         onPushTargetHandled()
     }
@@ -330,31 +309,9 @@ private fun MainContent(
         val id = openedProgram
         if (viewingRegistrations && id != null) programs.loadRegistrations(id)
     }
-    LaunchedEffect(openedChat) {
-        val id = openedChat
-        if (id == null) chat.closeChat() else chat.openChat(id)
-    }
-    // Ein Push zum offenen Chat zeigt nichts (siehe PushService).
-    DisposableEffect(openedChat) {
-        OpenChat.id = openedChat
-        onDispose { OpenChat.id = null }
-    }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(destination, openedChat, phoneOpen) {
-        if (destination == Destination.CHAT && openedChat == null && !phoneOpen) {
-            chat.loadList(silent = true)
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (true) {
-                    delay(LIST_POLL_INTERVAL_MS)
-                    chat.loadList(silent = true)
-                }
-            }
-        }
-    }
-
     Surface(Modifier.fillMaxSize()) {
         val programId = openedProgram
-        val chatId = openedChat
         val detail by programs.detail.collectAsState()
         val programProfile = (programs.profile.collectAsState().value as? ApiResult.Ok)?.value
         val assignedProgram = (detail as? ApiResult.Ok)?.value?.takeIf { it.id == programId }
@@ -362,8 +319,6 @@ private fun MainContent(
             programId != null && assigning && assignedProgram != null -> Screen.Assign(programId)
             programId != null && viewingRegistrations -> Screen.Registrations(programId)
             programId != null -> Screen.Program(programId)
-            chatId != null -> Screen.Chat(chatId)
-            phoneOpen -> Screen.Phone
             notificationsOpen -> Screen.Notifications
             changingPassword -> Screen.Password
             else -> Screen.Home
@@ -428,54 +383,12 @@ private fun MainContent(
                         )
                     }
                 }
-                is Screen.Chat -> {
-                    val chatId = screen.chatId
-                    BackHandler { openedChat = null }
-                    LaunchedEffect(chatId) {
-                        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            while (true) {
-                                delay(CHAT_POLL_INTERVAL_MS)
-                                chat.refresh()
-                            }
-                        }
-                    }
-                    val list by chat.list.collectAsState()
-                    val profile by chat.profile.collectAsState()
-                    val chatEntry = (list as? ApiResult.Ok)?.value?.chats?.firstOrNull { it.id == chatId }
-                    ChatConversationScreen(
-                        title = chatTitle(chatEntry),
-                        chat = chatEntry,
-                        profile = (profile as? ApiResult.Ok)?.value,
-                        state = chat.conversation.collectAsState().value,
-                            loadingOlder = chat.loadingOlder.collectAsState().value,
-                        send = chat.send.collectAsState().value,
-                        action = chat.action.collectAsState().value,
-                        onSend = chat::send,
-                        onOlder = chat::loadOlder,
-                        onDirectChat = { ageGroupId, parentId -> chat.openDirectChat(ageGroupId, parentId) { openedChat = it } },
-                            onBack = { openedChat = null },
-                        onRetry = { chat.openChat(chatId) },
-                    )
-                }
-                Screen.Phone -> {
-                    val leave = { phoneOpen = false; chat.resetPhone() }
-                    BackHandler(onBack = leave)
-                    val phoneProfile = (chat.profile.collectAsState().value as? ApiResult.Ok)?.value
-                    PhoneScreen(
-                        phone = phoneProfile?.phone,
-                        canSet = PhoneRules.maySet(phoneProfile),
-                        state = chat.phone.collectAsState().value,
-                        onSave = { chat.savePhone(it, leave) },
-                        onBack = leave,
-                    )
-                }
                 Screen.Notifications -> {
                     val leave = { notificationsOpen = false; push.clearError() }
                     BackHandler(onBack = leave)
                     NotificationsScreen(
                         switches = push.switches.collectAsState().value,
                         form = push.form.collectAsState().value,
-                        onChat = push::setChat,
                         onPrograms = push::setPrograms,
                         onRegistrations = push::setRegistrations,
                         onBack = leave,
@@ -514,17 +427,6 @@ private fun MainContent(
                                 lockAvailable = lockAvailable,
                                 lockEnabled = lockEnabled,
                                 onLockChange = onLockChange,
-                            )
-                        } else {
-                            ChatListScreen(
-                                chat.list.collectAsState().value,
-                                (chat.profile.collectAsState().value as? ApiResult.Ok)?.value,
-                                chat.action.collectAsState().value,
-                                onOpen = { openedChat = it },
-                                onDirectChat = { ageGroupId -> chat.openDirectChat(ageGroupId, null) { openedChat = it } },
-                                phoneVisible = PhoneRules.mayEdit((chat.profile.collectAsState().value as? ApiResult.Ok)?.value),
-                                onPhone = { phoneOpen = true },
-                                onRetry = { chat.loadList() },
                             )
                         }
                     }

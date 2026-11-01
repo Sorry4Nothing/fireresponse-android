@@ -1,6 +1,6 @@
 package ch.fireresponse.app.push
 
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
@@ -56,30 +56,29 @@ class PushApiTest {
         server.enqueue(reply(204))
         server.enqueue(reply(204))
         runBlocking {
-            push.setSwitches(PushSwitchesRequest(chat = false))
-            push.setSwitches(PushSwitchesRequest(programs = true))
+            push.setSwitches(PushSwitchesRequest(programs = false))
+            push.setSwitches(PushSwitchesRequest(registrations = true))
         }
         val first = server.takeRequest()
         assertEquals("PATCH /api/v1/ich HTTP/1.1", first.requestLine)
-        assertEquals("""{"pushChat":false}""", first.body?.utf8())
-        assertEquals("""{"pushProgramme":true}""", server.takeRequest().body?.utf8())
+        assertEquals("""{"pushProgramme":false}""", first.body?.utf8())
+        assertEquals("""{"pushAnmeldungen":true}""", server.takeRequest().body?.utf8())
     }
 
     @Test
     fun switchesFailWithTheErrorOfTheServer() {
         server.enqueue(reply(403, """{"code":"KEINE_BERECHTIGUNG","message":"x"}"""))
-        val result = runBlocking { push.setSwitches(PushSwitchesRequest(chat = true)) }
+        val result = runBlocking { push.setSwitches(PushSwitchesRequest(programs = true)) }
         assertEquals(ApiError.FORBIDDEN, (result as ApiResult.Failure).error)
     }
 
     @Test
     fun theProfileCarriesTheSwitchesAndTheyAreOnByDefault() {
         val json = Json { ignoreUnknownKeys = true }
-        val off = json.decodeFromString<Profile>("""{"id":"u1","pushChat":false,"pushProgramme":true}""")
-        assertEquals(false, off.pushChat)
-        assertEquals(true, off.pushPrograms)
+        val off = json.decodeFromString<Profile>("""{"id":"u1","pushProgramme":false}""")
+        assertEquals(false, off.pushPrograms)
         val plain = json.decodeFromString<Profile>("""{"id":"u1"}""")
-        assertTrue(plain.pushChat && plain.pushPrograms)
+        assertTrue(plain.pushPrograms)
     }
 
     @Test
@@ -102,9 +101,8 @@ class PushApiTest {
     }
 
     @Test
-    fun aPushLeadsToChatOrProgram() {
+    fun aPushLeadsToAProgram() {
         val id = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
-        assertEquals(PushTarget.Chat(id), PushTarget.from("chat", id))
         assertEquals(PushTarget.Program(id), PushTarget.from("programm", id))
     }
 
@@ -112,8 +110,15 @@ class PushApiTest {
     fun anUnknownTypeOrAnIdThatIsNoIdLeadsNowhere() {
         assertNull(PushTarget.from("person", "7c9e6679-7425-40de-944b-e07fc1f90ae7"))
         assertNull(PushTarget.from(null, "7c9e6679-7425-40de-944b-e07fc1f90ae7"))
-        assertNull(PushTarget.from("chat", null))
-        assertNull(PushTarget.from("chat", "../../ich"))
+        assertNull(PushTarget.from("programm", null))
+        assertNull(PushTarget.from("programm", "../../ich"))
         assertNull(PushTarget.from("programm", "7c9e6679-7425-40de-944b-e07fc1f90ae7/teilnahmen"))
+    }
+
+    @Test
+    fun unknownChannelsFallBackToMessages() {
+        assertEquals(Notifications.PROGRAMS_CHANNEL, Notifications.channelOf("programme"))
+        assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf("chat"))
+        assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf(null))
     }
 }

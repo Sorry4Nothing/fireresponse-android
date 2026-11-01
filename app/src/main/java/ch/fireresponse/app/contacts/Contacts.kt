@@ -1,7 +1,6 @@
 package ch.fireresponse.app.contacts
 
-import ch.fireresponse.app.chat.Profile
-import ch.fireresponse.app.chat.displayName
+import ch.fireresponse.app.profile.displayName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,10 +24,6 @@ data class Contact(
 @Serializable
 data class ContactList(@SerialName("kontakte") val contacts: List<Contact>)
 
-/** Body von `PATCH /api/v1/ich` für die eigene Nummer; leerer Text entfernt sie. */
-@Serializable
-data class PhoneRequest(@SerialName("telefon") val phone: String)
-
 /** Was die App zur Telefonnummer prüft. Die Grenzen sind die der API; der Server prüft trotzdem. */
 object PhoneRules {
     const val MIN_LENGTH = 6
@@ -43,10 +38,4 @@ object PhoneRules {
 
     /** `tel:`-Adresse nur mit Ziffern und einem führenden Plus: So wählt die Telefon-App ohne Sonderzeichen. */
     fun dialUri(number: String): String = "tel:" + number.filter { it.isDigit() || it == '+' }
-
-    /** Eine Nummer eintragen darf nur eine Stufenleitung. */
-    fun maySet(profile: Profile?): Boolean = profile != null && profile.roles.any { it.type == "stufenleitung" }
-
-    /** Der Bildschirm ist offen für eine Stufenleitung und für jede Person, die noch eine Nummer hinterlegt hat (Entfernen). */
-    fun mayEdit(profile: Profile?): Boolean = maySet(profile) || !profile?.phone.isNullOrBlank()
 }

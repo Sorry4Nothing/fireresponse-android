@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.failureForm
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,15 +16,13 @@ import kotlinx.coroutines.launch
 /** Die Push-Schalter der Person und das Hinterlegen des Tokens dieses Geräts. */
 class PushViewModel(private val api: PushApi, profile: Profile) : ViewModel() {
     /** `registrations` ist `null` bei Personen ohne Stufenrolle: Sie haben den Schalter nicht. */
-    data class Switches(val chat: Boolean, val programs: Boolean, val registrations: Boolean? = null)
+    data class Switches(val programs: Boolean, val registrations: Boolean? = null)
 
-    private val _switches = MutableStateFlow(Switches(profile.pushChat, profile.pushPrograms, profile.pushRegistrations))
+    private val _switches = MutableStateFlow(Switches(profile.pushPrograms, profile.pushRegistrations))
     val switches: StateFlow<Switches> = _switches.asStateFlow()
 
     private val _form = MutableStateFlow(FormState())
     val form: StateFlow<FormState> = _form.asStateFlow()
-
-    fun setChat(on: Boolean) = save(PushSwitchesRequest(chat = on)) { it.copy(chat = on) }
 
     fun setPrograms(on: Boolean) = save(PushSwitchesRequest(programs = on)) { it.copy(programs = on) }
 

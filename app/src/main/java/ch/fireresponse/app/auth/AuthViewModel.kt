@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import ch.fireresponse.app.R
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.security.LockState

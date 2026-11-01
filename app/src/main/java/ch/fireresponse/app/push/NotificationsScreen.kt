@@ -49,7 +49,7 @@ import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
 
 /**
- * Welche Mitteilungen die Person bekommt: neue Chat-Nachrichten, Mitteilungen und Erinnerungen, und für Leitende die An- und
+ * Welche Mitteilungen die Person bekommt: Mitteilungen und Erinnerungen, und für Leitende die An- und
  * Abmeldungen für Programme. Die Schalter gelten beim
  * Server, nicht auf diesem Gerät; ob das Gerät der App Mitteilungen zeigen lässt, entscheidet das System, und der
  * Bildschirm sagt es, wenn es sie sperrt.
@@ -58,7 +58,6 @@ import ch.fireresponse.app.ui.theme.fire
 fun NotificationsScreen(
     switches: PushViewModel.Switches,
     form: FormState,
-    onChat: (Boolean) -> Unit,
     onPrograms: (Boolean) -> Unit,
     onRegistrations: (Boolean) -> Unit,
     onBack: () -> Unit,
@@ -88,11 +87,6 @@ fun NotificationsScreen(
                 )
             }
             SettingsCard {
-                SwitchRow(
-                    R.drawable.ic_chat, stringResource(R.string.notifications_chat), stringResource(R.string.notifications_chat_hint),
-                    switches.chat, enabled = !form.running, onChange = onChat,
-                )
-                SettingsDivider()
                 SwitchRow(
                     R.drawable.ic_calendar, stringResource(R.string.notifications_programs), stringResource(R.string.notifications_programs_hint),
                     switches.programs, enabled = !form.running, onChange = onPrograms,

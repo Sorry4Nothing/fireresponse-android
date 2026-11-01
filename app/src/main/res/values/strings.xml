@@ -13,66 +13,18 @@
     <string name="retry">Nochmals versuchen</string>
 
     <string name="tab_programs">Programme</string>
-    <string name="tab_chat">Chat</string>
 
-    <string name="chat_title">Chat</string>
-    <string name="chat_empty">Du bist in keinem Chat.</string>
-    <string name="chat_empty_text">Sobald du einem Chat zugeteilt bist, siehst du ihn hier.</string>
-    <string name="chat_open">Chat öffnen</string>
-    <string name="back_to_chat">Zurück zu Chat</string>
-    <string name="chat_section_groups">Gruppen</string>
-    <string name="chat_section_group_leaders">Mit der Stufenleitung</string>
-    <string name="avatar_group_leaders">SL</string>
-    <string name="state_chat_not_found_text">Diesen Chat gibt es nicht mehr.</string>
-    <string name="day_today">Heute</string>
-    <string name="day_yesterday">Gestern</string>
-    <string name="message_own_time">%1$s · Gesendet</string>
-    <string name="chat_group">Gruppenchat %1$s</string>
-    <string name="chat_direct">Einzelchat %1$s</string>
-    <string name="chat_age_group">Stufe %1$s</string>
-    <string name="messages_empty">Noch keine Nachrichten.</string>
     <string name="message_you">Du</string>
-    <string name="message_author_leader">%1$s · SL</string>
-    <string name="chat_preview_own">Du: %1$s</string>
-    <string name="chat_preview_other">%1$s: %2$s</string>
     <string name="child_status_yes">%1$s kommt</string>
     <string name="child_status_no">%1$s kommt nicht</string>
     <string name="child_status_open">Zusage für %1$s offen</string>
-    <string name="message_program">Programm: %1$s</string>
-    <string name="messages_older">Ältere Nachrichten laden</string>
-    <string name="message_input">Nachricht</string>
-    <string name="message_placeholder">Nachricht schreiben</string>
-    <string name="message_empty_hint">Schreib zuerst eine Nachricht</string>
-    <string name="message_send">Senden</string>
-    <string name="message_sending">Wird gesendet …</string>
     <string name="close">Schliessen</string>
     <string name="contact_title">Kontakt</string>
     <string name="contact_group_leaders">Stufenleitung</string>
     <string name="contact_call">Anrufen</string>
     <string name="contact_call_name">Anrufen, %1$s</string>
-    <string name="phone_button">Meine Telefonnummer</string>
-    <string name="phone_title">Meine Telefonnummer</string>
-    <string name="phone_notice">Die Nummer ist freiwillig. Eltern, die ein Kind in deiner Stufe haben, sehen sie und können dich anrufen. Andere sehen sie nicht.</string>
-    <string name="phone_no_role">Du bist keine Stufenleitung mehr. Du kannst die Nummer nur noch entfernen.</string>
-    <string name="phone_label">Telefonnummer</string>
-    <string name="phone_hint">Ziffern und + ( ) / . - sind erlaubt, 6 bis 30 Zeichen.</string>
-    <string name="phone_invalid">Die Nummer stimmt nicht. Schreib sie zum Beispiel so: +41 79 000 00 00</string>
-    <string name="phone_remove">Nummer entfernen</string>
-    <plurals name="unread_messages">
-        <item quantity="one">Eine ungelesene Nachricht</item>
-        <item quantity="other">%d ungelesene Nachrichten</item>
-    </plurals>
-    <plurals name="new_messages">
-        <item quantity="one">Eine neue Nachricht</item>
-        <item quantity="other">%d neue Nachrichten</item>
-    </plurals>
     <string name="refresh">Aktualisieren</string>
     <string name="cancel">Abbrechen</string>
-    <string name="chat_read_along">Deine Nachricht geht an die ganze Stufenleitung: %1$s</string>
-    <string name="direct_chat_start">Einzelchat mit der Stufenleitung %1$s starten</string>
-    <string name="actions_title">Nachricht von %1$s</string>
-    <string name="action_direct_chat">Einzelchat mit %1$s öffnen</string>
-    <string name="action_running">Wird ausgeführt …</string>
 
     <string name="programs_title">Programme</string>
     <string name="programs_loading">Programme werden geladen</string>
@@ -172,8 +124,6 @@
     <string name="welcome_programs_text">Alle Anlässe deiner Stufe auf einen Blick.</string>
     <string name="welcome_rsvp">Zusagen</string>
     <string name="welcome_rsvp_text">Mit einem Tipp Ja oder Nein sagen.</string>
-    <string name="welcome_chat">Chat</string>
-    <string name="welcome_chat_text">Nachrichten an die Stufenleitung und in der Gruppe.</string>
     <string name="welcome_privacy_read">Datenschutzerklärung lesen</string>
     <string name="welcome_privacy_check">Ich habe die Datenschutzerklärung zur Kenntnis genommen.</string>
     <string name="lock_title">Entsperren</string>
@@ -194,8 +144,6 @@
     <string name="profile_section_account">Konto</string>
     <string name="profile_notifications">Benachrichtigungen</string>
     <string name="notifications_title">Benachrichtigungen</string>
-    <string name="notifications_chat">Neue Nachrichten</string>
-    <string name="notifications_chat_hint">Wenn im Chat jemand schreibt</string>
     <string name="notifications_programs">Mitteilungen und Erinnerungen</string>
     <string name="notifications_programs_hint">Von der Leitung und zu offenen Zusagen</string>
     <string name="notifications_registrations">An- und Abmeldungen</string>
@@ -203,7 +151,6 @@
     <string name="notifications_device_off">Dein Gerät lässt dieser App keine Benachrichtigungen zeigen. Du bekommst keine, auch wenn die Schalter an sind.</string>
     <string name="notifications_open_settings">In den Einstellungen erlauben</string>
     <string name="notifications_privacy">Eine Benachrichtigung sagt nur, dass es etwas Neues gibt. Der Text einer Nachricht und Namen stehen nie darin.</string>
-    <string name="channel_chat">Chat</string>
     <string name="channel_programs">Programme</string>
     <string name="channel_messages">Mitteilungen</string>
     <string name="profile_privacy">Datenschutz</string>
@@ -219,8 +166,6 @@
     <string name="slow_hint">Das dauert länger als sonst. Bitte noch einen Moment warten.</string>
     <string name="error_too_many_wait">Zu viele Versuche. Bitte warte %1$s und versuche es dann nochmals.</string>
     <string name="error_program_started">Das Programm hat schon begonnen. Die Anmeldung lässt sich nicht mehr ändern.</string>
-    <string name="error_direct_chat_unavailable">Einen Einzelchat gibt es nur zwischen der Stufenleitung und den Eltern eines Kindes dieser Stufe.</string>
-    <string name="error_message_too_fast">Du hast in kurzer Zeit viele Nachrichten gesendet. Bitte warte einen Moment.</string>
     <plurals name="wait_seconds">
         <item quantity="one">%d Sekunde</item>
         <item quantity="other">%d Sekunden</item>

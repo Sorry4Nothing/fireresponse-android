@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ch.fireresponse.app.chat.initials
+import ch.fireresponse.app.profile.initials
 import ch.fireresponse.app.images.LocalProfileImages
 import ch.fireresponse.app.ui.theme.Pill
 

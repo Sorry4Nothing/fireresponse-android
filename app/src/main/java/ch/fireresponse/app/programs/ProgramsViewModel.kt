@@ -2,7 +2,7 @@ package ch.fireresponse.app.programs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.contacts.ContactList
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult

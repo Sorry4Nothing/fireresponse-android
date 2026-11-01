@@ -1,6 +1,6 @@
 package ch.fireresponse.app.programs
 
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

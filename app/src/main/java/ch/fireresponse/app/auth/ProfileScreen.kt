@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
-import ch.fireresponse.app.chat.Profile
+import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.push.SwitchRow
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.Header

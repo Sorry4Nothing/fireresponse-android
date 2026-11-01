@@ -1,10 +1,8 @@
 package ch.fireresponse.app.push
 
-/** Wohin ein Push führt: in einen Chat oder in ein Programm. */
+/** Wohin ein Push führt: in ein Programm. */
 sealed interface PushTarget {
     val id: String
-
-    data class Chat(override val id: String) : PushTarget
 
     data class Program(override val id: String) : PushTarget
 
@@ -18,7 +16,6 @@ sealed interface PushTarget {
         fun from(type: String?, id: String?): PushTarget? {
             if (id == null || !ID.matches(id)) return null
             return when (type) {
-                "chat" -> Chat(id)
                 "programm" -> Program(id)
                 else -> null
             }

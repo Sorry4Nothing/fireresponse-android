@@ -59,8 +59,8 @@ enum class ErrorPage {
             ApiError.FORBIDDEN -> NO_ACCESS
             ApiError.NOT_SIGNED_IN -> SESSION
             ApiError.APP_OUTDATED -> OUTDATED
-            ApiError.TOO_MANY_REQUESTS, ApiError.REGISTRATION_CLOSED, ApiError.PROGRAM_STARTED, ApiError.DIRECT_CHAT_UNAVAILABLE,
-            ApiError.MESSAGE_TOO_FAST, ApiError.UNKNOWN -> ERROR
+            ApiError.TOO_MANY_REQUESTS, ApiError.REGISTRATION_CLOSED, ApiError.PROGRAM_STARTED,
+            ApiError.UNKNOWN -> ERROR
         }
     }
 }
