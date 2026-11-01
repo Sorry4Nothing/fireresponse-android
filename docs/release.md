@@ -1,6 +1,6 @@
 # Release als APK über GitHub
 
-Solange die Play Console die Identität noch prüft (Epic #7), bekommt der Pilot die App als signierte APK über ein GitHub-Release. Dieser Weg ersetzt den Store nicht: `assetlinks.json`, AAB und Play-Upload bleiben bei #7.
+Solange die Play Console die Identität noch prüft (A6, #36), bekommt der Pilot die App als signierte APK über ein GitHub-Release. Dieser Weg ersetzt den Store nicht: `assetlinks.json`, AAB und Play-Upload bleiben bei #38 und #39.
 
 ## Voraussetzungen (nur lokal, nie im Repo)
 
@@ -37,7 +37,7 @@ Die Datei liegt unter `app/build/outputs/apk/release/app-release.apk`. Prüfen:
 
 ## Veröffentlichen
 
-1. PR `develop` nach `main`, den die Betreiberin merged. `main` verlangt den Check `build`.
+1. PR `develop` nach `main`, den die verantwortliche Person merged. `main` verlangt den Check `build`.
 2. Auf dem Stand von `main` die APK bauen (siehe oben), nicht auf einem lokalen Zwischenstand.
 3. Tag und Release in einem Schritt, als Vorabversion:
 
