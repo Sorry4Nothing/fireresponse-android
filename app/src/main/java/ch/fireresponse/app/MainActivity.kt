@@ -68,6 +68,7 @@ import ch.fireresponse.app.auth.AuthState
 import ch.fireresponse.app.auth.AuthViewModel
 import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.LoginScreen
+import ch.fireresponse.app.auth.NoSquadScreen
 import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.ProfileScreen
 import ch.fireresponse.app.auth.StartScreen
@@ -212,6 +213,8 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 )
                 is AuthState.Welcome -> WelcomeScreen(
                     name = current.profile.name,
+                    squads = current.profile.squads.map { it.name },
+                    participants = current.profile.participants.map { it.firstName },
                     passwordSaved = passwordSaved,
                     form = form,
                     onReadPrivacy = openPrivacy,
@@ -220,7 +223,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                     lockEnabled = lockEnabled,
                     onLockChange = onLockChange,
                 )
-                is AuthState.SignedIn -> CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
+                is AuthState.SignedIn -> if (current.profile.hasNoSquad) NoSquadScreen(onBackToLogin = auth::signOut) else CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
                     // Die Bilder der Sitzung liegen im Speicher der Sitzung und verschwinden mit ihr.
                     val images = viewModel { ProfileImages(ProfileImageApi(client)) }
                     val squadLogos by viewModel { SquadLogos(AppointmentsApi(client)) }.paths.collectAsState()

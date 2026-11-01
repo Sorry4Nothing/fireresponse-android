@@ -38,6 +38,9 @@ data class Profile(
     /** Spitzname; `null` oder leer ohne Angabe. */
     val ceviName: String? = null,
 ) {
+    /** Das Konto gehört zu keiner Einheit: ohne Rolle, ohne Einheit und ohne Teilnehmende. Die Leitung muss es zuordnen. */
+    val hasNoSquad get() = squads.isEmpty() && roles.isEmpty() && participants.isEmpty()
+
     fun isCommander(squadId: String) = roles.any { it.type == "stufenleitung" && it.squadId == squadId }
 }
 

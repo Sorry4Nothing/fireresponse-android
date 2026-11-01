@@ -48,6 +48,9 @@
     <string name="state_404_text">Diese Übung gibt es nicht mehr. Vielleicht wurde sie verschoben oder abgesagt.</string>
     <string name="state_access_title">Kein Zugriff</string>
     <string name="state_access_text">Diese Seite ist nur für die Leitung. Wenn du denkst, das ist ein Fehler, frag deine Leitung.</string>
+    <string name="state_no_squad_title">Keine Einheit</string>
+    <string name="state_no_squad_text">Dein Konto gehört noch zu keiner Einheit. Die Leitung erledigt das.</string>
+    <string name="state_no_squad_action">Zurück zum Login</string>
     <string name="state_session_title">Bitte melde dich neu an</string>
     <string name="state_session_text">Du warst länger nicht aktiv. Zu deiner Sicherheit haben wir dich abgemeldet.</string>
     <string name="appointment_open">Übung öffnen</string>
@@ -89,7 +92,11 @@
     <string name="assignment_needs_squad">Ohne Einheit geht nur «Intern».</string>
 
     <!-- Anmeldung, Passwort, Willkommen, Profil -->
-    <string name="department">FireResponse</string>
+    <string name="department">Jugend- und Kinderfeuerwehr</string>
+    <string name="canton">Kanton Zürich</string>
+    <string name="rank_badge">Rangabzeichen</string>
+    <string name="rank_one_star">ein Stern</string>
+    <string name="rank_two_stars">zwei Sterne</string>
     <string name="start_loading">Wird geladen …</string>
     <string name="login_title">Schön, bist du da.</string>
     <string name="login_username">Benutzername</string>
@@ -109,6 +116,8 @@
     <string name="password_current">Bisheriges Passwort</string>
     <string name="password_new">Neues Passwort</string>
     <string name="password_rule_length">Mindestens 12 Zeichen</string>
+    <string name="password_repeat">Passwort wiederholen</string>
+    <string name="password_rule_match">Stimmt überein</string>
     <string name="password_rule_different">Anders als das bisherige</string>
     <string name="password_rule_met">erfüllt</string>
     <string name="password_rule_open">noch nicht erfüllt</string>
@@ -126,7 +135,9 @@
     <string name="welcome_rsvp">Zusagen</string>
     <string name="welcome_rsvp_text">Mit einem Tipp Ja oder Nein sagen.</string>
     <string name="welcome_privacy_read">Datenschutzerklärung lesen</string>
-    <string name="welcome_privacy_check">Ich habe die Datenschutzerklärung zur Kenntnis genommen.</string>
+    <string name="welcome_privacy_check">Ich habe die Datenschutzerklärung gelesen und bin einverstanden.</string>
+    <string name="welcome_privacy_hint">Bitte bestätige zuerst den Datenschutz.</string>
+    <string name="welcome_participants">Deine Teilnehmenden</string>
     <string name="lock_title">Entsperren</string>
     <string name="lock_text">Entsperre die App mit Fingerabdruck oder Gesicht.</string>
     <string name="lock_unlock">Entsperren</string>
@@ -137,7 +148,7 @@
     <string name="lock_enable_title">Entsperren einrichten</string>
     <string name="lock_cancel">Abbrechen</string>
     <string name="lock_switch">Mit Fingerabdruck oder Gesicht entsperren</string>
-    <string name="welcome_start">Los geht\'s</string>
+    <string name="welcome_start">Los geht’s</string>
     <string name="tab_profile">Profil</string>
     <string name="profile_title">Profil</string>
     <string name="profile_nickname">Spitzname: %1$s</string>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rangabzeichen mit 1 Sternen: Platzhalter nach dem Entwurf, nie umfärben; das Original der Jugendfeuerwehr als Vektor ersetzt es. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="34dp"
+    android:viewportWidth="100"
+    android:viewportHeight="130">
+    <path android:fillColor="#0A1230" android:pathData="M0,0 H100 V130 H0 Z" />
+    <path android:fillColor="#E8B22E" android:pathData="M14,16 H86 V22 H14 Z" />
+    <group android:translateX="50" android:translateY="62" android:scaleX="0.5" android:scaleY="0.5" android:pivotX="50" android:pivotY="65">
+        <path android:fillColor="#1F58C7" android:pathData="M0,-40 L-50,-28 L-50,30 C-50,60 -28,80 0,90 Z" />
+        <path android:fillColor="#A9CCF5" android:pathData="M0,-40 L50,-28 L50,30 C50,60 28,80 0,90 Z" />
+    </group>
+    <group android:translateX="50" android:translateY="108"><path android:fillColor="#E8B22E" android:pathData="M0,-9 L2.6,-2.8 L9.3,-2.8 L3.9,1.2 L5.8,7.6 L0,3.8 L-5.8,7.6 L-3.9,1.2 L-9.3,-2.8 L-2.6,-2.8 Z" /></group>
+</vector>

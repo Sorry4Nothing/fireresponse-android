@@ -63,6 +63,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import ch.fireresponse.app.R
+import ch.fireresponse.app.ui.Avatar
+import ch.fireresponse.app.ui.CantonFooter
+import ch.fireresponse.app.ui.Crest
 import ch.fireresponse.app.ui.Header
 import ch.fireresponse.app.ui.HeaderButton
 import ch.fireresponse.app.ui.LabeledTextField
@@ -70,6 +73,7 @@ import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.PrimaryButton
 import ch.fireresponse.app.ui.SlowHint
+import ch.fireresponse.app.ui.StatePage
 import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.push.SwitchRow
@@ -141,10 +145,11 @@ private fun LogoPage(
     }
 }
 
-/** Zeile über dem Titel: Name der Abteilung in Akzentfarbe. */
+/** Zeile über dem Titel in Akzentfarbe, auf Start, Login und Sperre mit dem Wappen darüber; auf Willkommen steht der Name der Einheit. */
 @Composable
-private fun DepartmentEyebrow() {
-    Text(stringResource(R.string.department).uppercase(), style = Eyebrow, color = MaterialTheme.fire.accent)
+private fun DepartmentEyebrow(text: String = stringResource(R.string.department), crest: Boolean = true) {
+    if (crest) Crest(Modifier.padding(bottom = Spacing.s2))
+    Text(text.uppercase(), style = Eyebrow, color = MaterialTheme.fire.accent)
 }
 
 /** Startbildschirm, solange die App den Server fragt, ob eine Sitzung besteht. */
@@ -238,6 +243,7 @@ fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                CantonFooter(Modifier.align(Alignment.CenterHorizontally))
             }
         },
     )
@@ -291,9 +297,10 @@ fun PasswordScreen(
     var new by remember { mutableStateOf("") }
     var currentVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
+    var repeat by remember { mutableStateOf("") }
     val askCurrent = !(first && startPasswordKnown)
     val bisher = if (askCurrent) current else null
-    val ready = PasswordRules.canSave(bisher, new)
+    val ready = PasswordRules.canSave(bisher, new) && PasswordRules.matches(new, repeat)
     val save = { if (ready && !form.running) onSave(bisher, new) }
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -334,13 +341,28 @@ fun PasswordScreen(
                     keyboardType = KeyboardType.Password,
                     masked = !newVisible,
                     autofill = ContentType.NewPassword,
-                    imeAction = ImeAction.Done,
-                    onImeAction = save,
+                    imeAction = ImeAction.Next,
                     enabled = !form.running,
                     trailing = { ShowPasswordSwitch(newVisible) { newVisible = it } },
                 )
-                PasswordRule(R.string.password_rule_length, PasswordRules.longEnough(new))
-                if (askCurrent) PasswordRule(R.string.password_rule_different, PasswordRules.different(current, new))
+                LabeledTextField(
+                    label = stringResource(R.string.password_repeat),
+                    value = repeat,
+                    onValueChange = { repeat = it },
+                    maxChars = PasswordRules.MAX_LENGTH,
+                    keyboardType = KeyboardType.Password,
+                    masked = !newVisible,
+                    autofill = ContentType.NewPassword,
+                    imeAction = ImeAction.Done,
+                    onImeAction = save,
+                    enabled = !form.running,
+                )
+                // Die Regeln sagen sich als Gruppe an, wenn sich eine ändert (Hinweis Polite), nie nur über die Farbe.
+                Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
+                    PasswordRule(R.string.password_rule_length, PasswordRules.longEnough(new))
+                    if (askCurrent) PasswordRule(R.string.password_rule_different, PasswordRules.different(current, new))
+                    PasswordRule(R.string.password_rule_match, PasswordRules.matches(new, repeat))
+                }
                 FormStatus(form)
             }
         }
@@ -417,12 +439,17 @@ fun LockedScreen(form: FormState, onUnlock: () -> Unit, onUsePassword: () -> Uni
 }
 
 /**
- * Willkommen beim ersten Start: Die Person nimmt die Datenschutzerklärung zur Kenntnis (Kenntnisnahme, keine Einwilligung).
- * Der Text der Erklärung steht auf dem Backend und öffnet im Browser.
+ * Willkommen beim ersten Start: kurze Einführung, die Teilnehmenden des Kontos und die Einwilligung zum Datenschutz.
+ * Der Text der Erklärung steht auf dem Backend und öffnet im Browser. «Los geht’s» gilt erst mit gesetztem Haken: Sonst sagt ein
+ * Hinweis, warum, und der Fokus springt auf die Checkbox.
  */
 @Composable
 fun WelcomeScreen(
     name: String,
+    /** Namen der Einheiten des Kontos, wie der Server sie liefert; stehen als Überzeile. */
+    squads: List<String>,
+    /** Vornamen der Teilnehmenden des Kontos. Das Rangabzeichen kommt dazu, sobald die API es liefert. */
+    participants: List<String>,
     passwordSaved: Boolean,
     form: FormState,
     onReadPrivacy: () -> Unit,
@@ -433,7 +460,8 @@ fun WelcomeScreen(
     onLockChange: (Boolean) -> Unit = {},
 ) {
     var acknowledged by rememberSaveable { mutableStateOf(false) }
-    val ready = acknowledged
+    var showHint by rememberSaveable { mutableStateOf(false) }
+    val checkboxFocus = remember { FocusRequester() }
     LogoPage(
         top = {
             if (passwordSaved) {
@@ -449,7 +477,7 @@ fun WelcomeScreen(
                     Text(stringResource(R.string.password_saved), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.fire.onSuccessContainer)
                 }
             }
-            DepartmentEyebrow()
+            DepartmentEyebrow(text = squads.filter { it.isNotBlank() }.joinToString(", ").ifEmpty { stringResource(R.string.department) }, crest = false)
             val focus = remember { FocusRequester() }
             LaunchedEffect(Unit) { focus.requestFocus() }
             Text(
@@ -457,6 +485,34 @@ fun WelcomeScreen(
                 style = MaterialTheme.typography.displayMedium,
                 modifier = Modifier.focusRequester(focus).focusTarget().semantics { heading() },
             )
+            if (participants.isNotEmpty()) {
+                Column(
+                    Modifier
+                        .padding(top = Spacing.s3)
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                        .padding(Spacing.s4),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+                ) {
+                    Text(
+                        stringResource(R.string.welcome_participants),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    participants.forEach { firstName ->
+                        Row(
+                            Modifier.semantics(mergeDescendants = true) {},
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Avatar(firstName, size = 32.dp)
+                            Text(firstName, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
             Column(Modifier.padding(top = Spacing.s3), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 WelcomePoint(R.drawable.ic_calendar, R.string.welcome_appointments, R.string.welcome_appointments_text)
                 WelcomePoint(R.drawable.ic_check, R.string.welcome_rsvp, R.string.welcome_rsvp_text)
@@ -470,13 +526,18 @@ fun WelcomeScreen(
                         lockEnabled, enabled = !form.running, onChange = onLockChange,
                     )
                 }
-                TextActionButton(stringResource(R.string.welcome_privacy_read), onReadPrivacy)
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = Sizes.touchTarget)
+                        .focusRequester(checkboxFocus)
                         .focusRing(MaterialTheme.shapes.small)
-                        .toggleable(value = acknowledged, enabled = !form.running, role = Role.Checkbox, onValueChange = { acknowledged = it })
+                        .toggleable(
+                            value = acknowledged,
+                            enabled = !form.running,
+                            role = Role.Checkbox,
+                            onValueChange = { acknowledged = it; if (it) showHint = false },
+                        )
                         .padding(horizontal = Spacing.s2),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -492,11 +553,18 @@ fun WelcomeScreen(
                     }
                     Text(stringResource(R.string.welcome_privacy_check), style = MaterialTheme.typography.bodyMedium)
                 }
+                TextActionButton(stringResource(R.string.welcome_privacy_read), onReadPrivacy)
+                if (showHint) {
+                    NoticeBanner(NoticeKind.WARNING, stringResource(R.string.welcome_privacy_hint), Modifier.semantics { liveRegion = LiveRegionMode.Assertive })
+                }
                 FormStatus(form)
                 PrimaryButton(
-                    stringResource(R.string.welcome_start), onClick = onAccept, modifier = Modifier.fillMaxWidth(), enabled = ready,
+                    stringResource(R.string.welcome_start),
+                    onClick = { if (acknowledged) onAccept() else { showHint = true; checkboxFocus.requestFocus() } },
+                    modifier = Modifier.fillMaxWidth(),
                     loading = form.running,
                 )
+                CantonFooter(Modifier.align(Alignment.CenterHorizontally).padding(top = Spacing.s2))
             }
         },
     )
@@ -526,4 +594,14 @@ internal fun formErrorText(form: FormState): String? {
     val time = waitTime(seconds)
     val words = pluralStringResource(if (time.minutes) R.plurals.wait_minutes else R.plurals.wait_seconds, time.amount, time.amount)
     return stringResource(error, words)
+}
+
+/** Das Konto gehört noch zu keiner Einheit: Die Leitung erledigt das. Einzige Aktion ist der Weg zurück zum Login. */
+@Composable
+fun NoSquadScreen(onBackToLogin: () -> Unit) {
+    Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+        StatePage(R.drawable.ic_unlinked, stringResource(R.string.state_no_squad_title), stringResource(R.string.state_no_squad_text)) {
+            PrimaryButton(stringResource(R.string.state_no_squad_action), onBackToLogin)
+        }
+    }
 }

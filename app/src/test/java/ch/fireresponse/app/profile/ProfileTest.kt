@@ -13,6 +13,13 @@ class ProfileTest {
     }
 
     @Test
+    fun anAccountWithoutRolesSquadsOrParticipantsHasNoSquad() {
+        assertEquals(true, Profile("u").hasNoSquad)
+        assertEquals(false, Profile("u", roles = listOf(ProfileRole("s1", "leitung"))).hasNoSquad)
+        assertEquals(false, Profile("u", participants = listOf(ProfileParticipant("k", "s1", "Lena"))).hasNoSquad)
+    }
+
+    @Test
     fun displayNamePrefersANonBlankNickname() {
         assertEquals("Fuchs", displayName("Anna Muster", "Fuchs"))
         assertEquals("Anna Muster", displayName("Anna Muster", null))

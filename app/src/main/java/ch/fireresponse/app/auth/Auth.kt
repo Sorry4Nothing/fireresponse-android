@@ -32,6 +32,9 @@ object PasswordRules {
 
     fun different(current: String, new: String) = current.isNotEmpty() && new != current
 
+    /** Beide Felder sind gleich und nicht leer: «Stimmt überein». */
+    fun matches(new: String, repeat: String) = new.isNotEmpty() && new == repeat
+
     fun valid(current: String, new: String) = longEnough(new) && different(current, new)
 
     /** `current` ist `null`, wenn die App das Startpasswort vom Login kennt: Dann prüft der Server, ob es sich unterscheidet. */

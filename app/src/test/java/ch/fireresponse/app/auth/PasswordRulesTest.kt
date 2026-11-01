@@ -39,6 +39,13 @@ class PasswordRulesTest {
     }
 
     @Test
+    fun repeatMustMatchAndNotBeEmpty() {
+        assertTrue(PasswordRules.matches("abcdefghijkl", "abcdefghijkl"))
+        assertFalse(PasswordRules.matches("abcdefghijkl", "abcdefghijkm"))
+        assertFalse(PasswordRules.matches("", ""))
+    }
+
+    @Test
     fun firstNameIsTheFirstWord() {
         assertEquals("Marion", firstName("Marion Keller"))
         assertEquals("Marion", firstName("  Marion  "))
