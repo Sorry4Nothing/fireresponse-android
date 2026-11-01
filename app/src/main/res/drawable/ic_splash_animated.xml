@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Das Logo baut sich Band für Band auf (Splash ab Android 12). Zusammen unter einer Sekunde, so lang erlaubt es das System. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_splash_logo">
+    <target android:name="path_top" android:animation="@animator/splash_fade_top" />
+    <target android:name="path_mid" android:animation="@animator/splash_fade_mid" />
+    <target android:name="path_low" android:animation="@animator/splash_fade_low" />
+    <target android:name="path_tip" android:animation="@animator/splash_fade_tip" />
+</animated-vector>

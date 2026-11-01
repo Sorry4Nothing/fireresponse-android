@@ -1,0 +1,11 @@
+<resources>
+    <!-- Hintergrund wie das Compose-Theme, damit beim Start nichts aufblitzt. -->
+    <style name="Theme.CeviOS" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <!-- Nur für den Start: Die Activity schaltet in onCreate auf Theme.CeviOS um. -->
+    <style name="Theme.CeviOS.Starting" parent="Theme.CeviOS">
+        <item name="android:windowBackground">@drawable/splash_window</item>
+    </style>
+</resources>
