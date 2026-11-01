@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -141,6 +143,15 @@ internal fun SwitchRow(
             checked = checked,
             onCheckedChange = null,
             enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = MaterialTheme.fire.switchOn,
+                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                checkedIconColor = MaterialTheme.fire.switchOn,
+                checkedBorderColor = MaterialTheme.fire.switchOn,
+                uncheckedTrackColor = Color.Transparent,
+                uncheckedBorderColor = MaterialTheme.colorScheme.outline,
+                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+            ),
             thumbContent = if (checked) {
                 { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(16.dp)) }
             } else {

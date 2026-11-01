@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -50,6 +55,10 @@ import ch.fireresponse.app.R
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.push.SwitchRow
 import ch.fireresponse.app.ui.Avatar
+import ch.fireresponse.app.ui.DangerButton
+import ch.fireresponse.app.ui.DialogText
+import ch.fireresponse.app.ui.FireResponseDialog
+import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.Header
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
@@ -74,11 +83,8 @@ fun ProfileScreen(
     imageForm: FormState,
     onPickImage: (Uri) -> Unit,
     onRemoveImage: () -> Unit,
-    onChangePassword: () -> Unit,
     onOpenNotifications: () -> Unit,
     onOpenPrivacy: () -> Unit,
-    onOpenSupport: () -> Unit,
-    onOpenDeleteAccount: () -> Unit,
     onSignOut: () -> Unit,
     onLeave: () -> Unit,
     lockAvailable: Boolean = false,
@@ -89,6 +95,18 @@ fun ProfileScreen(
     // Die Systemauswahl braucht keine Berechtigung: Die Person wählt, die App bekommt nur dieses eine Bild.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(onPickImage) }
     var removing by remember { mutableStateOf(false) }
+    var confirmingSignOut by remember { mutableStateOf(false) }
+    if (confirmingSignOut) {
+        val cancel = remember { FocusRequester() }
+        // Der Fokus startet auf «Abbrechen»: Wer den Dialog nur überfliegt, meldet sich nicht aus Versehen ab.
+        LaunchedEffect(Unit) { cancel.requestFocus() }
+        FireResponseDialog(
+            title = stringResource(R.string.sign_out_title),
+            onDismiss = { confirmingSignOut = false },
+            dismissButton = { TextActionButton(stringResource(R.string.cancel), { confirmingSignOut = false }, Modifier.focusRequester(cancel)) },
+            confirmButton = { DangerButton(stringResource(R.string.profile_sign_out), { confirmingSignOut = false; onSignOut() }) },
+        ) { DialogText(stringResource(R.string.sign_out_text)) }
+    }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Header(title = stringResource(R.string.profile_title), focusOnTitle = true)
         Column(Modifier.padding(horizontal = Spacing.s4), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
@@ -110,23 +128,33 @@ fun ProfileScreen(
                     R.drawable.ic_shield, stringResource(R.string.profile_privacy),
                     onClick = onOpenPrivacy, clickLabel = stringResource(R.string.profile_privacy_open), chevron = true,
                 )
-                SettingsDivider()
-                SettingsRow(
-                    R.drawable.ic_question, stringResource(R.string.profile_support),
-                    onClick = onOpenSupport, clickLabel = stringResource(R.string.profile_privacy_open), chevron = true,
-                )
-            }
-            SectionTitle(R.string.profile_section_account)
-            SettingsCard {
                 if (lockAvailable) {
+                    SettingsDivider()
                     SwitchRow(
                         R.drawable.ic_lock, stringResource(R.string.lock_switch), null,
                         lockEnabled, enabled = !form.running, onChange = onLockChange,
                     )
+                }
+            }
+            if (profile.participants.isNotEmpty()) {
+                SectionTitle(R.string.profile_section_participants)
+                SettingsCard {
+                    profile.participants.forEachIndexed { index, participant ->
+                        if (index > 0) SettingsDivider()
+                        ParticipantRow(participant.firstName)
+                    }
+                }
+            }
+            SectionTitle(R.string.profile_section_account)
+            SettingsCard {
+                if (profile.squads.isNotEmpty()) {
+                    SettingsRow(
+                        R.drawable.ic_group,
+                        pluralStringResource(R.plurals.profile_squad, profile.squads.size),
+                        value = profile.squads.joinToString(", ") { it.name },
+                    )
                     SettingsDivider()
                 }
-                SettingsRow(R.drawable.ic_lock, stringResource(R.string.profile_change_password), onClick = onChangePassword, chevron = true)
-                SettingsDivider()
                 if (profile.imageUrl != null) {
                     SettingsRow(
                         R.drawable.ic_cross, stringResource(R.string.profile_image_remove),
@@ -135,11 +163,9 @@ fun ProfileScreen(
                     SettingsDivider()
                 }
                 SettingsRow(
-                    R.drawable.ic_info, stringResource(R.string.profile_delete_account),
-                    onClick = onOpenDeleteAccount, clickLabel = stringResource(R.string.profile_privacy_open), chevron = true,
+                    R.drawable.ic_logout, stringResource(R.string.profile_sign_out),
+                    onClick = { confirmingSignOut = true }, loading = form.running, red = true,
                 )
-                SettingsDivider()
-                SettingsRow(R.drawable.ic_logout, stringResource(R.string.profile_sign_out), onClick = onSignOut, loading = form.running)
             }
             SlowHint(form.running)
             formErrorText(form)?.let { NoticeBanner(NoticeKind.ERROR, it) }
@@ -247,6 +273,7 @@ private fun SettingsRow(
     clickLabel: String? = null,
     chevron: Boolean = false,
     loading: Boolean = false,
+    red: Boolean = false,
 ) {
     val working = stringResource(R.string.working)
     Row(
@@ -263,9 +290,27 @@ private fun SettingsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (loading) Spinner(size = 24.dp, color = MaterialTheme.fire.accent)
-        else Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.fire.accent)
-        Text(title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+        else Icon(painterResource(icon), contentDescription = null, tint = if (red) MaterialTheme.fire.primaryText else MaterialTheme.fire.accent)
+        Text(
+            title,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            color = if (red) MaterialTheme.fire.primaryText else Color.Unspecified,
+            modifier = Modifier.weight(1f),
+        )
         value?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (chevron) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Eine Person aus den Teilnehmenden des Kontos: Initialen und Vorname. Nur zum Lesen. */
+@Composable
+private fun ParticipantRow(firstName: String) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = Sizes.touchTarget).padding(horizontal = 14.dp, vertical = Spacing.s2).semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Avatar(firstName, size = 32.dp)
+        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium))
     }
 }

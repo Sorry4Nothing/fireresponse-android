@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.WideBreakpoint
+import ch.fireresponse.app.ui.theme.fire
 import ch.fireresponse.app.ui.theme.Sizes
 
 /** Die Hauptziele des Docks. */
@@ -95,15 +96,15 @@ private fun Dock(active: Destination, onDestination: (Destination) -> Unit, vert
     }
 }
 
-/** Ein Ziel über die ganze Fläche (mindestens 48 dp): aktiv Blau mit weissem Wort, inaktiv ruhig. Das Wort steht immer da. */
+/** Ein Ziel über die ganze Fläche (mindestens 48 dp): aktiv mit Fläche `tab-selected` und `accent` für Icon und Wort, inaktiv ruhig. Das Wort steht immer da. */
 @Composable
 private fun DockDestination(destination: Destination, active: Boolean, onDestination: (Destination) -> Unit, modifier: Modifier) {
-    val color = if (active) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (active) MaterialTheme.fire.accent else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         modifier
             .focusRing(DestinationShape)
             .clip(DestinationShape)
-            .then(if (active) Modifier.background(MaterialTheme.colorScheme.secondary) else Modifier)
+            .then(if (active) Modifier.background(MaterialTheme.fire.tabSelected) else Modifier)
             .selectable(selected = active, role = Role.Tab, onClick = { onDestination(destination) }),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),

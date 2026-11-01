@@ -162,12 +162,6 @@ class AuthApiTest {
     }
 
     @Test
-    fun supportAndDeleteAccountPagesLiveOnTheBackend() {
-        assertEquals(server.url("/support").toString(), auth.supportUrl())
-        assertEquals(server.url("/konto-loeschen").toString(), auth.deleteAccountUrl())
-    }
-
-    @Test
     fun tooManySignInsCarryTheWaitTime() {
         server.enqueue(MockResponse.Builder().code(429).addHeader("X-Retry-After", "60").body("{}").build())
         val failure = runBlocking { auth.signIn("m.keller", "x") } as ApiResult.Failure

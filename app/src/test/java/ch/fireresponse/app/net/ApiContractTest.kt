@@ -62,7 +62,7 @@ class ApiContractTest {
     fun theTestFindsWhatItChecks() {
         // Ein Test, der nichts findet, besteht immer: Darum wird zuerst geprüft, dass er etwas findet.
         assertTrue("Vertrag nicht gelesen", contract().size > 40)
-        assertTrue("Keine Aufrufe der App gefunden", calls().size > 20)
+        assertTrue("Keine Aufrufe der App gefunden", calls().size > 10)
     }
 
     @Test

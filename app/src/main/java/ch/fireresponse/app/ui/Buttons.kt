@@ -146,3 +146,17 @@ private fun RowScope.ButtonContent(text: String, @DrawableRes icon: Int?, loadin
     }
     Text(text, style = MaterialTheme.typography.labelLarge)
 }
+
+/** Nur als Aktion in einem Bestätigungsdialog, z. B. «Abmelden»: `error-container` mit Rand, mindestens 48 dp hoch. */
+@Composable
+fun DangerButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Button(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = Sizes.touchTarget).focusRing(Pill),
+        shape = Pill,
+        border = BorderStroke(1.dp, scheme.onErrorContainer),
+        colors = ButtonDefaults.buttonColors(containerColor = scheme.errorContainer, contentColor = scheme.onErrorContainer),
+        contentPadding = PaddingValues(horizontal = 20.dp),
+    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+}

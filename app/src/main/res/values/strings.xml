@@ -142,6 +142,13 @@
     <string name="profile_nickname">Spitzname: %1$s</string>
     <string name="profile_section_app">App</string>
     <string name="profile_section_account">Konto</string>
+    <string name="profile_section_participants">Teilnehmende</string>
+    <string name="sign_out_title">Abmelden?</string>
+    <string name="sign_out_text">Du musst dich danach neu anmelden.</string>
+    <plurals name="profile_squad">
+        <item quantity="one">Einheit</item>
+        <item quantity="other">Einheiten</item>
+    </plurals>
     <string name="profile_notifications">Benachrichtigungen</string>
     <string name="notifications_title">Benachrichtigungen</string>
     <string name="notifications_appointments">Mitteilungen und Erinnerungen</string>
@@ -155,9 +162,6 @@
     <string name="channel_messages">Mitteilungen</string>
     <string name="profile_privacy">Datenschutz</string>
     <string name="profile_privacy_open">Im Browser öffnen</string>
-    <string name="profile_support">Support</string>
-    <string name="profile_delete_account">Konto löschen lassen</string>
-    <string name="profile_change_password">Passwort ändern</string>
     <string name="profile_sign_out">Abmelden</string>
     <string name="role_commander">Kommando</string>
     <string name="role_leader">Leitung</string>

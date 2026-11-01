@@ -219,8 +219,6 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                             passwordSaved, form, imageForm, auth,
                             pushTarget, onPushTargetHandled,
                             onOpenPrivacy = openPrivacy,
-                            onOpenSupport = { openInBrowser(context, authApi.supportUrl()) },
-                            onOpenDeleteAccount = { openInBrowser(context, authApi.deleteAccountUrl()) },
                             lockAvailable = lockAvailable,
                             lockEnabled = lockEnabled,
                             onLockChange = onLockChange,
@@ -248,7 +246,6 @@ private sealed interface Screen {
 
     data object Home : Screen { override val depth = 0 }
     data object Notifications : Screen { override val depth = 1 }
-    data object Password : Screen { override val depth = 1 }
     data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
     data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
     data class Assign(val appointmentId: String) : Screen { override val depth = 2 }
@@ -266,8 +263,6 @@ private fun MainContent(
     pushTarget: PushTarget?,
     onPushTargetHandled: () -> Unit,
     onOpenPrivacy: () -> Unit,
-    onOpenSupport: () -> Unit,
-    onOpenDeleteAccount: () -> Unit,
     lockAvailable: Boolean,
     lockEnabled: Boolean,
     onLockChange: (Boolean) -> Unit,
@@ -277,14 +272,11 @@ private fun MainContent(
     val appointments = viewModel { AppointmentsViewModel(appointmentsApi) }
     val push = viewModel { PushViewModel(pushApi, account) }
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
-    var changingPassword by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
     var assigning by rememberSaveable { mutableStateOf(false) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
 
-    // Ein gespeichertes Passwort schliesst den Wechsel; der Hinweis erscheint im Profil.
-    LaunchedEffect(passwordSaved) { if (passwordSaved) changingPassword = false }
     // Pushes brauchen das Token dieses Geräts beim Server und, ab Android 13, die Erlaubnis (einmal fragen, danach im Profil).
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(account.id) {
@@ -320,7 +312,6 @@ private fun MainContent(
             appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
             appointmentId != null -> Screen.Appointment(appointmentId)
             notificationsOpen -> Screen.Notifications
-            changingPassword -> Screen.Password
             else -> Screen.Home
         }
         val motion = rememberMotionEnabled()
@@ -394,11 +385,6 @@ private fun MainContent(
                         onBack = leave,
                     )
                 }
-                Screen.Password -> {
-                    val leave = { changingPassword = false; auth.clearError() }
-                    BackHandler(onBack = leave)
-                    PasswordScreen(first = false, form, onSave = auth::changePassword, onBack = leave)
-                }
                 Screen.Home -> MainScaffold(destination, onDestination = { destination = it }) {
                     AnimatedContent(
                         destination,
@@ -417,11 +403,8 @@ private fun MainContent(
                                 account, passwordSaved, form, imageForm,
                                 onPickImage = { uri -> auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, uri) } } },
                                 onRemoveImage = auth::removeImage,
-                                onChangePassword = { changingPassword = true },
                                 onOpenNotifications = { notificationsOpen = true },
                                 onOpenPrivacy = onOpenPrivacy,
-                                onOpenSupport = onOpenSupport,
-                                onOpenDeleteAccount = onOpenDeleteAccount,
                                 onSignOut = auth::signOut,
                                 onLeave = { auth.clearPasswordSaved(); auth.clearImageError() },
                                 lockAvailable = lockAvailable,
