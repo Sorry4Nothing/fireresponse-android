@@ -31,6 +31,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import ch.fireresponse.app.ui.theme.WideBreakpoint
+import ch.fireresponse.app.ui.theme.Spacing
+import ch.fireresponse.app.ui.ContentWidth
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Surface
@@ -307,10 +318,35 @@ private fun MainContent(
         val detail by appointments.detail.collectAsState()
         val appointmentProfile = (appointments.profile.collectAsState().value as? ApiResult.Ok)?.value
         val assignedAppointment = (detail as? ApiResult.Ok)?.value?.takeIf { it.id == appointmentId }
+        // Ab 600 dp stehen Liste und Detail nebeneinander auf dem Hauptbildschirm.
+        val wide = LocalConfiguration.current.screenWidthDp >= WideBreakpoint.value
+        val detailPane: @Composable (String) -> Unit = { id ->
+            LaunchedEffect(id) {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    while (true) {
+                        delay(DETAIL_POLL_INTERVAL_MS)
+                        appointments.refreshDetail()
+                    }
+                }
+            }
+            AppointmentDetailScreen(
+                detail,
+                appointments.rsvp.collectAsState().value,
+                canAssign = AssignmentRules.mayAssign(appointmentProfile),
+                canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
+                contacts = appointments.contacts.collectAsState().value,
+                onParticipant = { participantId, attending -> appointments.rsvpParticipant(id, participantId, attending) },
+                onLeader = { attending -> appointments.rsvpLeader(id, attending) },
+                onAssign = { assigning = true },
+                onRegistrations = { viewingRegistrations = true },
+                onBack = { openedAppointment = null },
+                onRetry = { appointments.loadDetail(id) },
+            )
+        }
         val target = when {
             appointmentId != null && assigning && assignedAppointment != null -> Screen.Assign(appointmentId)
             appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
-            appointmentId != null -> Screen.Appointment(appointmentId)
+            appointmentId != null && !wide -> Screen.Appointment(appointmentId)
             notificationsOpen -> Screen.Notifications
             else -> Screen.Home
         }
@@ -327,56 +363,41 @@ private fun MainContent(
                     val leave = { assigning = false; appointments.resetEdit() }
                     BackHandler(onBack = leave)
                     val edit = appointments.edit.collectAsState().value
+                    ContentWidth {
                     AssignmentScreen(
                         assigned, appointments.squads.collectAsState().value, appointmentProfile, edit,
                         onSave = { request -> appointments.saveAssignment(appointmentId, request, leave) },
                         onBack = leave,
                         onRetry = appointments::loadSquads,
                     )
+                    }
                 }
                 is Screen.Registrations -> {
                     val appointmentId = screen.appointmentId
                     BackHandler { viewingRegistrations = false }
                     val date = assignedAppointment?.startDay()?.let { "${weekdayShort(it)} ${it.dayOfMonth}.${it.monthValue}." }
                     MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null; viewingRegistrations = false }) {
+                        ContentWidth {
                         RegistrationsScreen(
                             eyebrow = listOfNotNull(assignedAppointment?.title, date).joinToString(" · ").ifBlank { null },
                             state = appointments.registrations.collectAsState().value,
                             onBack = { viewingRegistrations = false },
                             onRetry = { appointments.loadRegistrations(appointmentId) },
                         )
+                        }
                     }
                 }
                 is Screen.Appointment -> {
                     val appointmentId = screen.appointmentId
                     BackHandler { openedAppointment = null }
-                    LaunchedEffect(appointmentId) {
-                        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            while (true) {
-                                delay(DETAIL_POLL_INTERVAL_MS)
-                                appointments.refreshDetail()
-                            }
-                        }
-                    }
                     MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
-                        AppointmentDetailScreen(
-                            detail,
-                            appointments.rsvp.collectAsState().value,
-                            canAssign = AssignmentRules.mayAssign(appointmentProfile),
-                            canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
-                            contacts = appointments.contacts.collectAsState().value,
-                            onParticipant = { participantId, attending -> appointments.rsvpParticipant(appointmentId, participantId, attending) },
-                            onLeader = { attending -> appointments.rsvpLeader(appointmentId, attending) },
-                            onAssign = { assigning = true },
-                            onRegistrations = { viewingRegistrations = true },
-                            onBack = { openedAppointment = null },
-                            onRetry = { appointments.loadDetail(appointmentId) },
-                        )
+                        detailPane(appointmentId)
                     }
                 }
                 Screen.Notifications -> {
                     val leave = { notificationsOpen = false; push.clearError() }
                     BackHandler(onBack = leave)
+                    ContentWidth {
                     NotificationsScreen(
                         switches = push.switches.collectAsState().value,
                         form = push.form.collectAsState().value,
@@ -384,6 +405,7 @@ private fun MainContent(
                         onRegistrations = push::setRegistrations,
                         onBack = leave,
                     )
+                    }
                 }
                 Screen.Home -> MainScaffold(destination, onDestination = { destination = it }) {
                     AnimatedContent(
@@ -393,12 +415,26 @@ private fun MainContent(
                         label = "bereich",
                     ) { tab ->
                         if (tab == Destination.APPOINTMENTS) {
-                            AppointmentListScreen(
-                                appointments.list.collectAsState().value,
-                                onOpen = { openedAppointment = it },
-                                onRetry = appointments::loadList,
-                            )
-                        } else if (tab == Destination.PROFILE) {
+                            val list: @Composable () -> Unit = {
+                                AppointmentListScreen(
+                                    appointments.list.collectAsState().value,
+                                    onOpen = { openedAppointment = it },
+                                    onRetry = appointments::loadList,
+                                )
+                            }
+                            if (wide) {
+                                Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(Spacing.s4)) {
+                                    Box(Modifier.weight(0.4f)) { list() }
+                                    Box(Modifier.weight(0.6f)) {
+                                        ContentWidth {
+                                            if (appointmentId != null) detailPane(appointmentId) else DetailPlaceholder()
+                                        }
+                                    }
+                                }
+                            } else {
+                                list()
+                            }
+                        } else if (tab == Destination.PROFILE) ContentWidth {
                             ProfileScreen(
                                 account, passwordSaved, form, imageForm,
                                 onPickImage = { uri -> auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, uri) } } },
@@ -416,5 +452,13 @@ private fun MainContent(
                 }
             }
         }
+    }
+}
+
+/** Rechte Spalte im Querformat, solange keine Übung offen ist. */
+@Composable
+private fun DetailPlaceholder() {
+    Box(Modifier.fillMaxSize().padding(Spacing.s6), contentAlignment = Alignment.Center) {
+        Text(stringResource(R.string.detail_placeholder), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
