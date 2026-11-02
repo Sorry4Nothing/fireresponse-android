@@ -117,9 +117,10 @@ private fun Timeline(days: List<Day>, onOpen: (String) -> Unit) {
     }
 }
 
+// Das Datum steht im Satz der Karte (TalkBack); ein eigener Halt wäre doppelt.
 @Composable
 private fun DateColumn(day: Day, withLine: Boolean) {
-    Column(Modifier.width(52.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.width(52.dp).fillMaxHeight().clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
         val date = day.date
         if (date != null) {
             Text(weekdayShort(date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.fire.accent)
@@ -410,7 +411,8 @@ private fun Tile(label: String, time: String?, location: String?, modifier: Modi
         modifier
             .background(MaterialTheme.colorScheme.surfaceContainerLow, CARD)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CARD)
-            .padding(horizontal = 14.dp, vertical = Spacing.s3),
+            .padding(horizontal = 14.dp, vertical = Spacing.s3)
+            .semantics(mergeDescendants = true) {},
     ) {
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         time?.let { Text(it, style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontFeatureSettings = "tnum")) }
@@ -434,7 +436,7 @@ private fun Facts(appointment: Appointment) {
             .padding(horizontal = 14.dp, vertical = 4.dp),
     ) {
         rows.forEachIndexed { index, (icon, label, value) ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 10.dp).semantics(mergeDescendants = true) {}, horizontalArrangement = Arrangement.spacedBy(Spacing.s3)) {
                 Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.fire.accent, modifier = Modifier.size(24.dp))
                 Column {
                     Text(stringResource(label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
