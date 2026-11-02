@@ -7,6 +7,7 @@
     <string name="error_too_many_requests">Zu viele Anfragen. Bitte warte einen Moment und versuche es dann nochmals.</string>
     <string name="error_registration_closed">Die Anmeldung ist geschlossen. Die Übung ist abgesagt oder hat schon begonnen.</string>
     <string name="error_registration_not_open">Die Anmeldung ist noch nicht offen.</string>
+    <string name="error_no_registration">Für diese Übung gibt es keine Anmeldung.</string>
     <string name="error_network">Keine Verbindung. Prüfe dein Internet und versuche es nochmals.</string>
     <string name="error_unknown">Etwas ist schiefgelaufen. Bitte versuche es nochmals.</string>
 

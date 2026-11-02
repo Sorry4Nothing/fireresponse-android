@@ -59,7 +59,7 @@ fun registrationChip(status: String): ChipKind = when (status) {
 object RegistrationsRules {
     /** Kantonsadmin sowie Kommando und Leitende der Einheit des Termins. Eltern sehen nur ihre eigenen Personen im Detail. */
     fun maySee(appointment: Appointment, profile: Profile?): Boolean =
-        profile != null && (profile.admin || profile.squads.any { it.id == appointment.squad.id })
+        profile != null && appointment.registrable && (profile.admin || profile.squads.any { it.id == appointment.squad.id })
 
     /** Anteil eines Wertes am Ganzen für die Breite des Balkens; 0, wenn niemand zählt. */
     fun share(count: Int, total: Int): Float = if (total <= 0) 0f else count.toFloat() / total

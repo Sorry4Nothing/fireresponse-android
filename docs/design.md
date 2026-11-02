@@ -84,3 +84,4 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 - **Kein Logo je Einheit:** Die Vorlage kennt es nicht mehr. Die Einheit steht als Text; Logos, ihr Laden und der Fallback entfallen.
 - **Keine Einheit:** Ein Konto ohne Rolle, Einheit und Teilnehmende zeigt den Zustand «Keine Einheit» mit dem Weg zurück zum Login.
 - **Kein Ort, keine Zuordnung:** Der Vertrag kennt keinen Treffpunkt, keinen Schlussort und kein «Mitnehmen» mehr, dafür Thema, Info und Aufgebot (Text, wie der Server ihn liefert). Termine ordnet die App keiner Einheit zu: Das geschieht im Admin-Bereich, die Seite «Einheiten und Sichtbarkeit» entfällt.
+- **Termine ohne Anmeldung:** Gibt die Einheit die Art eines Termins (Sitzung, Übung …) nicht frei, ist `anmeldbar` falsch. Die App zeigt ihn dann nur mit Zeit und Titel: ohne Antworten, ohne «Anmeldung ab <Datum>» und ohne «Anmeldungen ansehen». Die Art selbst zeigt sie nicht.
