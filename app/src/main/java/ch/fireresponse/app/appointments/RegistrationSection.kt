@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import ch.fireresponse.app.ui.InitialsBadge
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.ChipKind
 import ch.fireresponse.app.ui.NoticeKind
@@ -62,7 +64,7 @@ fun RegistrationSection(
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
         Text(
             stringResource(if (appointment.participants.isEmpty()) R.string.section_leader_registration else R.string.section_participants),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
             modifier = Modifier.padding(top = 6.dp).semantics { heading() },
         )
         if (!appointment.attendanceOpen) NoticeBanner(NoticeKind.INFO, stringResource(R.string.registration_closed))
@@ -116,8 +118,9 @@ private fun RsvpRow(
         else -> stringResource(R.string.rsvp_pending) to scheme.onSurfaceVariant
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        InitialsBadge(name)
         Column(Modifier.weight(1f)) {
-            Text(name, style = MaterialTheme.typography.titleMedium)
+            Text(name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
             // Ist die Anmeldung geschlossen, sagt schon das Etikett rechts denselben Stand: nicht doppelt zeigen.
             if (isOpen) {
                 Text(

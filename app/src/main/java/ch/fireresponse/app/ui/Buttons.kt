@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.theme.Sizes
@@ -89,14 +90,14 @@ fun OutlinedPillButton(
 
 /** Ruhige Aktion in `accent`, z. B. «Abbrechen» oder «Zu den Programmen». */
 @Composable
-fun TextActionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TextActionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.labelLarge) {
     TextButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = Sizes.touchTarget).focusRing(Pill),
         shape = Pill,
         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.fire.accent),
         contentPadding = PaddingValues(horizontal = 12.dp),
-    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+    ) { Text(text, style = style) }
 }
 
 /** Gestrichelter Knopf für «etwas Neues anlegen», z. B. einen Einzelchat starten: ohne Fläche, 56 dp hoch. `loading` wie bei [PrimaryButton]. */
@@ -155,7 +156,6 @@ fun DangerButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
         onClick = onClick,
         modifier = modifier.heightIn(min = Sizes.touchTarget).focusRing(Pill),
         shape = Pill,
-        border = BorderStroke(1.dp, scheme.onErrorContainer),
         colors = ButtonDefaults.buttonColors(containerColor = scheme.errorContainer, contentColor = scheme.onErrorContainer),
         contentPadding = PaddingValues(horizontal = 20.dp),
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }

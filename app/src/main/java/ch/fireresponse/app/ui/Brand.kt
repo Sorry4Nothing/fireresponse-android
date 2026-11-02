@@ -2,7 +2,10 @@ package ch.fireresponse.app.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -14,12 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ch.fireresponse.app.R
+import ch.fireresponse.app.profile.initials
 import ch.fireresponse.app.ui.theme.Spacing
+import ch.fireresponse.app.ui.theme.fire
 
 /** Wappen des Kantons Zürich in der Grösse über der Überzeile (48 × 56 dp). Dekoration: Der Screenreader überspringt es. */
 @Composable
@@ -62,4 +68,19 @@ fun RankBadge(stars: Int, modifier: Modifier = Modifier, height: Dp = 34.dp, det
             .width(height * 100f / 130f)
             .semantics { contentDescription = if (detail == null) label else "$label, $detail" },
     )
+}
+
+/** Initialen in einem runden Feld, wie bei den Teilnehmenden: `surface-container` mit `accent`, 12 sp fett (Entwurf: 36 dp). */
+@Composable
+fun InitialsBadge(name: String, modifier: Modifier = Modifier, size: Dp = 36.dp) {
+    Box(
+        modifier.size(size).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape).clearAndSetSemantics {},
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            initials(name),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.fire.accent,
+        )
+    }
 }

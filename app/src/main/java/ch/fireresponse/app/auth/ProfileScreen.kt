@@ -55,6 +55,8 @@ import ch.fireresponse.app.R
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.push.SwitchRow
 import ch.fireresponse.app.ui.Avatar
+import ch.fireresponse.app.ui.theme.BarlowCondensed
+import ch.fireresponse.app.ui.InitialsBadge
 import ch.fireresponse.app.ui.DangerButton
 import ch.fireresponse.app.ui.DialogText
 import ch.fireresponse.app.ui.FireResponseDialog
@@ -124,17 +126,25 @@ fun ProfileScreen(
             SettingsCard {
                 SettingsRow(R.drawable.ic_bell, stringResource(R.string.profile_notifications), onClick = onOpenNotifications, chevron = true)
                 SettingsDivider()
-                SettingsRow(
-                    R.drawable.ic_shield, stringResource(R.string.profile_privacy),
-                    onClick = onOpenPrivacy, clickLabel = stringResource(R.string.profile_privacy_open), chevron = true,
-                )
                 if (lockAvailable) {
-                    SettingsDivider()
                     SwitchRow(
                         R.drawable.ic_lock, stringResource(R.string.lock_switch), null,
                         lockEnabled, enabled = !form.running, onChange = onLockChange,
                     )
+                    SettingsDivider()
                 }
+                SettingsRow(
+                    R.drawable.ic_shield, stringResource(R.string.profile_privacy),
+                    onClick = onOpenPrivacy, clickLabel = stringResource(R.string.profile_privacy_open), chevron = true,
+                )
+            }
+            if (lockAvailable) {
+                Text(
+                    stringResource(R.string.lock_hint),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                )
             }
             if (profile.participants.isNotEmpty()) {
                 SectionTitle(R.string.profile_section_participants)
@@ -148,11 +158,7 @@ fun ProfileScreen(
             SectionTitle(R.string.profile_section_account)
             SettingsCard {
                 if (profile.squads.isNotEmpty()) {
-                    SettingsRow(
-                        R.drawable.ic_group,
-                        pluralStringResource(R.plurals.profile_squad, profile.squads.size),
-                        value = profile.squads.joinToString(", ") { it.name },
-                    )
+                    InfoRow(pluralStringResource(R.plurals.profile_squad, profile.squads.size), profile.squads.joinToString("\n") { it.name })
                     SettingsDivider()
                 }
                 if (profile.imageUrl != null) {
@@ -185,7 +191,7 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
     ) {
         // Das Bild ist Zierde; der Knopf daneben hat einen Namen und ist 48 dp gross (halb über dem Rand des Bildes).
         Box(Modifier.padding(end = 10.dp, bottom = 10.dp)) {
-            Avatar(profile.name, size = 84.dp, imageUrl = profile.imageUrl, initialSize = 28.sp)
+            Avatar(profile.name, size = 76.dp, imageUrl = profile.imageUrl, initialSize = 26.sp)
             Box(
                 Modifier
                     .align(Alignment.BottomEnd)
@@ -209,7 +215,7 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
         Column(Modifier.semantics(mergeDescendants = true) {}) {
             Text(
                 profile.name,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.ExtraBold),
                 modifier = Modifier.semantics { heading() },
             )
             profile.ceviName?.trim()?.takeIf { it.isNotEmpty() }?.let {
@@ -243,9 +249,9 @@ private fun roleLine(profile: Profile): String {
 private fun SectionTitle(@StringRes text: Int) {
     Text(
         stringResource(text).uppercase(),
-        style = Eyebrow,
+        style = Eyebrow.copy(fontFamily = BarlowCondensed),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 6.dp, top = Spacing.s3, bottom = 2.dp).semantics { heading() },
+        modifier = Modifier.padding(start = 6.dp, top = Spacing.s3, bottom = 0.dp).semantics { heading() },
     )
 }
 
@@ -306,11 +312,23 @@ private fun SettingsRow(
 @Composable
 private fun ParticipantRow(firstName: String) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = Sizes.touchTarget).padding(horizontal = 14.dp, vertical = Spacing.s2).semantics(mergeDescendants = true) {},
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = Spacing.s2).semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(firstName, size = 32.dp)
-        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium))
+        InitialsBadge(firstName)
+        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+/** Eine Zeile nur zum Lesen: Beschriftung klein darüber, Wert darunter (Einheit). */
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Column(
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = 6.dp).semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyLarge)
     }
 }

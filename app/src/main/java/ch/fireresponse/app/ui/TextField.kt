@@ -21,11 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,13 +58,15 @@ fun LabeledTextField(
     imeAction: ImeAction = ImeAction.Default,
     onImeAction: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    /** Fläche des Feldes; der Login nutzt `surface`, das Passwort `surface-container-low` (Entwurf: weiss). */
+    container: Color = MaterialTheme.colorScheme.surface,
 ) {
     val scheme = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val shape = MaterialTheme.shapes.small
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), color = scheme.onSurfaceVariant)
         BasicTextField(
             value = value,
             onValueChange = { if (it.length <= maxChars) onValueChange(it) },
@@ -90,7 +94,7 @@ fun LabeledTextField(
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = Sizes.textField)
-                        .background(scheme.surface, shape)
+                        .background(container, shape)
                         .border(if (focused) 2.dp else 1.dp, if (focused) MaterialTheme.fire.focus else scheme.outline, shape)
                         .padding(
                             start = 16.dp,

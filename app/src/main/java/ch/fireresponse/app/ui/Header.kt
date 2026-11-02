@@ -47,7 +47,6 @@ fun Header(
     title: String?,
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
-    /** Stufen, deren Logo vor der Überzeile steht (dekorativ, der Name steht in der Überzeile). */
     back: HeaderButton? = null,
     action: HeaderButton? = null,
     titleStyle: TextStyle = MaterialTheme.typography.headlineLarge,
@@ -62,7 +61,7 @@ fun Header(
             Row(Modifier.fillMaxWidth().height(Sizes.touchTarget), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                 back?.let { RoundButton(it) }
                 Spacer(Modifier.weight(1f))
-                action?.let { RoundButton(it) }
+                action?.let { RoundButton(it, accent = true) }
             }
         }
         if (title != null) {
@@ -84,7 +83,7 @@ fun Header(
 }
 
 @Composable
-fun RoundButton(button: HeaderButton, modifier: Modifier = Modifier) {
+fun RoundButton(button: HeaderButton, modifier: Modifier = Modifier, accent: Boolean = false) {
     Surface(
         onClick = button.onClick,
         modifier = modifier.size(Sizes.touchTarget).focusRing(Pill).semantics { contentDescription = button.description },
@@ -95,7 +94,7 @@ fun RoundButton(button: HeaderButton, modifier: Modifier = Modifier) {
         Icon(
             painterResource(button.icon),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface,
+            tint = if (accent) MaterialTheme.fire.accent else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(12.dp),
         )
     }

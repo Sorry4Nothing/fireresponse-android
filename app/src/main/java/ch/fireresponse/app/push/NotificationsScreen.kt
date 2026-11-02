@@ -72,7 +72,6 @@ fun NotificationsScreen(
         Header(
             title = stringResource(R.string.notifications_title),
             back = HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_profile), onBack),
-            titleStyle = MaterialTheme.typography.headlineMedium,
             focusOnTitle = true,
         )
         Column(Modifier.padding(horizontal = Spacing.s4), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
@@ -152,11 +151,6 @@ internal fun SwitchRow(
                 uncheckedBorderColor = MaterialTheme.colorScheme.outline,
                 uncheckedThumbColor = MaterialTheme.colorScheme.outline,
             ),
-            thumbContent = if (checked) {
-                { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(16.dp)) }
-            } else {
-                null
-            },
         )
     }
 }

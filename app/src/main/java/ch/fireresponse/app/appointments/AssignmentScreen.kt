@@ -208,7 +208,7 @@ private fun SectionTitle(text: String) {
 private fun FormPage(eyebrow: String, title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
     val back = HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_appointment), onBack)
     Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())) {
-        Header(title = title, eyebrow = eyebrow, back = back, titleStyle = MaterialTheme.typography.headlineMedium, focusOnTitle = true)
+        Header(title = title, eyebrow = eyebrow, back = back, focusOnTitle = true)
         Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
             content()
             Spacer(Modifier.height(Spacing.s2))

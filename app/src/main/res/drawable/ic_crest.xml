@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Platzhalter für das Wappen des Kantons Zürich (offizielles Wappen mit Nutzungsrecht ersetzt es); aus dem Schild des Rangabzeichens abgeleitet. -->
+<!-- Wappen des Kantons Zürich aus dem Entwurf (Platzhalter; das offizielle Wappen mit Nutzungsrecht ersetzt es). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="48dp"
     android:height="56dp"
-    android:viewportWidth="100"
-    android:viewportHeight="130">
-    <path android:fillColor="#1F58C7" android:pathData="M50,0 L0,12 L0,70 C0,100 22,120 50,130 Z" />
-    <path android:fillColor="#A9CCF5" android:pathData="M50,0 L100,12 L100,70 C100,100 78,120 50,130 Z" />
+    android:viewportWidth="240"
+    android:viewportHeight="282">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+    <group>
+        <clip-path android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+        <path
+            android:fillColor="#2764C7"
+            android:pathData="m 1,0.98764 4.3125,181.6875 C 7.9334996,292.76272 168.85432,309.46046 219.5,232.76889 Z" />
+    </group>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
 </vector>

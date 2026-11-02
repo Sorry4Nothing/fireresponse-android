@@ -9,6 +9,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import ch.fireresponse.app.ui.InitialsBadge
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -33,7 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,8 +50,6 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
@@ -61,7 +65,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.CantonFooter
@@ -84,9 +90,9 @@ import ch.fireresponse.app.ui.theme.Sizes
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
 
-/** Das Logo füllt den Platz über dem Text, höchstens so gross wie im Entwurf; unter der Mindestgrösse entfällt es. */
+/** Die Flamme steht gross und angeschnitten oben rechts hinter dem Text, wie im Entwurf (420 dp, 110 dp über den Rand). */
 private val LOGO_SIZE = 420.dp
-private val LOGO_MIN_SIZE = 200.dp
+private val LOGO_OVERHANG = 110.dp
 
 /** So lange baut sich das Logo beim Start auf, und so weit gleitet es von rechts herein. */
 private const val LOGO_REVEAL_MS = 700
@@ -94,52 +100,49 @@ private val LOGO_SLIDE = 80.dp
 
 private val CardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 
-/** Seite mit dem Logo hinter dem Titel oben und einem Block unten. Scrollt, wenn der Platz bei grosser Schrift nicht reicht. */
+/**
+ * Seite mit der Flamme im Hintergrund, dem Titel oben und einem Block unten. Die Flamme liegt unter der Statusleiste und wird nicht
+ * von den Rändern des Systems beschnitten (`logoTop`: Abstand ihres Rahmens zum oberen Rand, im Entwurf -30 dp, auf Willkommen
+ * -130 dp). Scrollt, wenn der Platz bei grosser Schrift nicht reicht.
+ */
 @Composable
 private fun LogoPage(
     top: @Composable ColumnScope.() -> Unit,
     bottom: @Composable ColumnScope.() -> Unit,
     animateLogo: Boolean = false,
+    logoTop: Dp = (-30).dp,
 ) {
     // Beim Start gleitet das Logo von rechts herein und blendet auf; mit ausgeschalteten Animationen steht es gleich da.
     val motionEnabled = rememberMotionEnabled()
     val reveal = remember { Animatable(if (animateLogo && motionEnabled) 0f else 1f) }
     LaunchedEffect(Unit) { if (reveal.value < 1f) reveal.animateTo(1f, tween(LOGO_REVEAL_MS, easing = FastOutSlowInEasing)) }
-    BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
-        val fullHeight = maxHeight
-        var areaHeight by remember { mutableIntStateOf(0) }
-        var textHeight by remember { mutableIntStateOf(0) }
-        // Das Logo steht nur, wo es dem Text nicht in die Quere kommt: Bei offener Tastatur oder grosser Schrift schrumpft es oder entfällt.
-        val density = LocalDensity.current
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Column(Modifier.fillMaxWidth().heightIn(min = fullHeight)) {
-                Box(Modifier.weight(1f).fillMaxWidth().clipToBounds().onSizeChanged { areaHeight = it.height }) {
-                    val logoSize = with(density) { (areaHeight - textHeight).toDp() }.coerceAtMost(LOGO_SIZE)
-                    if (logoSize >= LOGO_MIN_SIZE) {
-                        Image(
-                            painterResource(R.drawable.ic_logo),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = logoSize * (110f / 420f), y = logoSize * (8f / 420f))
-                                .size(logoSize)
-                                .graphicsLayer {
-                                    alpha = reveal.value
-                                    translationX = (1f - reveal.value) * LOGO_SLIDE.toPx()
-                                },
-                        )
-                    }
+    Box(Modifier.fillMaxSize().clipToBounds()) {
+        Image(
+            painterResource(R.drawable.ic_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = LOGO_OVERHANG, y = logoTop)
+                .size(LOGO_SIZE)
+                .graphicsLayer {
+                    alpha = reveal.value
+                    translationX = (1f - reveal.value) * LOGO_SLIDE.toPx()
+                },
+        )
+        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+            val fullHeight = maxHeight
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                Column(Modifier.fillMaxWidth().heightIn(min = fullHeight)) {
                     Column(
                         Modifier
-                            .align(Alignment.BottomStart)
+                            .weight(1f)
                             .fillMaxWidth()
-                            .onSizeChanged { textHeight = it.height }
                             .padding(start = 28.dp, end = 28.dp, bottom = 28.dp, top = Spacing.s8),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s2, Alignment.Bottom),
                         content = top,
                     )
+                    bottom()
                 }
-                bottom()
             }
         }
     }
@@ -237,12 +240,12 @@ fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
                     loading = form.running,
                     loadingText = stringResource(R.string.login_running),
                 )
-                Text(
-                    stringResource(R.string.login_forgot),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth(),
+                var forgot by remember { mutableStateOf(false) }
+                TextActionButton(
+                    stringResource(R.string.login_forgot_link), { forgot = !forgot }, Modifier.align(Alignment.CenterHorizontally),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 )
+                if (forgot) NoticeBanner(NoticeKind.INFO, stringResource(R.string.login_forgot))
                 CantonFooter(Modifier.align(Alignment.CenterHorizontally))
             }
         },
@@ -281,8 +284,7 @@ private fun ShowPasswordSwitch(visible: Boolean, onChange: (Boolean) -> Unit) {
 
 /**
  * Passwort ändern: der Pflichtwechsel nach dem Startpasswort (`first`, ohne Zurück) und der freiwillige aus dem Profil.
- * Der Server verlangt auch das bisherige Passwort. Es gibt kein Feld zum Wiederholen: «Passwort anzeigen» ersetzt es
- * (Checkliste 9.7).
+ * Der Server verlangt auch das bisherige Passwort. Das Feld zum Wiederholen und die Regel «Stimmt überein» folgen dem Entwurf.
  */
 @Composable
 fun PasswordScreen(
@@ -308,14 +310,13 @@ fun PasswordScreen(
                 title = stringResource(if (first) R.string.password_title_first else R.string.password_title),
                 eyebrow = stringResource(if (first) R.string.password_eyebrow_first else R.string.password_eyebrow),
                 back = onBack?.let { HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_profile), it) },
-                titleStyle = MaterialTheme.typography.headlineMedium,
                 focusOnTitle = true,
             )
             Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 if (first) {
                     Text(
                         stringResource(R.string.password_intro_first),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -333,8 +334,10 @@ fun PasswordScreen(
                         trailing = { ShowPasswordSwitch(currentVisible) { currentVisible = it } },
                     )
                 }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 LabeledTextField(
                     label = stringResource(R.string.password_new),
+                        container = MaterialTheme.colorScheme.surfaceContainerLow,
                     value = new,
                     onValueChange = { new = it },
                     maxChars = PasswordRules.MAX_LENGTH,
@@ -345,8 +348,19 @@ fun PasswordScreen(
                     enabled = !form.running,
                     trailing = { ShowPasswordSwitch(newVisible) { newVisible = it } },
                 )
+                    // Die Regeln stehen unter dem Feld und sagen Änderungen an (Polite); nie nur über die Farbe.
+                    Column(
+                        Modifier.padding(top = 2.dp).semantics { liveRegion = LiveRegionMode.Polite },
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        PasswordRule(R.string.password_rule_length, PasswordRules.longEnough(new))
+                        if (askCurrent) PasswordRule(R.string.password_rule_different, PasswordRules.different(current, new))
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 LabeledTextField(
                     label = stringResource(R.string.password_repeat),
+                    container = MaterialTheme.colorScheme.surfaceContainerLow,
                     value = repeat,
                     onValueChange = { repeat = it },
                     maxChars = PasswordRules.MAX_LENGTH,
@@ -356,12 +370,13 @@ fun PasswordScreen(
                     imeAction = ImeAction.Done,
                     onImeAction = save,
                     enabled = !form.running,
+                    trailing = { ShowPasswordSwitch(newVisible) { newVisible = it } },
                 )
-                // Die Regeln sagen sich als Gruppe an, wenn sich eine ändert (Hinweis Polite), nie nur über die Farbe.
-                Column(Modifier.semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-                    PasswordRule(R.string.password_rule_length, PasswordRules.longEnough(new))
-                    if (askCurrent) PasswordRule(R.string.password_rule_different, PasswordRules.different(current, new))
-                    PasswordRule(R.string.password_rule_match, PasswordRules.matches(new, repeat))
+                    if (repeat.isNotEmpty()) {
+                        Box(Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+                            PasswordRule(R.string.password_rule_match, PasswordRules.matches(new, repeat))
+                        }
+                    }
                 }
                 FormStatus(form)
             }
@@ -462,19 +477,26 @@ fun WelcomeScreen(
     var acknowledged by rememberSaveable { mutableStateOf(false) }
     var showHint by rememberSaveable { mutableStateOf(false) }
     val checkboxFocus = remember { FocusRequester() }
+    val scheme = MaterialTheme.colorScheme
     LogoPage(
+        logoTop = (-130).dp,
         top = {
             if (passwordSaved) {
                 Row(
                     Modifier
-                        .background(MaterialTheme.fire.successContainer, Pill)
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .background(MaterialTheme.fire.successContainer, RoundedCornerShape(14.dp))
+                        .heightIn(min = 28.dp)
+                        .padding(horizontal = 12.dp)
                         .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(painterResource(R.drawable.ic_check), null, tint = MaterialTheme.fire.onSuccessContainer, modifier = Modifier.size(18.dp))
-                    Text(stringResource(R.string.password_saved), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.fire.onSuccessContainer)
+                    Text(
+                        stringResource(R.string.password_saved),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.fire.onSuccessContainer,
+                    )
                 }
             }
             DepartmentEyebrow(text = squads.filter { it.isNotBlank() }.joinToString(", ").ifEmpty { stringResource(R.string.department) }, crest = false)
@@ -486,40 +508,46 @@ fun WelcomeScreen(
                 modifier = Modifier.focusRequester(focus).focusTarget().semantics { heading() },
             )
             if (participants.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.welcome_participants).uppercase(),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.04.em),
+                    color = scheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, top = Spacing.s3).semantics { heading() },
+                )
                 Column(
                     Modifier
-                        .padding(top = Spacing.s3)
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
-                        .padding(Spacing.s4),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+                        .background(scheme.surfaceContainerLow)
+                        .border(1.dp, scheme.outlineVariant, MaterialTheme.shapes.medium),
                 ) {
-                    Text(
-                        stringResource(R.string.welcome_participants),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.semantics { heading() },
-                    )
-                    participants.forEach { firstName ->
+                    participants.forEachIndexed { index, firstName ->
+                        if (index > 0) HorizontalDivider(Modifier.padding(start = 62.dp), color = scheme.outlineVariant)
                         Row(
-                            Modifier.semantics(mergeDescendants = true) {},
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 52.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                                .semantics(mergeDescendants = true) {},
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Avatar(firstName, size = 32.dp)
-                            Text(firstName, style = MaterialTheme.typography.bodyLarge)
+                            InitialsBadge(firstName)
+                            Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                         }
                     }
                 }
             }
-            Column(Modifier.padding(top = Spacing.s3), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                WelcomePoint(R.drawable.ic_calendar, R.string.welcome_appointments, R.string.welcome_appointments_text)
-                WelcomePoint(R.drawable.ic_check, R.string.welcome_rsvp, R.string.welcome_rsvp_text)
+            Column(Modifier.padding(top = Spacing.s2), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                WelcomePoint(
+                    R.drawable.ic_calendar, stringResource(R.string.welcome_appointments),
+                    if (participants.isEmpty()) stringResource(R.string.welcome_appointments_text) else stringResource(R.string.welcome_appointments_of, joinNames(participants)),
+                )
+                WelcomePoint(R.drawable.ic_check, stringResource(R.string.welcome_rsvp), stringResource(R.string.welcome_rsvp_text))
             }
         },
         bottom = {
-            Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
+            Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (passwordSaved && lockAvailable) {
                     SwitchRow(
                         R.drawable.ic_lock, stringResource(R.string.lock_switch), null,
@@ -538,22 +566,33 @@ fun WelcomeScreen(
                             role = Role.Checkbox,
                             onValueChange = { acknowledged = it; if (it) showHint = false },
                         )
-                        .padding(horizontal = Spacing.s2),
+                        .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         Modifier
                             .size(24.dp)
-                            .background(if (acknowledged) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surface, RoundedCornerShape(6.dp))
-                            .border(if (acknowledged) 0.dp else 1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp)),
+                            .background(if (acknowledged) MaterialTheme.fire.accent else Color.Transparent, RoundedCornerShape(6.dp))
+                            .border(if (acknowledged) 0.dp else 1.5.dp, scheme.outline, RoundedCornerShape(6.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (acknowledged) Icon(painterResource(R.drawable.ic_check), null, tint = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.size(16.dp))
+                        if (acknowledged) Icon(painterResource(R.drawable.ic_check_selected), null, tint = scheme.surface, modifier = Modifier.size(16.dp))
                     }
-                    Text(stringResource(R.string.welcome_privacy_check), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.welcome_privacy_check), style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp))
                 }
-                TextActionButton(stringResource(R.string.welcome_privacy_read), onReadPrivacy)
+                Text(
+                    stringResource(R.string.welcome_privacy_read),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.fire.accent,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .heightIn(min = Sizes.touchTarget)
+                        .focusRing(MaterialTheme.shapes.small)
+                        .clickable(role = Role.Button, onClick = onReadPrivacy)
+                        .padding(start = 46.dp, end = 8.dp)
+                        .wrapContentHeight(Alignment.CenterVertically),
+                )
                 if (showHint) {
                     NoticeBanner(NoticeKind.WARNING, stringResource(R.string.welcome_privacy_hint), Modifier.semantics { liveRegion = LiveRegionMode.Assertive })
                 }
@@ -564,24 +603,28 @@ fun WelcomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     loading = form.running,
                 )
-                CantonFooter(Modifier.align(Alignment.CenterHorizontally).padding(top = Spacing.s2))
+                CantonFooter(Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp))
             }
         },
     )
 }
 
+/** «Lena», «Lena und Noah», «Lena, Noah und Mia». */
+private fun joinNames(names: List<String>): String =
+    if (names.size <= 1) names.joinToString() else names.dropLast(1).joinToString(", ") + " und " + names.last()
+
 /** Erstes Wort des Anzeigenamens; leer, wenn der Name fehlt. */
 internal fun firstName(name: String) = name.trim().substringBefore(' ')
 
 @Composable
-private fun WelcomePoint(@DrawableRes icon: Int, @StringRes title: Int, @StringRes text: Int) {
+private fun WelcomePoint(@DrawableRes icon: Int, title: String, text: String) {
     Row(Modifier.semantics(mergeDescendants = true) {}, horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
-        Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondaryContainer, Pill), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, Pill), contentAlignment = Alignment.Center) {
             Icon(painterResource(icon), null, tint = MaterialTheme.fire.accent, modifier = Modifier.size(20.dp))
         }
         Column {
-            Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
-            Text(stringResource(text), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -599,8 +642,9 @@ internal fun formErrorText(form: FormState): String? {
 /** Das Konto gehört noch zu keiner Einheit: Die Leitung erledigt das. Einzige Aktion ist der Weg zurück zum Login. */
 @Composable
 fun NoSquadScreen(onBackToLogin: () -> Unit) {
-    Box(Modifier.fillMaxSize().safeDrawingPadding()) {
-        StatePage(R.drawable.ic_unlinked, stringResource(R.string.state_no_squad_title), stringResource(R.string.state_no_squad_text)) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+        Header(title = null, back = HeaderButton(R.drawable.ic_back, stringResource(R.string.state_no_squad_action), onBackToLogin))
+        StatePage(R.drawable.ic_lock, stringResource(R.string.state_no_squad_title), stringResource(R.string.state_no_squad_text), Modifier.weight(1f)) {
             PrimaryButton(stringResource(R.string.state_no_squad_action), onBackToLogin)
         }
     }

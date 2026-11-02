@@ -28,8 +28,8 @@ import ch.fireresponse.app.profile.initials
 import ch.fireresponse.app.images.LocalProfileImages
 import ch.fireresponse.app.ui.theme.Pill
 
-/** Anfangsbuchstabe des ersten Wortes, gross; leer, wenn der Name leer ist. */
-fun avatarInitial(name: String): String = initials(name).take(1)
+/** Anfangsbuchstaben des ersten und des letzten Wortes, gross («MK»); leer, wenn der Name leer ist. */
+fun avatarInitial(name: String): String = initials(name)
 
 /**
  * Runder Avatar: das Profilbild, solange es da ist und lädt, sonst die Initiale auf `secondary`. Er ist für den Screenreader

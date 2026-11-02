@@ -24,9 +24,11 @@
     <string name="close">Schliessen</string>
     <string name="contact_title">Kontakt</string>
     <string name="contact_commanders">Kommando</string>
+    <string name="contact_person">Kontaktperson</string>
     <string name="contact_call">Anrufen</string>
     <string name="contact_call_name">Anrufen, %1$s</string>
     <string name="detail_placeholder">Wähle links eine Übung.</string>
+    <string name="add_to_calendar">In Kalender übernehmen</string>
     <string name="refresh">Aktualisieren</string>
     <string name="cancel">Abbrechen</string>
 
@@ -52,7 +54,7 @@
     <string name="state_access_title">Kein Zugriff</string>
     <string name="state_access_text">Diese Seite ist nur für die Leitung. Wenn du denkst, das ist ein Fehler, frag deine Leitung.</string>
     <string name="state_no_squad_title">Keine Einheit</string>
-    <string name="state_no_squad_text">Dein Konto gehört noch zu keiner Einheit. Die Leitung erledigt das.</string>
+    <string name="state_no_squad_text">Dein Konto ist noch keiner Einheit zugewiesen. Das erledigt deine Jugendleitung. Frag dort nach.</string>
     <string name="state_no_squad_action">Zurück zum Login</string>
     <string name="state_session_title">Bitte melde dich neu an</string>
     <string name="state_session_text">Du warst länger nicht aktiv. Zu deiner Sicherheit haben wir dich abgemeldet.</string>
@@ -106,7 +108,8 @@
     <string name="login_password">Passwort</string>
     <string name="login_submit">Anmelden</string>
     <string name="login_running">Anmeldung läuft …</string>
-    <string name="login_forgot">Passwort vergessen? Dann hilft die Leitung.</string>
+    <string name="login_forgot_link">Passwort vergessen?</string>
+    <string name="login_forgot">Dann hilft dir die Leitung deiner Einheit weiter.</string>
     <string name="login_failed">Anmeldung nicht möglich. Bitte Benutzername und Passwort prüfen oder später nochmals versuchen. Sonst hilft die Leitung.</string>
     <string name="login_admin_only">Admins melden sich im Admin-Bereich an. In der App geht das nicht.</string>
     <string name="password_show">Passwort anzeigen</string>
@@ -114,7 +117,7 @@
     <string name="password_eyebrow">Konto</string>
     <string name="password_title_first">Eigenes Passwort wählen</string>
     <string name="password_title">Passwort ändern</string>
-    <string name="password_intro_first">Du hast ein Startpasswort von deiner Einheit bekommen. Wähle jetzt ein eigenes, das nur du kennst.</string>
+    <string name="password_intro_first">Du hast ein Startpasswort von deiner Leitung bekommen. Wähle jetzt ein eigenes, das nur du kennst.</string>
     <string name="password_current_first">Startpasswort</string>
     <string name="password_current">Bisheriges Passwort</string>
     <string name="password_new">Neues Passwort</string>
@@ -135,6 +138,7 @@
     <string name="welcome_title">Willkommen, %1$s!</string>
     <string name="welcome_appointments">Übungen</string>
     <string name="welcome_appointments_text">Alle Übungen deiner Einheit auf einen Blick.</string>
+    <string name="welcome_appointments_of">Alle Übungen von %1$s auf einen Blick.</string>
     <string name="welcome_rsvp">Zusagen</string>
     <string name="welcome_rsvp_text">Mit einem Tipp Ja oder Nein sagen.</string>
     <string name="welcome_privacy_read">Datenschutzerklärung lesen</string>
@@ -150,7 +154,7 @@
     <string name="lock_prompt_title">FireResponse entsperren</string>
     <string name="lock_enable_title">Entsperren einrichten</string>
     <string name="lock_cancel">Abbrechen</string>
-    <string name="lock_switch">Mit Fingerabdruck oder Gesicht entsperren</string>
+    <string name="lock_switch">Biometrisches Login</string>
     <string name="welcome_start">Los geht’s</string>
     <string name="tab_profile">Profil</string>
     <string name="profile_title">Profil</string>
@@ -158,8 +162,9 @@
     <string name="profile_section_app">App</string>
     <string name="profile_section_account">Konto</string>
     <string name="profile_section_participants">Teilnehmende</string>
+    <string name="lock_hint">Mit Fingerabdruck oder Gesicht öffnet sich die App nur für dich. Ohne fragt sie nach deiner Geräte-PIN.</string>
     <string name="sign_out_title">Abmelden?</string>
-    <string name="sign_out_text">Du musst dich danach neu anmelden.</string>
+    <string name="sign_out_text">Danach brauchst du wieder Benutzername und Passwort.</string>
     <plurals name="profile_squad">
         <item quantity="one">Einheit</item>
         <item quantity="other">Einheiten</item>

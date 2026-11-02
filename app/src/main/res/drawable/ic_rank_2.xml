@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Rangabzeichen mit 2 Sternen: Platzhalter nach dem Entwurf, nie umfärben; das Original der Jugendfeuerwehr als Vektor ersetzt es. -->
+<!-- Rangabzeichen mit zwei Sternen nach dem Entwurf (Platzhalter, nie umfärben); das Original der Jugendfeuerwehr als Vektor ersetzt es. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="26dp"
-    android:height="34dp"
+    android:width="28dp"
+    android:height="36dp"
     android:viewportWidth="100"
     android:viewportHeight="130">
-    <path android:fillColor="#0A1230" android:pathData="M0,0 H100 V130 H0 Z" />
-    <path android:fillColor="#E8B22E" android:pathData="M14,16 H86 V22 H14 Z" />
-    <group android:translateX="50" android:translateY="62" android:scaleX="0.5" android:scaleY="0.5" android:pivotX="50" android:pivotY="65">
-        <path android:fillColor="#1F58C7" android:pathData="M0,-40 L-50,-28 L-50,30 C-50,60 -28,80 0,90 Z" />
-        <path android:fillColor="#A9CCF5" android:pathData="M0,-40 L50,-28 L50,30 C50,60 28,80 0,90 Z" />
+    <path android:fillColor="#0A1230" android:strokeColor="#1B2A5C" android:strokeWidth="2" android:pathData="M4,1 H96 Q99,1 99,4 V126 Q99,129 96,129 H4 Q1,129 1,126 V4 Q1,1 4,1 Z" />
+    <path android:fillColor="#E8B22E" android:pathData="M11,14 H89 V25 H11 Z M11,33 H89 V44 H11 Z" />
+    <group android:translateX="26" android:translateY="50" android:scaleX="0.2" android:scaleY="0.1925">
+        <path android:fillColor="#FFFFFF" android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+        <group>
+            <clip-path android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+            <path android:fillColor="#2764C7" android:pathData="m 1,0.98764 4.3125,181.6875 C 7.9334996,292.76272 168.85432,309.46046 219.5,232.76889 Z" />
+        </group>
+        <path android:fillColor="#00000000" android:strokeColor="#DDE9FA" android:strokeWidth="6" android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
     </group>
-    <group android:translateX="36" android:translateY="108"><path android:fillColor="#E8B22E" android:pathData="M0,-9 L2.6,-2.8 L9.3,-2.8 L3.9,1.2 L5.8,7.6 L0,3.8 L-5.8,7.6 L-3.9,1.2 L-9.3,-2.8 L-2.6,-2.8 Z" /></group>
-    <group android:translateX="64" android:translateY="108"><path android:fillColor="#E8B22E" android:pathData="M0,-9 L2.6,-2.8 L9.3,-2.8 L3.9,1.2 L5.8,7.6 L0,3.8 L-5.8,7.6 L-3.9,1.2 L-9.3,-2.8 L-2.6,-2.8 Z" /></group>
+    <group android:translateY="5">
+        <path android:fillColor="#E8B22E" android:strokeColor="#B88414" android:strokeWidth="0.6" android:strokeLineJoin="round" android:pathData="M33,101 L35.7,108.28 L43.46,108.6 L37.37,113.42 L39.47,120.9 L33,116.6 L26.53,120.9 L28.63,113.42 L22.54,108.6 L30.3,108.28 Z" />
+        <path android:fillColor="#E8B22E" android:strokeColor="#B88414" android:strokeWidth="0.6" android:strokeLineJoin="round" android:pathData="M67,101 L69.7,108.28 L77.46,108.6 L71.37,113.42 L73.47,120.9 L67,116.6 L60.53,120.9 L62.63,113.42 L56.54,108.6 L64.3,108.28 Z" />
+    </group>
 </vector>

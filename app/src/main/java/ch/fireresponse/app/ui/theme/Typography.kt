@@ -16,9 +16,9 @@ import ch.fireresponse.app.R
  */
 val BarlowCondensed = FontFamily(Font(R.font.barlow_condensed_bold, weight = FontWeight.Bold))
 
-/** Inter ist eine variable Schrift; die Gewichte 400 und 700 genügen. */
+/** Inter ist eine variable Schrift; der Entwurf nutzt die Gewichte 400 bis 800. */
 val Inter = FontFamily(
-    listOf(400, 700).map { weight ->
+    listOf(400, 500, 600, 700, 800).map { weight ->
         Font(
             R.font.inter,
             weight = FontWeight(weight),
@@ -27,12 +27,12 @@ val Inter = FontFamily(
     },
 )
 
-private fun title(size: Int, lineHeight: Int) = TextStyle(
+private fun title(size: Int, lineHeight: Int, spacing: Float = 0.005f) = TextStyle(
     fontFamily = BarlowCondensed,
     fontSize = size.sp,
     lineHeight = lineHeight.sp,
     fontWeight = FontWeight.Bold,
-    letterSpacing = 0.005.em,
+    letterSpacing = spacing.em,
 )
 
 private fun text(size: Int, lineHeight: Int, weight: Int, spacing: Float = 0f) = TextStyle(
@@ -45,8 +45,8 @@ private fun text(size: Int, lineHeight: Int, weight: Int, spacing: Float = 0f) =
 
 /** Die Stile aus dem Design (`tokens.json`, `type`), den Material-Rollen zugeordnet. */
 internal val FireResponseTypography = Typography(
-    displayLarge = title(48, 48), // display: Begrüssung auf dem Login
-    displayMedium = title(48, 48),
+    displayLarge = title(40, 44, -0.01f), // display: Begrüssung auf Login und Willkommen (die Bildschirme setzen 40/44)
+    displayMedium = title(40, 44, -0.01f),
     displaySmall = title(34, 36),
     headlineLarge = title(34, 36), // headline: Screen-Titel im Kopf
     headlineMedium = title(28, 32), // headline-small: Titel auf Detail-Screens

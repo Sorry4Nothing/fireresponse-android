@@ -4,6 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.platform.LocalContext
+import android.provider.CalendarContract
+import android.content.Intent
+import android.content.ActivityNotFoundException
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.Color
@@ -121,7 +125,7 @@ private fun DateColumn(day: Day, withLine: Boolean) {
             Text(weekdayShort(date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.fire.accent)
             Text(
                 date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = 26.sp, lineHeight = 30.sp, fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 26.sp, lineHeight = 30.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -169,8 +173,7 @@ private fun statusLines(appointment: Appointment): List<StatusLine> {
  */
 @Composable
 private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) {
-    val squads = appointment.squads.joinToString(", ") { it.name }
-    val headerLine = listOf(listTime(appointment), squads).filter { it.isNotBlank() }.joinToString(" · ")
+    val headerLine = listTime(appointment)
     val lines = statusLines(appointment)
     val chips = listOfNotNull(
         stringResource(R.string.status_cancelled).takeIf { appointment.cancelled },
@@ -201,10 +204,14 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
             )
             Text(appointment.title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp))
             appointment.location?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            lines.forEach { line ->
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
+            lines.forEachIndexed { index, line ->
+                Row(
+                    Modifier.padding(top = if (index == 0) 6.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Icon(painterResource(line.icon), contentDescription = null, tint = line.color, modifier = Modifier.size(16.dp))
-                    Text(line.text, style = MaterialTheme.typography.bodyMedium, color = line.color)
+                    Text(line.text, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold), color = line.color)
                 }
             }
             AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
@@ -288,39 +295,59 @@ private fun AppointmentContent(
     onAssign: () -> Unit,
     onRegistrations: () -> Unit,
 ) {
-    val squads = appointment.squads.joinToString(", ") { it.name }
     val date = appointment.startDay()?.let { "${weekdayShort(it)} ${dayAndMonth(it)}" }
+    val context = LocalContext.current
+    val calendar = calendarIntent(appointment)
+    val toCalendar = stringResource(R.string.add_to_calendar)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Header(
             title = appointment.title,
-            eyebrow = listOfNotNull(squads.ifBlank { null }, date).joinToString(" · "),
+            eyebrow = date,
             back = back,
-            titleStyle = MaterialTheme.typography.headlineMedium,
+            action = calendar?.let { intent ->
+                HeaderButton(R.drawable.ic_calendar_plus, toCalendar) {
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        // Keine Kalender-App auf dem Gerät: Der Knopf tut dann nichts.
+                    }
+                }
+            },
             focusOnTitle = true,
         )
         Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
             AppointmentStatus(appointment)
             Tiles(appointment)
             Facts(appointment)
-            RegistrationSection(appointment, rsvp, onParticipant, onLeader)
             ContactSection(appointment, contacts)
+            RegistrationSection(appointment, rsvp, onParticipant, onLeader)
             LeaderSection(appointment, canAssign, canSeeRegistrations, onAssign, onRegistrations)
             Box(Modifier.height(Spacing.s4))
         }
     }
 }
 
-/** «Kontakt» mit den Stufenleitungen des Programms (wer abgesagt hat, fehlt). Ein Fehler beim Laden zeigt keinen Abschnitt. */
+/** Die Kontaktpersonen der Übung (wer abgesagt hat, fehlt), je eine Karte. Ein Fehler beim Laden zeigt nichts. */
 @Composable
 private fun ContactSection(appointment: Appointment, contacts: ApiResult<ContactList>?) {
     if (appointment.unassigned || contacts !is ApiResult.Ok) return
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
-        Text(
-            stringResource(R.string.contact_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = 6.dp).semantics { heading() },
-        )
-        ContactCard(contacts.value.contacts)
+    ContactCard(contacts.value.contacts)
+}
+
+/** Der Termin als Eintrag für die Kalender-App der Person; `null`, solange Zeit oder Tag fehlen. */
+private fun calendarIntent(appointment: Appointment): Intent? {
+    val intent = Intent(Intent.ACTION_INSERT, CalendarContract.Events.CONTENT_URI)
+        .putExtra(CalendarContract.Events.TITLE, appointment.title)
+        .putExtra(CalendarContract.Events.EVENT_LOCATION, appointment.location)
+    return when (val time = appointment.time()) {
+        is Timing.Timed -> intent
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, time.start.toInstant().toEpochMilli())
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, time.end.toInstant().toEpochMilli())
+        is Timing.AllDay -> intent
+            .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, time.from.atStartOfDay(SWISS_ZONE).toInstant().toEpochMilli())
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, time.until.atStartOfDay(SWISS_ZONE).toInstant().toEpochMilli())
+        null -> null
     }
 }
 
@@ -340,7 +367,7 @@ private fun LeaderSection(
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
         Text(
             stringResource(R.string.section_leaders),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
             modifier = Modifier.padding(top = 6.dp).semantics { heading() },
         )
         if (canAssign && appointment.unassigned) NoticeBanner(NoticeKind.INFO, stringResource(R.string.unassigned_notice))

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Platzhalter-Flamme für den Start (288 dp, das Logo liegt im inneren Kreis von 192 dp). -->
+<!-- Flamme für den Start (288 dp, das Logo liegt im inneren Kreis von 192 dp): die Flamme des Entwurfs, Platzhalter. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="288dp"
     android:height="288dp"
-    android:viewportWidth="40"
-    android:viewportHeight="40">
-    <group android:translateX="8" android:translateY="8">
-        <path android:fillColor="#D9381E" android:pathData="M12,2 C12,2 6,8 6,14 a6,6 0 0 0 12,0 c0,-2.3 -1,-4.2 -2.3,-5.6 C15.3,10.2 14.2,11 13,11 c0,-3.2 -0.8,-6 -1,-9 z" />
+    android:viewportWidth="220"
+    android:viewportHeight="220">
+    <group android:translateX="30" android:translateY="30">
+        <path
+            android:fillColor="#D4161C"
+            android:pathData="M80,10C95,40 130,55 130,95C130,125 108,148 80,148C52,148 30,125 30,95C30,72 45,58 55,42C58,56 66,62 72,62C70,42 74,26 80,10Z" />
+        <path
+            android:fillColor="#FFC400"
+            android:pathData="M80,78C88,92 104,100 104,118C104,133 93,142 80,142C67,142 56,133 56,118C56,100 72,92 80,78Z" />
     </group>
 </vector>

@@ -18,6 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import ch.fireresponse.app.ui.theme.Pill
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,18 +44,12 @@ import ch.fireresponse.app.ui.theme.Spacing
 private val CARD = RoundedCornerShape(16.dp)
 
 /**
- * Die Kontaktpersonen in einer Karte, je Zeile Name und Nummer. Ohne Eintrag steht «Stufenleitung»: Dann hat die Stufe
- * keine SL, und der Einzelchat mit der Stufenleitung geht trotzdem.
+ * Die Kontaktpersonen, je eine Karte: Initialen, «Kontaktperson», Name und rechts der runde Knopf «Anrufen». Ohne Eintrag steht
+ * «Kommando»: Dann hat die Einheit keine Kontaktperson.
  */
 @Composable
 fun ContactCard(contacts: List<Contact>, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow, CARD)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CARD)
-            .padding(horizontal = 14.dp, vertical = 4.dp),
-    ) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         if (contacts.isEmpty()) {
             Text(
                 stringResource(R.string.contact_commanders),
@@ -62,7 +63,7 @@ fun ContactCard(contacts: List<Contact>, modifier: Modifier = Modifier) {
 }
 
 /**
- * Name, darunter die Nummer, rechts «Anrufen». Der Knopf öffnet nur die Telefon-App mit der Nummer (`ACTION_DIAL`): Die
+ * Name, darüber «Kontaktperson», rechts «Anrufen». Der Knopf öffnet nur die Telefon-App mit der Nummer (`ACTION_DIAL`): Die
  * Person wählt selbst, die App braucht dafür keine Berechtigung. Ohne Nummer oder ohne Telefon-App fehlt der Knopf.
  */
 @Composable
@@ -80,37 +81,38 @@ private fun ContactRow(contact: Contact) {
         }
     }
     Row(
-        Modifier.fillMaxWidth().heightIn(min = Sizes.touchTarget).padding(vertical = Spacing.s2),
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, CARD)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CARD)
+            .padding(start = 14.dp, top = 10.dp, end = 8.dp, bottom = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(contact.title, size = 40.dp, imageUrl = contact.imageUrl, initialSize = 16.sp)
-        Column(Modifier.weight(1f)) {
-            Text(contact.title, style = MaterialTheme.typography.titleMedium)
-            contact.fullName?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            contact.phone?.takeIf { it.isNotBlank() }?.let { number ->
-                if (canCall) {
-                    // Ein Tipp auf die Nummer öffnet die Telefon-App mit der Nummer; der grosse Treffer bleibt der Knopf «Anrufen».
-                    Text(
-                        number,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.fire.accent,
-                        modifier = Modifier
-                            .focusRing(MaterialTheme.shapes.small)
-                            .clickable(onClickLabel = stringResource(R.string.contact_call), role = Role.Button, onClick = dial),
-                    )
-                } else {
-                    Text(number, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+        Avatar(contact.title, size = 40.dp, imageUrl = contact.imageUrl, initialSize = 14.sp)
+        Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
+            Text(
+                stringResource(R.string.contact_person),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(contact.title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            contact.fullName?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         if (canCall && intent != null) {
             val description = stringResource(R.string.contact_call_name, contact.title)
-            OutlinedPillButton(
-                stringResource(R.string.contact_call),
-                onClick = dial,
-                modifier = Modifier.semantics { contentDescription = description },
-            )
+            Box(
+                Modifier
+                    .size(Sizes.touchTarget)
+                    .focusRing(Pill)
+                    .clip(Pill)
+                    .background(MaterialTheme.colorScheme.surfaceContainer, Pill)
+                    .clickable(role = Role.Button, onClick = dial)
+                    .semantics { contentDescription = description },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(painterResource(R.drawable.ic_phone), contentDescription = null, tint = MaterialTheme.fire.accent)
+            }
         }
     }
 }

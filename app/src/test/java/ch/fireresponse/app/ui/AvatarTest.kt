@@ -5,9 +5,9 @@ import org.junit.Test
 
 class AvatarTest {
     @Test
-    fun initialIsFirstLetterOfFirstWord() {
-        assertEquals("S", avatarInitial("Sarah Läuchli"))
-        assertEquals("A", avatarInitial("Anna Maria Meier"))
+    fun initialsAreFirstLettersOfFirstAndLastWord() {
+        assertEquals("SL", avatarInitial("Sarah Läuchli"))
+        assertEquals("AM", avatarInitial("Anna Maria Meier"))
         assertEquals("T", avatarInitial("  tom "))
     }
 

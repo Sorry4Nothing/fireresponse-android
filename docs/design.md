@@ -74,5 +74,6 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 ## Weitere Entscheide
 
 - **Passwort wiederholen:** Die Vorlage hat zwei Felder (neu und wiederholen) mit der Regel «Stimmt überein»; die App folgt ihr. «Passwort anzeigen» bleibt daneben.
+- **Bildschirme nach den Entwürfen:** Login, Passwort, Willkommen, Liste, Detail, Profil und «Keine Einheit» sind gegen die Entwurfsdateien (`L1` bis `L13`, `S4`, `S9`) abgeglichen: echte Flamme und Zürcher Wappen, Titel 34/36 und Begrüssung 40/44, Inter 400 bis 800, Kontaktkarte mit Anrufen-Knopf, Zusage mit Initialen, Kalender-Knopf im Detail. Die Galerie `GalleryActivity` (nur Debug-Build, Beispieldaten) zeigt sie ohne Server: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list`.
 - **Kein Logo je Einheit:** Die Vorlage kennt es nicht mehr. Die Einheit steht als Text; Logos, ihr Laden und der Fallback entfallen.
 - **Keine Einheit:** Ein Konto ohne Rolle, Einheit und Teilnehmende zeigt den Zustand «Keine Einheit» mit dem Weg zurück zum Login. Wie der neue Server dies meldet, steht mit dem Vertrag fest.
