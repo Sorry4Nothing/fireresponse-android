@@ -70,6 +70,14 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
         }
     }
 
+    /** Die Karten der Liste zeigen die Antworten: Nach dem Speichern lädt sie still neu. Ein Fehler lässt den alten Stand stehen. */
+    private fun refreshList() {
+        viewModelScope.launch(Background()) {
+            val today = LocalDate.now(SWISS_ZONE)
+            (api.list(today, today.plusMonths(WINDOW_MONTHS)) as? ApiResult.Ok)?.let { _list.value = it }
+        }
+    }
+
     /** Lädt die Übersicht der Anmeldungen neu; bis die Antwort da ist, zeigt der Bildschirm das Laden. */
     fun loadRegistrations(appointmentId: String) {
         _registrations.value = null
@@ -119,6 +127,7 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
                     _rsvp.value = RsvpState(sentAt = existing + (key to TIME_FORMAT.format(LocalTime.now(SWISS_ZONE))))
                     val fresh = api.read(appointmentId)
                     if (openedId == appointmentId) _detail.value = fresh
+                    refreshList()
                 }
             }
         }
