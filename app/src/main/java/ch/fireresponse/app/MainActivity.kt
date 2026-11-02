@@ -98,6 +98,7 @@ import ch.fireresponse.app.appointments.startDay
 import ch.fireresponse.app.appointments.weekdayShort
 import ch.fireresponse.app.appointments.AppointmentsViewModel
 import ch.fireresponse.app.ui.MainScaffold
+import ch.fireresponse.app.ui.TwoPane
 import ch.fireresponse.app.ui.Destination
 import ch.fireresponse.app.ui.BusyOverlay
 import ch.fireresponse.app.ui.ErrorState
@@ -207,7 +208,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                     }
                 }
                 AuthState.MustChangePassword -> PasswordScreen(
-                    first = true, form, onSave = auth::changePassword, startPasswordKnown = auth.startPasswordKnown.collectAsState().value,
+                    form, onSave = auth::changePassword, startPasswordKnown = auth.startPasswordKnown.collectAsState().value,
                 )
                 is AuthState.Welcome -> WelcomeScreen(
                     name = current.profile.name,
@@ -423,14 +424,7 @@ private fun MainContent(
                                 )
                             }
                             if (wide) {
-                                Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(Spacing.s4)) {
-                                    Box(Modifier.weight(0.4f)) { list() }
-                                    Box(Modifier.weight(0.6f)) {
-                                        ContentWidth {
-                                            if (appointmentId != null) detailPane(appointmentId) else DetailPlaceholder()
-                                        }
-                                    }
-                                }
+                                TwoPane(list = list, detail = { if (appointmentId != null) detailPane(appointmentId) else DetailPlaceholder() })
                             } else {
                                 list()
                             }

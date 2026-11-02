@@ -26,6 +26,7 @@ import ch.fireresponse.app.auth.LockedScreen
 import ch.fireresponse.app.auth.LoginScreen
 import ch.fireresponse.app.auth.NoSquadScreen
 import ch.fireresponse.app.auth.PasswordScreen
+import ch.fireresponse.app.auth.StartScreen
 import ch.fireresponse.app.auth.ProfileScreen
 import ch.fireresponse.app.auth.WelcomeScreen
 import ch.fireresponse.app.contacts.Contact
@@ -38,7 +39,9 @@ import ch.fireresponse.app.profile.ProfileSquad
 import ch.fireresponse.app.push.NotificationsScreen
 import ch.fireresponse.app.push.PushViewModel
 import ch.fireresponse.app.ui.Destination
+import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.MainScaffold
+import ch.fireresponse.app.ui.TwoPane
 import ch.fireresponse.app.ui.theme.FireResponseTheme
 
 /**
@@ -102,7 +105,7 @@ private val registrations = Registrations(
 private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "login" to { LoginScreen(FormState()) { _, _ -> } },
     "loginError" to { LoginScreen(FormState(error = R.string.login_failed)) { _, _ -> } },
-    "password" to { PasswordScreen(first = true, form = FormState(), onSave = { _, _ -> }, startPasswordKnown = true) },
+    "password" to { PasswordScreen(form = FormState(), onSave = { _, _ -> }, startPasswordKnown = true) },
     "welcome" to {
         WelcomeScreen(
             name = profile.name, squads = profile.squads.map { it.name }, participants = profile.participants.map { it.firstName },
@@ -116,6 +119,33 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     },
     "empty" to {
         MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Ok(AppointmentList(emptyList())), {}, {}) }
+    },
+    "start" to { StartScreen() },
+    "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
+    "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
+    "notfound" to {
+        MainScaffold(Destination.APPOINTMENTS, {}) {
+            AppointmentDetailScreen(
+                ApiResult.Failure(ApiError.NOT_FOUND), RsvpState(), canAssign = false, canSeeRegistrations = false, contacts = null,
+                onParticipant = { _, _ -> }, onLeader = {}, onAssign = {}, onRegistrations = {}, onBack = {}, onRetry = {},
+            )
+        }
+    },
+    "noaccess" to { MainScaffold(Destination.APPOINTMENTS, {}) { ErrorState(ApiError.FORBIDDEN, {}, onToAppointments = {}) } },
+    "session" to { ErrorState(ApiError.NOT_SIGNED_IN, {}, onSignIn = {}) },
+    "wide" to {
+        MainScaffold(Destination.APPOINTMENTS, {}) {
+            TwoPane(
+                list = { AppointmentListScreen(ApiResult.Ok(AppointmentList(appointments)), {}, {}) },
+                detail = {
+                    AppointmentDetailScreen(
+                        ApiResult.Ok(appointments[0]), RsvpState(), canAssign = false, canSeeRegistrations = true,
+                        contacts = ApiResult.Ok(ContactList(listOf(Contact("c1", "Petra Beispiel", phone = "079 000 00 00")))),
+                        onParticipant = { _, _ -> }, onLeader = {}, onAssign = {}, onRegistrations = {}, onBack = {}, onRetry = {},
+                    )
+                },
+            )
+        }
     },
     "offline" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.NETWORK), {}, {}) } },
     "detail" to {

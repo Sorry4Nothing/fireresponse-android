@@ -52,7 +52,7 @@
     <string name="state_404_title">Nicht gefunden</string>
     <string name="state_404_text">Diese Übung gibt es nicht mehr. Vielleicht wurde sie verschoben oder abgesagt.</string>
     <string name="state_access_title">Kein Zugriff</string>
-    <string name="state_access_text">Diese Seite ist nur für die Leitung. Wenn du denkst, das ist ein Fehler, frag deine Leitung.</string>
+    <string name="state_access_text">Diese Seite ist nur für die Leitung deiner Einheit. Wenn du denkst, das ist ein Fehler, frag deine Leitung.</string>
     <string name="state_no_squad_title">Keine Einheit</string>
     <string name="state_no_squad_text">Dein Konto ist noch keiner Einheit zugewiesen. Das erledigt deine Jugendleitung. Frag dort nach.</string>
     <string name="state_no_squad_action">Zurück zum Login</string>
@@ -114,12 +114,9 @@
     <string name="login_admin_only">Admins melden sich im Admin-Bereich an. In der App geht das nicht.</string>
     <string name="password_show">Passwort anzeigen</string>
     <string name="password_eyebrow_first">Erster Login</string>
-    <string name="password_eyebrow">Konto</string>
     <string name="password_title_first">Eigenes Passwort wählen</string>
-    <string name="password_title">Passwort ändern</string>
     <string name="password_intro_first">Du hast ein Startpasswort von deiner Leitung bekommen. Wähle jetzt ein eigenes, das nur du kennst.</string>
     <string name="password_current_first">Startpasswort</string>
-    <string name="password_current">Bisheriges Passwort</string>
     <string name="password_new">Neues Passwort</string>
     <string name="password_rule_length">Mindestens 12 Zeichen</string>
     <string name="password_repeat">Passwort wiederholen</string>

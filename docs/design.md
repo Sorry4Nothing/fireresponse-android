@@ -27,7 +27,7 @@ Stil «Feuerwache»: ruhiges, warmes Graphit als Grund. Akzent in der Nacht Warn
 | Hinweis | `ui/Notice.kt` |
 | Textfeld | `ui/TextField.kt`: Label immer sichtbar, Rand `outline`, Fokus 2 dp `focus` |
 | Zustände | `ui/States.kt`: Laden (Skelett), Leer, Offline, Fehler, Nicht gefunden, Kein Zugriff, Sitzung abgelaufen |
-| Querformat | `MainActivity.kt`: ab 600 dp Liste und Detail nebeneinander; `ui/ContentWidth.kt` begrenzt den Text auf 640 dp |
+| Hochformat | `AndroidManifest.xml`: `screenOrientation="portrait"`, die App dreht sich nicht. Ab Android 16 ignoriert das System die Sperre auf Bildschirmen ab 600 dp (Tablets, aufgeklappte Foldables); dort gelten `ui/TwoPane.kt` (Liste und Detail nebeneinander, Dock links) und `ui/ContentWidth.kt` (Text höchstens 640 dp) |
 | Profil | `auth/ProfileScreen.kt`: Profilbild, Benachrichtigungen, Datenschutz, Biometrie, Teilnehmende, Einheiten als Info-Zeile, Abmelden |
 
 ## Regeln

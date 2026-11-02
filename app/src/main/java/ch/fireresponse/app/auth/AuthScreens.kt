@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -169,12 +170,21 @@ fun StartScreen() {
                 style = MaterialTheme.typography.displayMedium,
                 modifier = Modifier.semantics { heading() },
             )
-            Text(
-                stringResource(R.string.start_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = Spacing.s5).semantics { liveRegion = LiveRegionMode.Polite },
-            )
+            Row(
+                Modifier.padding(top = Spacing.s5).semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Der Balken ist Zierde (Entwurf: 96 x 4 dp, knapp die Hälfte gefüllt); der Text sagt, was läuft.
+                Box(Modifier.width(96.dp).height(4.dp).background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(2.dp))) {
+                    Box(Modifier.fillMaxWidth(0.45f).height(4.dp).background(MaterialTheme.fire.accent, RoundedCornerShape(2.dp)))
+                }
+                Text(
+                    stringResource(R.string.start_loading),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         },
         bottom = { Spacer(Modifier.height(72.dp)) },
         animateLogo = true,
@@ -286,15 +296,13 @@ private fun ShowPasswordSwitch(visible: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 /**
- * Passwort ändern: der Pflichtwechsel nach dem Startpasswort (`first`, ohne Zurück) und der freiwillige aus dem Profil.
+ * Eigenes Passwort wählen: der Pflichtwechsel nach dem ersten Login, ohne Zurück und ohne Dock (im Profil gibt es keinen Wechsel).
  * Der Server verlangt auch das bisherige Passwort. Das Feld zum Wiederholen und die Regel «Stimmt überein» folgen dem Entwurf.
  */
 @Composable
 fun PasswordScreen(
-    first: Boolean,
     form: FormState,
     onSave: (String?, String) -> Unit,
-    onBack: (() -> Unit)? = null,
     /** Die App kennt das Startpasswort vom Login: Dann entfällt das Feld dafür. */
     startPasswordKnown: Boolean = false,
 ) {
@@ -303,29 +311,26 @@ fun PasswordScreen(
     var currentVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
     var repeat by remember { mutableStateOf("") }
-    val askCurrent = !(first && startPasswordKnown)
+    val askCurrent = !startPasswordKnown
     val bisher = if (askCurrent) current else null
     val ready = PasswordRules.canSave(bisher, new) && PasswordRules.matches(new, repeat)
     val save = { if (ready && !form.running) onSave(bisher, new) }
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Header(
-                title = stringResource(if (first) R.string.password_title_first else R.string.password_title),
-                eyebrow = stringResource(if (first) R.string.password_eyebrow_first else R.string.password_eyebrow),
-                back = onBack?.let { HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_profile), it) },
+                title = stringResource(R.string.password_title_first),
+                eyebrow = stringResource(R.string.password_eyebrow_first),
                 focusOnTitle = true,
             )
             Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                if (first) {
-                    Text(
-                        stringResource(R.string.password_intro_first),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    stringResource(R.string.password_intro_first),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 if (askCurrent) {
                     LabeledTextField(
-                        label = stringResource(if (first) R.string.password_current_first else R.string.password_current),
+                        label = stringResource(R.string.password_current_first),
                         value = current,
                         onValueChange = { current = it },
                         maxChars = PasswordRules.MAX_LENGTH,
