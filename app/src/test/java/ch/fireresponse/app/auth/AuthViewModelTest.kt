@@ -96,15 +96,24 @@ class AuthViewModelTest {
 
     private fun <T> StateFlow<T>.await(condition: (T) -> Boolean): T = runBlocking { withTimeout(5_000) { first(condition) } }
 
+    /**
+     * Wartet, bis das Formular wieder frei ist. Der Zustand wechselt, bevor `signIn`, `changePassword` und `acceptConsent` es freigeben; ein
+     * Aufruf davor wird ignoriert (`if (_form.value.running) return`). Auf einem langsamen Rechner reicht das Warten auf den Zustand allein nicht.
+     */
+    private fun idle() = viewModel.form.await { !it.running }
+
     /** Meldet an, wählt das Passwort und stimmt zu: danach ist die Person in der App. */
     private fun signInCompletely() {
         viewModel.state.await { it is AuthState.SignedOut }
         viewModel.signIn("demo", "startpasswort123")
         viewModel.state.await { it is AuthState.MustChangePassword }
+        idle()
         viewModel.changePassword(null, "meinneuespasswort1")
         viewModel.state.await { it is AuthState.Welcome }
+        idle()
         viewModel.acceptConsent()
         viewModel.state.await { it is AuthState.SignedIn }
+        idle()
     }
 
     @Test
@@ -128,6 +137,7 @@ class AuthViewModelTest {
         viewModel.state.await { it is AuthState.SignedOut }
         viewModel.signIn("demo", "startpasswort123")
         viewModel.state.await { it is AuthState.MustChangePassword }
+        idle()
         assertTrue("das Startpasswort ist für den Wechsel bekannt", viewModel.startPasswordKnown.value)
     }
 
@@ -136,6 +146,7 @@ class AuthViewModelTest {
         viewModel.state.await { it is AuthState.SignedOut }
         viewModel.signIn("demo", "startpasswort123")
         viewModel.state.await { it is AuthState.MustChangePassword }
+        idle()
         viewModel.changePassword(null, "meinneuespasswort1")
         val welcome = viewModel.state.await { it is AuthState.Welcome } as AuthState.Welcome
         assertEquals("Wir speichern nur, was nötig ist.", welcome.consent.text)
