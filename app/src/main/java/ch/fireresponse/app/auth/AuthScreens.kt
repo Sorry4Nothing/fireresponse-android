@@ -9,6 +9,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.WindowInsets
 import ch.fireresponse.app.ui.InitialsBadge
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.text.font.FontWeight
@@ -107,6 +110,7 @@ private val CardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
  * von den Rändern des Systems beschnitten (`logoTop`: Abstand ihres Rahmens zum oberen Rand, im Entwurf -30 dp, auf Willkommen
  * -130 dp). Scrollt, wenn der Platz bei grosser Schrift nicht reicht.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LogoPage(
     top: @Composable ColumnScope.() -> Unit,
@@ -118,8 +122,8 @@ private fun LogoPage(
     val motionEnabled = rememberMotionEnabled()
     val reveal = remember { Animatable(if (animateLogo && motionEnabled) 0f else 1f) }
     LaunchedEffect(Unit) { if (reveal.value < 1f) reveal.animateTo(1f, tween(LOGO_REVEAL_MS, easing = FastOutSlowInEasing)) }
-    // Bei grosser Schrift (ab 130 %) entfällt die Flamme: Sie ist Zierde, und der Text darüber wäre auf Rot kaum lesbar.
-    val showLogo = LocalDensity.current.fontScale < 1.3f
+    // Bei grosser Schrift (ab 130 %) und bei offener Tastatur entfällt die Flamme: Sie ist Zierde, und der Text darüber wäre auf Rot kaum lesbar.
+    val showLogo = LocalDensity.current.fontScale < 1.3f && !WindowInsets.isImeVisible
     Box(Modifier.fillMaxSize().clipToBounds()) {
         if (showLogo) Image(
             painterResource(R.drawable.ic_logo),
@@ -311,6 +315,7 @@ fun PasswordScreen(
     var currentVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
     var repeat by remember { mutableStateOf("") }
+    val repeatFocus = remember { FocusRequester() }
     val askCurrent = !startPasswordKnown
     val bisher = if (askCurrent) current else null
     val ready = PasswordRules.canSave(bisher, new) && PasswordRules.matches(new, repeat)
@@ -353,6 +358,7 @@ fun PasswordScreen(
                     masked = !newVisible,
                     autofill = ContentType.NewPassword,
                     imeAction = ImeAction.Next,
+                        onImeAction = { repeatFocus.requestFocus() },
                     enabled = !form.running,
                     trailing = { ShowPasswordSwitch(newVisible) { newVisible = it } },
                 )
@@ -368,6 +374,7 @@ fun PasswordScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 LabeledTextField(
                     label = stringResource(R.string.password_repeat),
+                    focusRequester = repeatFocus,
                     container = MaterialTheme.colorScheme.surfaceContainerLow,
                     value = repeat,
                     onValueChange = { repeat = it },
