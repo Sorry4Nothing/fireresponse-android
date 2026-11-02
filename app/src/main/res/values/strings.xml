@@ -97,7 +97,7 @@
     <string name="login_forgot_link">Passwort vergessen?</string>
     <string name="login_forgot">Dann hilft dir die Leitung deiner Einheit weiter.</string>
     <string name="login_failed">Anmeldung nicht möglich. Bitte Benutzername und Passwort prüfen oder später nochmals versuchen. Sonst hilft die Leitung.</string>
-    <string name="login_admin_only">Für dieses Konto ist ein zweiter Faktor eingerichtet. Das geht in der App noch nicht; melde dich im Admin-Bereich an.</string>
+    <string name="login_admin_only">Admins melden sich im Admin-Bereich an. In der App geht das nicht.</string>
     <string name="password_show">Passwort anzeigen</string>
     <string name="password_eyebrow_first">Erster Login</string>
     <string name="password_title_first">Eigenes Passwort wählen</string>

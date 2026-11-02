@@ -62,7 +62,6 @@ Geprüft:
 Oberfläche und Komponenten sind nach der Vorlage gebaut. Der Vertrag (E4) ist übernommen: Profil, Termine, Anmeldungen, Kontaktperson, Abzeichen (Sterne), Info und Aufgebot, «Anmeldung ab» und die Einwilligung mit Text vom Server sind gebaut. Offen ist, was ein Design oder eine Datei von aussen braucht:
 
 - **Abzeichen als Bild:** Der Vertrag liefert ein Rang-Abzeichen entweder als Sterne (0 bis 5) oder als Bild (`bildUrl`, PNG oder SVG). `RankBadge` zeigt Sterne, aber nur 0 bis 2 (die Platzhalter-Bilder reichen nicht weiter); die Standard-Ränge der Einheiten gehen bis 5, Ränge 3 bis 5 zeigt die App darum nicht; Bild-Abzeichen zeigt die App noch nicht, weil sie SVG nicht ohne Zusatzbibliothek lesen kann und ein Original-Abzeichen fehlt.
-- **Zweiter Faktor:** Hat ein Konto (Kommando) den zweiten Faktor eingerichtet, verlangt die Anmeldung einen Code (`/api/auth/two-factor/verify-totp`). Die App führt diesen Schritt nicht aus und weist solche Konten ab; es fehlt ein Entwurf dafür.
 - **Einheitslogo:** Der Vertrag liefert es jetzt (`logoUrl` in `/ich`, SVG oder PNG). Der Entwurf kennt kein Logo je Einheit, und SVG liest die App nicht ohne Zusatzbibliothek: Es bleibt aus, bis das Design es vorsieht.
 - **Datenschutz** als Screen mit Abschnittskarten: Bis dahin öffnet die App die Seite des Servers im Browser; die Einwilligung selbst steht im Willkommen.
 - **Kennzeichnung der Einheit in der Liste** und Push-Einstellungen im Profil (Design folgt), Info-Seite «Konto aufs Kind übertragen» (Design folgt).
