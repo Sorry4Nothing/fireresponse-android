@@ -17,6 +17,9 @@
     <string name="message_you">Du</string>
     <string name="participant_status_yes">%1$s kommt</string>
     <string name="participant_status_no">%1$s kommt nicht</string>
+    <string name="own_status_yes">Du bist dabei</string>
+    <string name="own_status_no">Du bist nicht dabei</string>
+    <string name="own_status_open">Anmeldung offen</string>
     <string name="participant_status_open">Zusage für %1$s offen</string>
     <string name="close">Schliessen</string>
     <string name="contact_title">Kontakt</string>

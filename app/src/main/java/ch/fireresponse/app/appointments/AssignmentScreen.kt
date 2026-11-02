@@ -48,7 +48,6 @@ import ch.fireresponse.app.ui.PrimaryButton
 import ch.fireresponse.app.ui.SlowHint
 import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.focusRing
-import ch.fireresponse.app.ui.SquadLogo
 import ch.fireresponse.app.ui.theme.Sizes
 import ch.fireresponse.app.ui.theme.Spacing
 
@@ -107,7 +106,6 @@ private fun AssignmentForm(
                 ChoiceRow(
                     title = group.name,
                     text = null,
-                    squadId = group.id,
                     enabled = !edit.running,
                     control = { Checkbox(checked = checked, onCheckedChange = null) },
                     modifier = Modifier.toggleable(
@@ -173,7 +171,6 @@ private fun ChoiceRow(
     title: String,
     text: String?,
     enabled: Boolean,
-    squadId: String? = null,
     control: @Composable () -> Unit,
     modifier: Modifier,
 ) {
@@ -190,7 +187,6 @@ private fun ChoiceRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         control()
-        squadId?.let { SquadLogo(it, size = 40.dp) }
         Column(Modifier.weight(1f)) {
             Text(
                 title,

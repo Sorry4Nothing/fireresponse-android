@@ -25,6 +25,11 @@ class DaysTest {
     }
 
     @Test
+    fun spokenDayIsWrittenOut() {
+        assertEquals("Samstag, 14. November", spokenDay(LocalDate.of(2026, 11, 14)))
+    }
+
+    @Test
     fun lateEveningInUtcBelongsToNextDayInSwitzerland() {
         val days = groupByDay(
             listOf(

@@ -53,12 +53,14 @@ Geprüft: Build, Lint und Unit-Tests (inklusive Kontrast); Start, Offline-Zustan
 
 ## Noch nicht umgesetzt
 
-Diese Teile hängen am neuen API-Vertrag (E4) oder an Design, das noch folgt:
+Oberfläche und Komponenten sind nach der Vorlage gebaut. Offen ist, was Daten vom neuen API-Vertrag (E4) braucht oder dessen Design noch folgt:
 
-- Zeitleiste der Übungsliste (Datum links an einer Linie), Treffpunkt- und Schluss-Kacheln im Detail, Kontaktperson pro Termin mit Rangabzeichen (A2, A3)
-- Rangabzeichen (`RangAbzeichen`) bei den Teilnehmenden; der Rang kommt als Bild von der API
-- Zustand «Keine Einheit», Willkommen mit Einführung und Einwilligung nach neuer Vorlage, Anmeldung mit Wappen (A1)
-- Kennzeichnung der Einheit in der Liste, Push-Einstellungen im Profil, Info-Seite «Konto aufs Kind übertragen» (Design folgt)
+- **Rangabzeichen:** `ui/Brand.kt` hat die Komponente `RankBadge` (Bild mit Label, 0 bis 2 Sterne); sie hängt noch nirgends, weil der Rang als Bild von der API kommt (Anmeldungen, Profil, Willkommen, Kontaktperson).
+- **Kontaktperson pro Termin** mit Rolle und Rangabzeichen, **Info und Aufgebot** im Detail (A3, A2).
+- **Datenschutz** als Screen mit Abschnittskarten: Der Text kommt von der API; bis dahin öffnet die App die Seite im Browser.
+- **Einwilligung am Konto** (Willkommen): Die App sendet die Kenntnisnahme wie bisher; die neue Einwilligung am Konto kommt mit dem Vertrag.
+- **Kennzeichnung der Einheit in der Liste** und Push-Einstellungen im Profil (Design folgt), Info-Seite «Konto aufs Kind übertragen» (Design folgt).
+- **Wappen und Rangabzeichen** sind Platzhalter nach dem Entwurf; das offizielle Wappen mit Nutzungsrecht und das Original der Jugendfeuerwehr als Vektor ersetzen sie.
 
 ## Abweichungen von der Vorlage
 
@@ -68,3 +70,9 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 2. **Push.** Die Vorlage zeigt Benachrichtigungen als «Kommt bald». Push ist Teil von V1; das Profil führt zu den Schaltern.
 3. **Anwesenheit.** Die Vorlage führt «Anwesenheit» in der Verwaltung. Die App erfasst keine Anwesenheit.
 4. **Schreibweise.** Die Vorlage schreibt «Fire-Response». Die App heisst «FireResponse».
+
+## Weitere Entscheide
+
+- **Passwort wiederholen:** Die Vorlage hat zwei Felder (neu und wiederholen) mit der Regel «Stimmt überein»; die App folgt ihr. «Passwort anzeigen» bleibt daneben.
+- **Kein Logo je Einheit:** Die Vorlage kennt es nicht mehr. Die Einheit steht als Text; Logos, ihr Laden und der Fallback entfallen.
+- **Keine Einheit:** Ein Konto ohne Rolle, Einheit und Teilnehmende zeigt den Zustand «Keine Einheit» mit dem Weg zurück zum Login. Wie der neue Server dies meldet, steht mit dem Vertrag fest.

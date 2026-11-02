@@ -14,24 +14,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 
-/** Das Profilbild ist ein JPEG von 256 × 256 Pixeln (rund 20 bis 80 KB), das Stufenlogo ein WebP bis 512 Pixel; alles darüber ist kein Bild dieser Art. */
+/** Das Profilbild ist ein JPEG von 256 × 256 Pixeln (rund 20 bis 80 KB); alles darüber ist kein Bild dieser Art. */
 private const val MAX_IMAGE_BYTES = 512 * 1024
 
 /** Bilder im Arbeitsspeicher der Sitzung: gut 60 Bilder zu 256 × 256 Pixeln. */
 private const val CACHE_BYTES = 16 * 1024 * 1024
 
 /**
- * Nur Adressen, wie der Vertrag sie für ein Profilbild oder Stufenlogo liefert: `/api/v1/personen/{id}/bild` und
- * `/api/v1/stufen/{id}/logo`, mit `?v=…` für die Fassung.
+ * Nur Adressen, wie der Vertrag sie für ein Profilbild liefert: `/api/v1/personen/{id}/bild`, mit `?v=…` für die Fassung.
  * Alles andere (anderer Host, andere Route) lädt die App nicht: Ein fremder Host bekäme sonst das Sitzungscookie.
  */
-private val IMAGE_PATH = Regex("^/api/v1/(personen/[0-9a-fA-F-]{36}/bild|stufen/[0-9a-fA-F-]{36}/logo)(\\?[A-Za-z0-9=&._-]{0,64})?$")
+private val IMAGE_PATH = Regex("^/api/v1/personen/[0-9a-fA-F-]{36}/bild(\\?[A-Za-z0-9=&._-]{0,64})?$")
 
 fun isProfileImagePath(path: String): Boolean = IMAGE_PATH.matches(path)
 
 /** Der Zugang zu den Profilbildern des Backends. */
 class ProfileImageApi(private val api: ApiClient) {
-    /** Lädt ein Bild mit der Sitzung. Eine Adresse, die weder Profilbild noch Stufenlogo nennt, gilt als nicht gefunden. */
+    /** Lädt ein Bild mit der Sitzung. Eine Adresse, die kein Profilbild nennt, gilt als nicht gefunden. */
     suspend fun load(path: String): ApiResult<ByteArray> =
         if (isProfileImagePath(path)) {
             api.getBytes(path, MAX_IMAGE_BYTES)

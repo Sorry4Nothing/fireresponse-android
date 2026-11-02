@@ -48,15 +48,6 @@ class ProfileImagesTest {
     }
 
     @Test
-    fun squadLogoRouteIsAcceptedAndNothingElseOnTheSquadPath() {
-        assertTrue(isProfileImagePath("/api/v1/stufen/$id/logo"))
-        assertTrue(isProfileImagePath("/api/v1/stufen/$id/logo?v=3"))
-        assertFalse(isProfileImagePath("https://boese.example/api/v1/stufen/$id/logo"))
-        assertFalse(isProfileImagePath("/api/v1/stufen/$id/kontakte"))
-        assertFalse(isProfileImagePath("/api/v1/stufen/$id/logo/../../ich"))
-    }
-
-    @Test
     fun aForeignAddressIsNeverRequestedAndGetsNoCookie() {
         val result = runBlocking { images.load("https://boese.example/api/v1/personen/$id/bild") }
         assertEquals(ApiResult.Failure(ApiError.NOT_FOUND), result)

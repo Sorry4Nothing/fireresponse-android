@@ -78,8 +78,6 @@ import ch.fireresponse.app.images.LocalProfileImages
 import ch.fireresponse.app.images.ProfileImageApi
 import ch.fireresponse.app.images.ProfileImageEncoder
 import ch.fireresponse.app.images.ProfileImages
-import ch.fireresponse.app.images.LocalSquadLogos
-import ch.fireresponse.app.images.SquadLogos
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
@@ -226,8 +224,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 is AuthState.SignedIn -> if (current.profile.hasNoSquad) NoSquadScreen(onBackToLogin = auth::signOut) else CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
                     // Die Bilder der Sitzung liegen im Speicher der Sitzung und verschwinden mit ihr.
                     val images = viewModel { ProfileImages(ProfileImageApi(client)) }
-                    val squadLogos by viewModel { SquadLogos(AppointmentsApi(client)) }.paths.collectAsState()
-                    CompositionLocalProvider(LocalProfileImages provides images, LocalSquadLogos provides squadLogos) {
+                    CompositionLocalProvider(LocalProfileImages provides images) {
                         MainContent(
                             AppointmentsApi(client), PushApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,

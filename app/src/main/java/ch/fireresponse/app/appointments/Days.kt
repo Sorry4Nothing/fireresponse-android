@@ -39,3 +39,7 @@ fun weekdayShort(date: LocalDate): String =
 /** «14. November» */
 fun dayAndMonth(date: LocalDate): String =
     "${date.dayOfMonth}. ${date.month.getDisplayName(TextStyle.FULL, Locale.GERMAN)}"
+
+/** «Samstag, 14. November»: Für den Screenreader ausgeschrieben statt «SA 14». */
+fun spokenDay(date: LocalDate): String =
+    "${date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.GERMAN)}, ${dayAndMonth(date)}"

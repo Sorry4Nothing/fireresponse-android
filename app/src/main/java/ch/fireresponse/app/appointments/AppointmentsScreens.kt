@@ -4,6 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.graphics.Color
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -52,7 +56,6 @@ import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.OutlinedPillButton
 import ch.fireresponse.app.ui.StatusChip
 import ch.fireresponse.app.ui.focusRing
-import ch.fireresponse.app.ui.SquadLogo
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
 import java.time.LocalTime
@@ -131,47 +134,81 @@ private fun DateColumn(day: Day, withLine: Boolean) {
     }
 }
 
+/** Eine Zeile Stand auf der Karte: Symbol und Satz, nie nur Farbe. */
+private data class StatusLine(@DrawableRes val icon: Int, val text: String, val color: Color)
+
+/**
+ * Der Stand je eigenem Teilnehmenden («Noah kommt», «Lena kommt nicht», «Zusage für Lena offen») und, für Leitende, der eigene
+ * («Du bist dabei», «Du bist nicht dabei», «Anmeldung offen»). Bei einer abgesagten Übung steht schon «Abgesagt» da.
+ */
+@Composable
+private fun statusLines(appointment: Appointment): List<StatusLine> {
+    if (appointment.cancelled) return emptyList()
+    val scheme = MaterialTheme.colorScheme
+    val colors = MaterialTheme.fire
+    val participants = appointment.participants.map {
+        when (it.status) {
+            "ja" -> StatusLine(R.drawable.ic_check, stringResource(R.string.participant_status_yes, it.firstName), colors.onSuccessContainer)
+            "nein" -> StatusLine(R.drawable.ic_cross, stringResource(R.string.participant_status_no, it.firstName), scheme.onErrorContainer)
+            else -> StatusLine(R.drawable.ic_question, stringResource(R.string.participant_status_open, it.firstName), scheme.onSurfaceVariant)
+        }
+    }
+    val own = appointment.ownRegistration?.let {
+        when (it) {
+            "ja" -> StatusLine(R.drawable.ic_check, stringResource(R.string.own_status_yes), colors.onSuccessContainer)
+            "nein" -> StatusLine(R.drawable.ic_cross, stringResource(R.string.own_status_no), scheme.onErrorContainer)
+            else -> StatusLine(R.drawable.ic_question, stringResource(R.string.own_status_open), scheme.onSurfaceVariant)
+        }
+    }
+    return participants + listOfNotNull(own)
+}
+
+/**
+ * Die Karte einer Übung: Zeit in `accent`, Titel, Ort, darunter der Stand. Die ganze Karte ist ein Klickziel; TalkBack liest einen
+ * vollständigen Satz mit Datum («Samstag, 14. November, 14:00–17:00, Schläuche kuppeln, Feuerwehrmagazin, Zusage für Lena offen»).
+ */
 @Composable
 private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) {
     val squads = appointment.squads.joinToString(", ") { it.name }
     val headerLine = listOf(listTime(appointment), squads).filter { it.isNotBlank() }.joinToString(" · ")
-    Column(
+    val lines = statusLines(appointment)
+    val chips = listOfNotNull(
+        stringResource(R.string.status_cancelled).takeIf { appointment.cancelled },
+        stringResource(R.string.status_review).takeIf { appointment.inReview },
+        stringResource(R.string.status_unassigned).takeIf { appointment.unassigned },
+    )
+    val spoken = (
+        listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title, appointment.location) +
+            chips + lines.map { it.text }
+        ).filter { it.isNotBlank() }.joinToString(", ")
+    Box(
         Modifier
             .fillMaxWidth()
             .focusRing(CARD)
             .clip(CARD)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClickLabel = stringResource(R.string.appointment_open)) { onOpen(appointment.id) }
-            .padding(horizontal = Spacing.s4, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+            .semantics { contentDescription = spoken },
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2), verticalAlignment = Alignment.CenterVertically) {
-            appointment.squads.forEach { SquadLogo(it.id, size = 28.dp) }
+        Column(
+            Modifier.clearAndSetSemantics {}.padding(horizontal = Spacing.s4, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
             Text(
                 headerLine,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"),
                 color = MaterialTheme.fire.accent,
             )
+            Text(appointment.title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp))
+            appointment.location?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            lines.forEach { line ->
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(line.icon), contentDescription = null, tint = line.color, modifier = Modifier.size(16.dp))
+                    Text(line.text, style = MaterialTheme.typography.bodyMedium, color = line.color)
+                }
+            }
+            AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
         }
-        Text(appointment.title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp))
-        appointment.location?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        // Je eigenes Kind der Stand (Vorname und «kommt», «kommt nicht» oder «noch offen»); bei einem abgesagten Programm steht schon «Abgesagt» da.
-        if (!appointment.cancelled) appointment.participants.forEach { ParticipantStatus(it) }
-        AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
-    }
-}
-
-/** Der Stand eines eigenen Kindes auf der Karte: Symbol und Wort, nie nur Farbe. */
-@Composable
-private fun ParticipantStatus(participant: AppointmentParticipant) {
-    val (icon, text) = when (participant.status) {
-        "ja" -> R.drawable.ic_check to stringResource(R.string.participant_status_yes, participant.firstName)
-        "nein" -> R.drawable.ic_cross to stringResource(R.string.participant_status_no, participant.firstName)
-        else -> R.drawable.ic_question to stringResource(R.string.participant_status_open, participant.firstName)
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -257,7 +294,6 @@ private fun AppointmentContent(
         Header(
             title = appointment.title,
             eyebrow = listOfNotNull(squads.ifBlank { null }, date).joinToString(" · "),
-            eyebrowSquads = appointment.squads.map { it.id },
             back = back,
             titleStyle = MaterialTheme.typography.headlineMedium,
             focusOnTitle = true,

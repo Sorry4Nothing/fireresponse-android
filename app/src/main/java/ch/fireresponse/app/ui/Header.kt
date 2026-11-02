@@ -48,7 +48,6 @@ fun Header(
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     /** Stufen, deren Logo vor der Überzeile steht (dekorativ, der Name steht in der Überzeile). */
-    eyebrowSquads: List<String> = emptyList(),
     back: HeaderButton? = null,
     action: HeaderButton? = null,
     titleStyle: TextStyle = MaterialTheme.typography.headlineLarge,
@@ -68,12 +67,7 @@ fun Header(
         }
         if (title != null) {
             Column(Modifier.padding(horizontal = Spacing.s2), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                if (eyebrow != null || eyebrowSquads.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
-                        eyebrowSquads.forEach { SquadLogo(it, size = 24.dp) }
-                        eyebrow?.let { Text(it.uppercase(), style = Eyebrow, color = MaterialTheme.fire.accent) }
-                    }
-                }
+                eyebrow?.let { Text(it.uppercase(), style = Eyebrow, color = MaterialTheme.fire.accent) }
                 val focus = remember { FocusRequester() }
                 if (focusOnTitle) LaunchedEffect(title) { focus.requestFocus() }
                 Text(
