@@ -18,7 +18,11 @@ class AuthApi(private val api: ApiClient) {
     suspend fun changePassword(current: String, new: String): ApiResult<Unit> =
         api.postAction("/api/auth/change-password", ChangePasswordRequest(current, new))
 
-    suspend fun acceptPrivacy(): ApiResult<Unit> = api.postWithoutBody("/api/v1/ich/datenschutz")
+    /** Die aktuelle Fassung der Einwilligung mit Text. Eine neue Fassung heisst: neu zustimmen. */
+    suspend fun consent(): ApiResult<Consent> = api.get("/api/v1/einwilligung")
+
+    /** Stimmt der aktuellen Fassung zu; die Fassung setzt der Server, die App schickt nichts. */
+    suspend fun giveConsent(): ApiResult<Unit> = api.putWithoutBody("/api/v1/einwilligung")
 
     /** Bleibt auch bei offenem Pflichtwechsel des Passworts erreichbar (alle anderen Routen antworten dann 403). */
     suspend fun profile(): ApiResult<Profile> = api.get("/api/v1/ich")

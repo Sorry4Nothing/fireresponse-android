@@ -40,8 +40,8 @@ sealed interface AuthState {
     /** Die Person hat noch ein Startpasswort und muss ein eigenes wählen. */
     data object MustChangePassword : AuthState
 
-    /** Erster Start: Die Person nimmt die Datenschutzerklärung zur Kenntnis. */
-    data class Welcome(val profile: Profile) : AuthState
+    /** Erster Start oder neue Fassung: Die Person liest die Einwilligung (`consent`, Text vom Server) und stimmt zu. */
+    data class Welcome(val profile: Profile, val consent: Consent) : AuthState
 
     data class SignedIn(val profile: Profile, val scope: SessionScope) : AuthState
 }
@@ -175,7 +175,7 @@ class AuthViewModel(
             when (val result = api.signIn(username.trim(), password)) {
                 is ApiResult.Failure -> _form.value = failureForm(result, signInErrorText(result))
                 is ApiResult.Ok -> if (result.value.twoFactorRedirect) {
-                    // Admins melden sich nur im Admin-Bereich an: kein Sitzungscookie, auch kein halbes (`two_factor`).
+                    // Konten mit zweitem Faktor (Kantonsadmin, Kommando) kann die App noch nicht anmelden: kein Sitzungscookie, auch kein halbes (`two_factor`).
                     forgetSession()
                     _form.value = FormState(error = R.string.login_admin_only)
                 } else {
@@ -213,12 +213,12 @@ class AuthViewModel(
         }
     }
 
-    fun acceptPrivacy() {
+    fun acceptConsent() {
         val welcome = _state.value as? AuthState.Welcome ?: return
         if (_form.value.running) return
         _form.value = FormState(running = true)
         viewModelScope.launch {
-            when (val result = api.acceptPrivacy()) {
+            when (val result = api.giveConsent()) {
                 is ApiResult.Failure -> if (result.error != ApiError.NOT_SIGNED_IN) _form.value = failureForm(result, result.error.text)
                 is ApiResult.Ok -> {
                     _form.value = FormState()
@@ -299,10 +299,18 @@ class AuthViewModel(
                 val profile = result.value
                 when {
                     profile.mustChangePassword -> _state.value = AuthState.MustChangePassword
-                    profile.privacyReadAt == null -> _state.value = AuthState.Welcome(profile)
+                    !profile.consented -> askConsent(profile)
                     else -> enter(profile)
                 }
             }
+        }
+    }
+
+    /** Holt den Text der aktuellen Einwilligung; ist sie schon gültig (anderes Gerät), geht es weiter. */
+    private suspend fun askConsent(profile: Profile) {
+        when (val result = api.consent()) {
+            is ApiResult.Failure -> fail(result.error)
+            is ApiResult.Ok -> if (result.value.valid) enter(profile) else _state.value = AuthState.Welcome(profile, result.value)
         }
     }
 
@@ -320,8 +328,9 @@ class AuthViewModel(
     private var rechecking = false
 
     /**
-     * Ein 403 unter `/api/v1` heisst auch «Passwortwechsel offen». Das Profil (`GET /ich`) bleibt dann erreichbar und sagt es:
-     * Dann geht es zur Passwortseite, sonst bleibt es bei der Meldung der Stelle. Mehrere 403 gleichzeitig prüfen einmal.
+     * Ein 403 unter `/api/v1` heisst auch «Passwortwechsel offen» oder «Einwilligung fehlt» (neue Fassung). Das Profil
+     * (`GET /ich`) bleibt dann erreichbar und sagt es: Dann geht es zur Passwortseite oder zur Einwilligung, sonst bleibt es bei
+     * der Meldung der Stelle. Mehrere 403 gleichzeitig prüfen einmal.
      */
     private fun recheckAfterForbidden() {
         if (rechecking || _state.value !is AuthState.SignedIn) return
@@ -329,10 +338,10 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 val profile = (api.profile() as? ApiResult.Ok)?.value
-                if (profile != null && profile.mustChangePassword) {
+                if (profile != null && (profile.mustChangePassword || !profile.consented)) {
                     scope?.viewModelStore?.clear()
                     scope = null
-                    _state.value = AuthState.MustChangePassword
+                    if (profile.mustChangePassword) _state.value = AuthState.MustChangePassword else askConsent(profile)
                 }
             } finally {
                 rechecking = false

@@ -12,9 +12,8 @@ import java.time.ZoneOffset
 
 /**
  * Nur im Debug-Build, nur wenn keine echte Adresse eingestellt ist (`fireresponseApiBaseUrl`): Die App läuft dann gegen diesen
- * Fake-Server und lässt sich ohne Backend durchspielen. Er antwortet im Format des bisherigen Vertrags, hält seinen Stand im
- * Arbeitsspeicher und kennt ein erfundenes Konto: Benutzername `demo`, Startpasswort `startpasswort123`. Mit dem neuen Vertrag (E4)
- * wird er angepasst oder entfällt.
+ * Fake-Server und lässt sich ohne Backend durchspielen. Er antwortet im Format des Vertrags (`api-vertrag/openapi.yaml`), hält
+ * seinen Stand im Arbeitsspeicher und kennt ein erfundenes Konto: Benutzername `demo`, Startpasswort `startpasswort123`.
  */
 class DebugApp : Application() {
     override fun onCreate() {
@@ -26,10 +25,8 @@ class DebugApp : Application() {
 class FakeBackend : Interceptor {
     private var signedIn = false
     private var mustChange = true
-    private var privacyRead = false
-    private var appointmentsOpen = true
+    private var consented = false
     private val participantStatus = mutableMapOf("k1" to "offen", "k2" to "ja")
-    private var leaderStatus = "offen"
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
@@ -40,60 +37,72 @@ class FakeBackend : Interceptor {
         fun noContent() = reply(request, 204, "")
         return when {
             path == "/api/auth/get-session" ->
-                ok(if (signedIn) """{"user":{"name":"Sandra Muster","mussPasswortAendern":$mustChange}}""" else "null")
+                ok(if (signedIn) """{"session":{"id":"s1"},"user":{"name":"Sandra Muster","mussPasswortAendern":$mustChange}}""" else "null")
             path == "/api/auth/sign-in/username" -> {
                 if ("\"demo\"" in body && "startpasswort123" in body || (!mustChange && "\"demo\"" in body)) {
                     signedIn = true
-                    ok("""{"twoFactorRedirect":false}""", "fake_session=1; Path=/")
+                    ok("""{"redirect":false,"token":"x","user":{"name":"Sandra Muster","mussPasswortAendern":$mustChange}}""", "fake_session=1; Path=/")
                 } else {
-                    reply(request, 401, """{"code":"INVALID_USERNAME_OR_PASSWORD","message":"x"}""")
+                    reply(request, 401, """{"code":"ANMELDUNG_FEHLGESCHLAGEN","message":"x"}""")
                 }
             }
             path == "/api/auth/change-password" -> { mustChange = false; ok("{}") }
-            path == "/api/auth/sign-out" -> { signedIn = false; ok("{}", "fake_session=; Max-Age=0; Path=/") }
+            path == "/api/auth/sign-out" -> { signedIn = false; ok("""{"success":true}""", "fake_session=; Max-Age=0; Path=/") }
             !signedIn -> reply(request, 401, """{"code":"NICHT_ANGEMELDET","message":"x"}""")
             path == "/api/v1/ich" && method == "GET" -> ok(profile())
+            path == "/api/v1/einwilligung" && method == "GET" -> ok(consent())
+            path == "/api/v1/einwilligung" && method == "PUT" -> { consented = true; noContent() }
+            mustChange -> reply(request, 403, """{"code":"PASSWORT_AENDERN","message":"x"}""")
+            !consented -> reply(request, 403, """{"code":"EINWILLIGUNG_FEHLT","message":"x"}""")
             path == "/api/v1/ich" && method == "PATCH" -> noContent()
-            path == "/api/v1/ich/datenschutz" -> { privacyRead = true; noContent() }
             path == "/api/v1/push-token" -> noContent()
-            path == "/api/v1/programme" -> ok("""{"programme":[${appointment("a1", 3)},${appointment("a2", 3, hour = 17)},${appointment("a3", 10, cancelled = true)}]}""")
+            path == "/api/v1/programme" ->
+                ok("""{"programme":[${appointment("a1", 3)},${appointment("a2", 3, hour = 17)},${appointment("a3", 10, cancelled = true)},${appointment("a4", 60)}]}""")
             Regex("/api/v1/programme/(\\w+)").matchEntire(path) != null && method == "GET" ->
-                ok(appointment(Regex("/api/v1/programme/(\\w+)").matchEntire(path)!!.groupValues[1], 3))
-            path.endsWith("/kontakte") -> ok("""{"kontakte":[{"id":"c1","name":"Petra Beispiel","telefon":"079 000 00 00"}]}""")
+                ok(appointment(Regex("/api/v1/programme/(\\w+)").matchEntire(path)!!.groupValues[1], 3, detail = true))
             Regex("/api/v1/programme/\\w+/teilnahmen/(\\w+)").matchEntire(path) != null && method == "PUT" -> {
                 participantStatus[Regex("/teilnahmen/(\\w+)").find(path)!!.groupValues[1]] = if ("\"ja\"" in body) "ja" else "nein"
                 noContent()
             }
-            path.endsWith("/leitung") -> { leaderStatus = if ("\"ja\"" in body) "ja" else "nein"; noContent() }
+            path.endsWith("/leitung") -> reply(request, 403, """{"code":"KEINE_BERECHTIGUNG","message":"x"}""")
             path.endsWith("/teilnahmen") -> ok(
-                """{"zahlen":{"kinder":{"ja":1,"nein":0,"offen":1},"leitende":{"ja":1,"nein":0,"offen":0}},""" +
-                    """"kinder":[{"id":"k1","vorname":"Lena","nachname":"Muster","status":"${participantStatus["k1"]}"},""" +
-                    """{"id":"k2","vorname":"Noah","nachname":"Beispiel","status":"${participantStatus["k2"]}"}],""" +
-                    """"leitende":[{"id":"l1","name":"Petra Beispiel","rolle":"leitung","status":"ja"}]}""",
+                """{"zahlen":{"teilnehmende":{"ja":1,"nein":0,"offen":1},"leitende":{"ja":0,"nein":0,"offen":0}},""" +
+                    """"teilnehmende":[{"id":"k1","vorname":"Lena","nachname":"Muster","status":"${participantStatus["k1"]}"},""" +
+                    """{"id":"k2","vorname":"Noah","nachname":"Beispiel","status":"${participantStatus["k2"]}"}],"leitende":[]}""",
             )
-            path == "/api/v1/stufen" -> ok("""{"stufen":[{"id":"s1","name":"Jugendfeuerwehr Musterdorf"}]}""")
-            path.startsWith("/api/v1/personen/") -> reply(request, 404, """{"code":"NICHT_GEFUNDEN","message":"x"}""")
             else -> reply(request, 404, """{"code":"NICHT_GEFUNDEN","message":"x"}""")
         }
     }
 
-    private fun profile() =
-        """{"id":"u1","admin":false,"name":"Sandra Muster","benutzername":"demo","mussPasswortAendern":$mustChange,""" +
-            """"datenschutzGelesenAm":${if (privacyRead) "\"2026-11-01T10:00:00.000Z\"" else "null"},""" +
-            """"rollen":[],"stufen":[{"id":"s1","name":"Jugendfeuerwehr Musterdorf","kuerzel":"JF"}],""" +
-            """"kinder":[{"id":"k1","stufeId":"s1","vorname":"Lena"},{"id":"k2","stufeId":"s1","vorname":"Noah"}],""" +
-            """"pushProgramme":true}"""
+    private fun consent() =
+        """{"version":1,"gueltig":$consented,"text":"Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit. """ +
+            """Die Daten bleiben in der Schweiz und werden nicht weitergegeben."}"""
 
-    private fun appointment(id: String, inDays: Long, hour: Int = 13, cancelled: Boolean = false): String {
+    private fun profile() =
+        """{"id":"u1","name":"Sandra Muster","benutzername":"demo","kantonsadmin":false,"zweiterFaktor":false,"einwilligung":$consented,""" +
+            """"mussPasswortAendern":$mustChange,"telefon":null,"bildUrl":null,"pushProgramme":true,""" +
+            """"einheiten":[],"teilnehmende":[""" +
+            """{"id":"k1","vorname":"Lena","nachname":"Muster","einheitId":"s1","art":"eltern"},""" +
+            """{"id":"k2","vorname":"Noah","nachname":"Beispiel","einheitId":"s1","art":"eltern"}]}"""
+
+    private fun appointment(id: String, inDays: Long, hour: Int = 13, cancelled: Boolean = false, detail: Boolean = false): String {
         val day = LocalDate.now().plusDays(inDays)
         val start = day.atTime(hour, 0).toInstant(ZoneOffset.UTC)
-        val title = when (id) { "a1" -> "Schläuche kuppeln"; "a2" -> "Knotenkunde"; else -> "Leiterübung" }
-        return """{"id":"$id","titel":"$title","status":"${if (cancelled) "abgesagt" else "aktiv"}","sichtbarkeit":"eltern","ganztaegig":false,""" +
-            """"beginn":"$start","ende":"${start.plusSeconds(3 * 3600)}","googleOrt":"Feuerwehrmagazin","treffpunkt":"${hour + 1}:45 Uhr\nParkplatz beim Magazin",""" +
-            """"schlussOrt":"Feuerwehrmagazin","schlussZeit":"${hour + 4}:00","mitnehmen":"Festes Schuhwerk",""" +
-            """"stufen":[{"id":"s1","name":"Jugendfeuerwehr Musterdorf"}],"teilnahmeOffen":$appointmentsOpen,""" +
-            """"kinder":[{"id":"k1","vorname":"Lena","status":${json("k1")}},""" +
-            """{"id":"k2","vorname":"Noah","status":${json("k2")}}],"eigeneAnmeldung":null}"""
+        val title = when (id) { "a1" -> "Schläuche kuppeln"; "a2" -> "Knotenkunde"; "a4" -> "Winterlager"; else -> "Leiterübung" }
+        val opensOn = day.minusDays(42)
+        val open = !cancelled && !opensOn.isAfter(LocalDate.now())
+        val extra = if (detail) {
+            ""","thema":"Schläuche kuppeln und ausrollen","info":"Festes Schuhwerk und eine Trinkflasche mitnehmen.",""" +
+                """"aufgebot":"Treffpunkt ${hour}:45 Uhr, Parkplatz beim Magazin",""" +
+                """"kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"kommandant","bildUrl":null,"abzeichen":{"sterne":2,"bildUrl":null},"telefon":"079 000 00 00"}"""
+        } else {
+            ""
+        }
+        return """{"id":"$id","titel":"$title","status":"${if (cancelled) "abgesagt" else "aktiv"}","ganztaegig":false,""" +
+            """"beginn":"$start","ende":"${start.plusSeconds(3 * 3600)}","tagVon":null,"tagBis":null,""" +
+            """"anmeldungAb":"$opensOn","teilnahmeOffen":$open,"einheit":{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf"},""" +
+            """"teilnehmende":[{"id":"k1","vorname":"Lena","status":${json("k1")},"abzeichen":{"sterne":1,"bildUrl":null}},""" +
+            """{"id":"k2","vorname":"Noah","status":${json("k2")},"abzeichen":null}]$extra}"""
     }
 
     /** «offen» heisst in der Liste `null`, sonst «ja» oder «nein». */

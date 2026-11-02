@@ -2,7 +2,7 @@
 
 Native Android-App (Kotlin, Jetpack Compose) für FireResponse, die App für Jugend- und Kinderfeuerwehren im Kanton Zürich: Übungen aus Lodur, Ja/Nein-Anmeldung, Kontakt und Push.
 
-Das Backend liegt in [Sorry4Nothing/fireresponse-api](https://github.com/Sorry4Nothing/fireresponse-api). Die API-Beschreibung steht dort unter `docs/api/`; `api-vertrag/` hier ist bis zum neuen Vertrag (E4) noch der alte Stand.
+Das Backend liegt in [Sorry4Nothing/fireresponse-api](https://github.com/Sorry4Nothing/fireresponse-api). Die API-Beschreibung steht dort unter `docs/api/`; `api-vertrag/` hier ist die Kopie des Vertrags (E4, Stand 2. November 2026); die App wird gegen sie geprüft (`ApiContractTest`).
 
 ## Bauen und prüfen
 

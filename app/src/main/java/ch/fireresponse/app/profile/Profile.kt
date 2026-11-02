@@ -3,49 +3,64 @@ package ch.fireresponse.app.profile
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Eine Einheit des Kontos mit der Rolle der Person darin: «kommandant», «stellvertretung» oder «leitung». */
 @Serializable
-data class ProfileRole(@SerialName("stufeId") val squadId: String, @SerialName("typ") val type: String)
+data class ProfileSquad(
+    val id: String,
+    val name: String,
+    @SerialName("typ") val type: String = "jf",
+    @SerialName("bezirk") val district: String = "",
+    @SerialName("rolle") val role: String,
+)
 
-@Serializable
-data class ProfileSquad(val id: String, val name: String, @SerialName("kuerzel") val abbreviation: String = "")
-
+/** Eine aktive teilnehmende Person, für die das Konto antwortet; `kind` ist «eltern» oder «selbst». */
 @Serializable
 data class ProfileParticipant(
     val id: String,
-    @SerialName("stufeId") val squadId: String,
     @SerialName("vorname") val firstName: String = "",
+    @SerialName("nachname") val lastName: String = "",
+    @SerialName("einheitId") val squadId: String,
+    @SerialName("art") val kind: String = "eltern",
 )
 
-/** Das eigene Profil (`GET /api/v1/ich`). Die Felder der Anzeige sind für die Termine egal. */
+/** Das Rang-Abzeichen: entweder `stars` (0 bis 5) oder `imageUrl`, das andere ist `null`. Kein Objekt heisst kein Rang. */
+@Serializable
+data class Badge(
+    @SerialName("sterne") val stars: Int? = null,
+    @SerialName("bildUrl") val imageUrl: String? = null,
+)
+
+/** Rollen des Kommandos. Auf Dateiebene: Ein privater `companion object` in einer `@Serializable`-Klasse versperrt dem Plug-in den Serializer. */
+private val COMMAND_ROLES = setOf("kommandant", "stellvertretung")
+
+/** Das eigene Profil (`GET /api/v1/ich`). */
 @Serializable
 data class Profile(
     val id: String,
-    val admin: Boolean = false,
+    @SerialName("kantonsadmin") val admin: Boolean = false,
     @SerialName("telefon") val phone: String? = null,
-    @SerialName("rollen") val roles: List<ProfileRole> = emptyList(),
-    @SerialName("stufen") val squads: List<ProfileSquad> = emptyList(),
-    @SerialName("kinder") val participants: List<ProfileParticipant> = emptyList(),
+    @SerialName("einheiten") val squads: List<ProfileSquad> = emptyList(),
+    @SerialName("teilnehmende") val participants: List<ProfileParticipant> = emptyList(),
     val name: String = "",
     @SerialName("benutzername") val username: String? = null,
     @SerialName("mussPasswortAendern") val mustChangePassword: Boolean = false,
-    /** Wann die Person die Datenschutzerklärung zur Kenntnis genommen hat; `null`: noch nicht. */
-    @SerialName("datenschutzGelesenAm") val privacyReadAt: String? = null,
+    /** Hat die Person der aktuellen Fassung der Einwilligung zugestimmt? Sonst sperrt die API die App-Routen. */
+    @SerialName("einwilligung") val consented: Boolean = false,
     @SerialName("bildUrl") val imageUrl: String? = null,
     /** Die Push-Schalter beim Server: Sie sind standardmässig an. */
     @SerialName("pushProgramme") val pushAppointments: Boolean = true,
     /** Der Server liefert ihn nur Personen mit Einheitsrolle; `null`: kein Schalter anzeigen. */
     @SerialName("pushAnmeldungen") val pushRegistrations: Boolean? = null,
-    /** Spitzname; `null` oder leer ohne Angabe. */
-    val ceviName: String? = null,
 ) {
-    /** Das Konto gehört zu keiner Einheit: ohne Rolle, ohne Einheit und ohne Teilnehmende. Die Leitung muss es zuordnen. */
-    val hasNoSquad get() = squads.isEmpty() && roles.isEmpty() && participants.isEmpty()
+    /** Das Konto gehört zu keiner Einheit: ohne Rolle und ohne Teilnehmende. Die Leitung muss es zuordnen. */
+    val hasNoSquad get() = squads.isEmpty() && participants.isEmpty()
 
-    fun isCommander(squadId: String) = roles.any { it.type == "stufenleitung" && it.squadId == squadId }
+    /** Kommandant oder Stellvertretung der Einheit: das Kommando. */
+    fun isCommand(squadId: String) = squads.any { it.id == squadId && it.role in COMMAND_ROLES }
+
+    val isCommand get() = squads.any { it.role in COMMAND_ROLES }
+    val isLeader get() = squads.any { it.role == "leitung" }
 }
-
-/** Spitzname, wenn einer da ist (nicht leer), sonst der volle Name. */
-fun displayName(name: String, ceviName: String?): String = ceviName?.trim()?.takeIf { it.isNotEmpty() } ?: name
 
 /** Anfangsbuchstaben des ersten und des letzten Wortes des Namens, etwa «VN» für «Vorname Nachname». */
 fun initials(name: String): String {

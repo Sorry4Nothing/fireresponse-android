@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.contacts.ContactCard
-import ch.fireresponse.app.contacts.ContactList
+
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.ui.ChipKind
 import ch.fireresponse.app.ui.ErrorState
@@ -62,7 +62,7 @@ import ch.fireresponse.app.ui.StatusChip
 import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
-import java.time.LocalTime
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm")
@@ -179,11 +179,11 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
     val chips = listOfNotNull(
         stringResource(R.string.status_cancelled).takeIf { appointment.cancelled },
         stringResource(R.string.status_review).takeIf { appointment.inReview },
-        stringResource(R.string.status_unassigned).takeIf { appointment.unassigned },
     )
+    val opensOn = appointment.registrationOpensOn(LocalDate.now(SWISS_ZONE))?.let { stringResource(R.string.registration_from, dayAndMonth(it)) }
     val spoken = (
-        listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title, appointment.location) +
-            chips + lines.map { it.text }
+        listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title) +
+            chips + lines.map { it.text } + listOfNotNull(opensOn)
         ).filter { it.isNotBlank() }.joinToString(", ")
     Box(
         Modifier
@@ -204,7 +204,6 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
                 color = MaterialTheme.fire.accent,
             )
             Text(appointment.title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp))
-            appointment.location?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             lines.forEachIndexed { index, line ->
                 Row(
                     Modifier.padding(top = if (index == 0) 6.dp else 0.dp),
@@ -215,23 +214,29 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
                     Text(line.text, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold), color = line.color)
                 }
             }
+            if (opensOn != null) {
+                Row(
+                    Modifier.padding(top = if (lines.isEmpty()) 6.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(painterResource(R.drawable.ic_clock), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                    Text(opensOn, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
             AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
         }
     }
 }
 
-/**
- * Abgesagt, «wird noch geprüft» oder «nicht zugeordnet» (nur Leitungen sehen solche Termine): als Etikett mit Icon und
- * Wort. Ein aktives, zugeordnetes Termin braucht keins.
- */
+/** Abgesagt oder «wird noch geprüft» (nur Leitungen sehen solche Termine): als Etikett mit Icon und Wort. Ein aktiver Termin braucht keins. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AppointmentStatus(appointment: Appointment, modifier: Modifier = Modifier) {
-    if (!appointment.cancelled && !appointment.inReview && !appointment.unassigned) return
+    if (!appointment.cancelled && !appointment.inReview) return
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.s2), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         if (appointment.cancelled) StatusChip(ChipKind.NO, stringResource(R.string.status_cancelled))
         if (appointment.inReview) StatusChip(ChipKind.REVIEW, stringResource(R.string.status_review))
-        if (appointment.unassigned) StatusChip(ChipKind.UNASSIGNED, stringResource(R.string.status_unassigned))
     }
 }
 
@@ -257,12 +262,9 @@ private fun listTime(appointment: Appointment): String = when (val time = appoin
 fun AppointmentDetailScreen(
     state: ApiResult<Appointment>?,
     rsvp: RsvpState,
-    canAssign: Boolean,
     canSeeRegistrations: Boolean,
-    contacts: ApiResult<ContactList>?,
     onParticipant: (participantId: String, attending: Boolean) -> Unit,
     onLeader: (attending: Boolean) -> Unit,
-    onAssign: () -> Unit,
     onRegistrations: () -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
@@ -278,7 +280,7 @@ fun AppointmentDetailScreen(
                 Header(title = null, back = back)
                 ErrorState(state.error, onRetry, onToAppointments = onBack)
             }
-            is ApiResult.Ok -> AppointmentContent(state.value, rsvp, canAssign, canSeeRegistrations, contacts, back, onParticipant, onLeader, onAssign, onRegistrations)
+            is ApiResult.Ok -> AppointmentContent(state.value, rsvp, canSeeRegistrations, back, onParticipant, onLeader, onRegistrations)
         }
     }
 }
@@ -287,13 +289,10 @@ fun AppointmentDetailScreen(
 private fun AppointmentContent(
     appointment: Appointment,
     rsvp: RsvpState,
-    canAssign: Boolean,
     canSeeRegistrations: Boolean,
-    contacts: ApiResult<ContactList>?,
     back: HeaderButton,
     onParticipant: (participantId: String, attending: Boolean) -> Unit,
     onLeader: (attending: Boolean) -> Unit,
-    onAssign: () -> Unit,
     onRegistrations: () -> Unit,
 ) {
     val date = appointment.startDay()?.let { "${weekdayShort(it)} ${dayAndMonth(it)}" }
@@ -318,28 +317,25 @@ private fun AppointmentContent(
         )
         Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
             AppointmentStatus(appointment)
-            Tiles(appointment)
             Facts(appointment)
-            ContactSection(appointment, contacts)
+            ContactSection(appointment)
             RegistrationSection(appointment, rsvp, onParticipant, onLeader)
-            LeaderSection(appointment, canAssign, canSeeRegistrations, onAssign, onRegistrations)
+            LeaderSection(canSeeRegistrations, onRegistrations)
             Box(Modifier.height(Spacing.s4))
         }
     }
 }
 
-/** Die Kontaktpersonen der Übung (wer abgesagt hat, fehlt), je eine Karte. Ein Fehler beim Laden zeigt nichts. */
+/** Die Kontaktperson der Übung, wie der Server sie bestimmt (wer abgesagt hat, gibt sie weiter). Ohne Person steht nichts da. */
 @Composable
-private fun ContactSection(appointment: Appointment, contacts: ApiResult<ContactList>?) {
-    if (appointment.unassigned || contacts !is ApiResult.Ok) return
-    ContactCard(contacts.value.contacts)
+private fun ContactSection(appointment: Appointment) {
+    appointment.contact?.let { ContactCard(listOf(it)) }
 }
 
 /** Der Termin als Eintrag für die Kalender-App der Person; `null`, solange Zeit oder Tag fehlen. */
 private fun calendarIntent(appointment: Appointment): Intent? {
     val intent = Intent(Intent.ACTION_INSERT, CalendarContract.Events.CONTENT_URI)
         .putExtra(CalendarContract.Events.TITLE, appointment.title)
-        .putExtra(CalendarContract.Events.EVENT_LOCATION, appointment.location)
     return when (val time = appointment.time()) {
         is Timing.Timed -> intent
             .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, time.start.toInstant().toEpochMilli())
@@ -352,80 +348,27 @@ private fun calendarIntent(appointment: Appointment): Intent? {
     }
 }
 
-/**
- * Aktionen für Leitende: die Anmeldungen ansehen (Admins sowie Leitende und SL der Einheiten) und, nur für Admins und
- * Kommandos, Einheiten und Sichtbarkeit setzen.
- */
+/** Aktion für Kommando und Leitende der Einheit (und das Konto des Kantonsadmins): die Anmeldungen ansehen. */
 @Composable
-private fun LeaderSection(
-    appointment: Appointment,
-    canAssign: Boolean,
-    canSeeRegistrations: Boolean,
-    onAssign: () -> Unit,
-    onRegistrations: () -> Unit,
-) {
-    if (!canAssign && !canSeeRegistrations) return
+private fun LeaderSection(canSeeRegistrations: Boolean, onRegistrations: () -> Unit) {
+    if (!canSeeRegistrations) return
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
         Text(
             stringResource(R.string.section_leaders),
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
             modifier = Modifier.padding(top = 6.dp).semantics { heading() },
         )
-        if (canAssign && appointment.unassigned) NoticeBanner(NoticeKind.INFO, stringResource(R.string.unassigned_notice))
-        if (canSeeRegistrations) {
-            OutlinedPillButton(stringResource(R.string.registrations_action), onRegistrations, Modifier.fillMaxWidth(), icon = R.drawable.ic_group)
-        }
-        if (canAssign) OutlinedPillButton(stringResource(R.string.assignment_action), onAssign, Modifier.fillMaxWidth())
+        OutlinedPillButton(stringResource(R.string.registrations_action), onRegistrations, Modifier.fillMaxWidth(), icon = R.drawable.ic_group)
     }
 }
 
-/** Zwei Kacheln, die Eltern am häufigsten suchen: wann und wo man sich trifft, wann und wo es endet. */
-@Composable
-private fun Tiles(appointment: Appointment) {
-    val closing = appointment.closingTime?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
-    val meeting = parseMeetingPoint(appointment.meetingPoint)
-    // Nennt die Webseite eine Zeit, gilt sie; sonst der Beginn aus dem Kalender.
-    val meetingTime = meeting.time ?: when (val time = appointment.time()) {
-        is Timing.Timed -> TIME_FORMAT.format(time.start)
-        is Timing.AllDay -> stringResource(R.string.time_list_all_day)
-        null -> null
-    }
-    val meetingPoint = meeting.place
-    val closingLocation = appointment.closingLocation?.takeIf { it.isNotBlank() }
-    Row(Modifier.height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        if (meetingTime != null || meetingPoint != null) {
-            Tile(stringResource(R.string.section_meeting_point), meetingTime, meetingPoint, Modifier.weight(1f).fillMaxHeight())
-        }
-        if (closing != null || closingLocation != null) {
-            Tile(
-                stringResource(R.string.section_closing), closing?.let { TIME_FORMAT.format(it) }, closingLocation,
-                Modifier.weight(1f).fillMaxHeight(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun Tile(label: String, time: String?, location: String?, modifier: Modifier) {
-    Column(
-        modifier
-            .background(MaterialTheme.colorScheme.surfaceContainerLow, CARD)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CARD)
-            .padding(horizontal = 14.dp, vertical = Spacing.s3)
-            .semantics(mergeDescendants = true) {},
-    ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        time?.let { Text(it, style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontFeatureSettings = "tnum")) }
-        location?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    }
-}
-
-/** Liste mit Ort und Mitnehmen, je mit Icon. Felder ohne Inhalt fallen weg. */
+/** Thema, Aufgebot und Info, wie der Server sie liefert, je mit Icon. Felder ohne Inhalt fallen weg. */
 @Composable
 private fun Facts(appointment: Appointment) {
     val rows = listOf(
-        Triple(R.drawable.ic_location, R.string.fact_location, appointment.googleLocation?.takeIf { it.isNotBlank() }),
-        Triple(R.drawable.ic_bring_along, R.string.section_bring_along, appointment.bringAlong?.takeIf { it.isNotBlank() }),
+        Triple(R.drawable.ic_calendar, R.string.fact_topic, appointment.topic?.takeIf { it.isNotBlank() }),
+        Triple(R.drawable.ic_bring_along, R.string.fact_call_up, appointment.callUp?.takeIf { it.isNotBlank() }),
+        Triple(R.drawable.ic_info, R.string.fact_info, appointment.info?.takeIf { it.isNotBlank() }),
     ).filter { it.third != null }
     if (rows.isEmpty()) return
     Column(

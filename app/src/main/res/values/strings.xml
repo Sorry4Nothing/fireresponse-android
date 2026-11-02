@@ -6,6 +6,7 @@
     <string name="error_app_outdated">Diese App ist zu alt. Bitte installiere die neue Version.</string>
     <string name="error_too_many_requests">Zu viele Anfragen. Bitte warte einen Moment und versuche es dann nochmals.</string>
     <string name="error_registration_closed">Die Anmeldung ist geschlossen. Die Übung ist abgesagt oder hat schon begonnen.</string>
+    <string name="error_registration_not_open">Die Anmeldung ist noch nicht offen.</string>
     <string name="error_network">Keine Verbindung. Prüfe dein Internet und versuche es nochmals.</string>
     <string name="error_unknown">Etwas ist schiefgelaufen. Bitte versuche es nochmals.</string>
 
@@ -40,7 +41,6 @@
     <string name="time_list_all_day">Ganztägig</string>
     <string name="time_list_until">Ganztägig bis %1$s</string>
     <string name="back_to_appointments">Zurück zu Übungen</string>
-    <string name="fact_location">Ort</string>
     <string name="section_participants">Kommen die Teilnehmenden?</string>
     <string name="rsvp_pending">Noch offen</string>
     <string name="rsvp_sent">Gesendet %1$s</string>
@@ -62,39 +62,24 @@
     <string name="status_cancelled">Abgesagt</string>
     <string name="status_review">Wird noch geprüft</string>
     <string name="time_pending">Zeit noch offen</string>
-    <string name="section_meeting_point">Treffpunkt</string>
-    <string name="section_closing">Schluss</string>
-    <string name="section_bring_along">Mitnehmen</string>
+    <string name="fact_topic">Thema</string>
+    <string name="fact_call_up">Aufgebot</string>
+    <string name="fact_info">Info</string>
 
     <string name="section_leader_registration">Deine Anmeldung</string>
     <string name="registration_closed">Die Anmeldung ist geschlossen.</string>
+    <string name="registration_from">Anmeldung ab %1$s</string>
     <string name="registration_saving">Wird gespeichert …</string>
     <string name="rsvp_yes">Kommt</string>
     <string name="rsvp_no">Kommt nicht</string>
     <string name="button_yes">Ja</string>
     <string name="button_no">Nein</string>
 
-    <string name="status_unassigned">Nicht zugeordnet</string>
     <string name="section_leaders">Für Leitende</string>
-    <string name="unassigned_notice">Diese Übung ist noch keiner Einheit zugeordnet. Teilnehmende und Leitende sehen sie erst, wenn eine Einheit und eine Sichtbarkeit gesetzt sind.</string>
     <string name="save">Speichern</string>
     <string name="saving">Wird gespeichert …</string>
     <string name="back_to_appointment">Zurück zur Übung</string>
 
-    <string name="assignment_action">Einheiten und Sichtbarkeit</string>
-    <string name="assignment_title">Einheiten und Sichtbarkeit</string>
-    <string name="assignment_loading">Einheiten werden geladen</string>
-    <string name="assignment_squads">Einheiten</string>
-    <string name="assignment_no_choices">Du bist in keiner Einheit im Kommando. Darum kannst du keine Einheit zuordnen.</string>
-    <string name="assignment_fixed">Diese Einheiten kannst du nicht ändern: %1$s. Sie und die Sichtbarkeit bleiben, wie sie sind.</string>
-    <string name="assignment_visibility">Wer sieht die Übung?</string>
-    <string name="visibility_intern">Intern</string>
-    <string name="visibility_intern_text">Nur Kommando und Admins</string>
-    <string name="visibility_leaders">Leitende</string>
-    <string name="visibility_leaders_text">Zusätzlich die Leitenden der Einheiten</string>
-    <string name="visibility_parents">Teilnehmende</string>
-    <string name="visibility_parents_text">Zusätzlich die Teilnehmenden der Einheiten</string>
-    <string name="assignment_needs_squad">Ohne Einheit geht nur «Intern».</string>
 
     <!-- Anmeldung, Passwort, Willkommen, Profil -->
     <string name="department">Jugend- und Kinderfeuerwehr</string>
@@ -111,7 +96,7 @@
     <string name="login_forgot_link">Passwort vergessen?</string>
     <string name="login_forgot">Dann hilft dir die Leitung deiner Einheit weiter.</string>
     <string name="login_failed">Anmeldung nicht möglich. Bitte Benutzername und Passwort prüfen oder später nochmals versuchen. Sonst hilft die Leitung.</string>
-    <string name="login_admin_only">Admins melden sich im Admin-Bereich an. In der App geht das nicht.</string>
+    <string name="login_admin_only">Für dieses Konto ist ein zweiter Faktor eingerichtet. Das geht in der App noch nicht; melde dich im Admin-Bereich an.</string>
     <string name="password_show">Passwort anzeigen</string>
     <string name="password_eyebrow_first">Erster Login</string>
     <string name="password_title_first">Eigenes Passwort wählen</string>
@@ -138,8 +123,9 @@
     <string name="welcome_appointments_of">Alle Übungen von %1$s auf einen Blick.</string>
     <string name="welcome_rsvp">Zusagen</string>
     <string name="welcome_rsvp_text">Mit einem Tipp Ja oder Nein sagen.</string>
+    <string name="welcome_consent_title">Einwilligung</string>
     <string name="welcome_privacy_read">Datenschutzerklärung lesen</string>
-    <string name="welcome_privacy_check">Ich habe die Datenschutzerklärung gelesen und bin einverstanden.</string>
+    <string name="welcome_privacy_check">Ich habe die Einwilligung gelesen und bin einverstanden.</string>
     <string name="welcome_privacy_hint">Bitte bestätige zuerst den Datenschutz.</string>
     <string name="welcome_participants">Deine Teilnehmenden</string>
     <string name="lock_title">Entsperren</string>
@@ -155,7 +141,6 @@
     <string name="welcome_start">Los geht’s</string>
     <string name="tab_profile">Profil</string>
     <string name="profile_title">Profil</string>
-    <string name="profile_nickname">Spitzname: %1$s</string>
     <string name="profile_section_app">App</string>
     <string name="profile_section_account">Konto</string>
     <string name="profile_section_participants">Teilnehmende</string>

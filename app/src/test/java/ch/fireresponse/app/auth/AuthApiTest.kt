@@ -10,6 +10,7 @@ import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -131,26 +132,37 @@ class AuthApiTest {
     }
 
     @Test
-    fun acceptingThePrivacyNoticeIsAnEmptyPost() {
-        reply(204, "")
-        assertEquals(ApiResult.Ok(Unit), runBlocking { auth.acceptPrivacy() })
+    fun theConsentTextComesFromTheServer() {
+        reply(200, """{"version":2,"text":"Wir speichern nur, was nötig ist.","gueltig":false}""")
+        val consent = (runBlocking { auth.consent() } as ApiResult.Ok).value
+        assertEquals(Consent(2, "Wir speichern nur, was nötig ist.", valid = false), consent)
         val request = server.takeRequest()
-        assertEquals("POST", request.method)
-        assertEquals("/api/v1/ich/datenschutz", request.url.encodedPath)
+        assertEquals("GET", request.method)
+        assertEquals("/api/v1/einwilligung", request.url.encodedPath)
+    }
+
+    
+    fun givingConsentIsAnEmptyPutBecauseTheServerSetsTheVersion() {
+        reply(204, "")
+        assertEquals(ApiResult.Ok(Unit), runBlocking { auth.giveConsent() })
+        val request = server.takeRequest()
+        assertEquals("PUT", request.method)
+        assertEquals("/api/v1/einwilligung", request.url.encodedPath)
+        assertEquals(0L, request.body?.size ?: 0L)
     }
 
     @Test
     fun profileCarriesWhatTheStartNeeds() {
         reply(
             200,
-            """{"id":"u","name":"Marion Keller","benutzername":"m.keller","mussPasswortAendern":false,"datenschutzGelesenAm":null,
-               "telefon":null,"bildUrl":"/api/v1/personen/u/bild?v=3","pushProgramme":true,"admin":false,"zweiterFaktor":false,
-               "rollen":[],"stufen":[],"kinder":[{"id":"k","vorname":"Lena","nachname":"Keller","stufeId":"s"}]}""",
+            """{"id":"u","name":"Marion Keller","benutzername":"m.keller","mussPasswortAendern":false,"einwilligung":false,
+               "telefon":null,"bildUrl":"/api/v1/personen/u/bild?v=3","pushProgramme":true,"kantonsadmin":false,"zweiterFaktor":false,
+               "einheiten":[],"teilnehmende":[{"id":"k","vorname":"Lena","nachname":"Keller","einheitId":"s","art":"eltern"}]}""",
         )
         val profile = (runBlocking { auth.profile() } as ApiResult.Ok).value
         assertEquals("Marion Keller", profile.name)
         assertEquals("m.keller", profile.username)
-        assertNull(profile.privacyReadAt)
+        assertFalse(profile.consented)
         assertEquals("Lena", profile.participants.single().firstName)
         assertEquals("/api/v1/personen/u/bild?v=3", profile.imageUrl)
     }

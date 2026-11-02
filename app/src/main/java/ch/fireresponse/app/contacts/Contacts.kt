@@ -1,28 +1,22 @@
 package ch.fireresponse.app.contacts
 
-import ch.fireresponse.app.profile.displayName
+import ch.fireresponse.app.profile.Badge
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Eine Kontaktperson (Kommando). `phone` ist nur für Eltern mit einer aktiven teilnehmenden Person in der Einheit gefüllt, sonst `null`. */
+/**
+ * Die Kontaktperson eines Termins: Kommandant/in, sonst die erste Stellvertretung ohne Absage (das entscheidet der Server).
+ * `phone` ist nur für Eltern und Teilnehmende mit einer aktiven Person in der Einheit gefüllt, sonst `null`.
+ */
 @Serializable
 data class Contact(
     val id: String,
     val name: String,
+    @SerialName("rolle") val role: String = "kommandant",
     @SerialName("telefon") val phone: String? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
-    /** Spitzname; `null` oder leer ohne Angabe. */
-    val ceviName: String? = null,
-) {
-    /** Titel der Karte: der Spitzname, ohne ihn der volle Name. */
-    val title get() = displayName(name, ceviName)
-
-    /** Der volle Name darunter; nur, wenn der Titel ein Spitzname ist. */
-    val fullName get() = name.takeIf { title != name }
-}
-
-@Serializable
-data class ContactList(@SerialName("kontakte") val contacts: List<Contact>)
+    @SerialName("abzeichen") val badge: Badge? = null,
+)
 
 /** Was die App zur Telefonnummer prüft. Die Grenzen sind die der API; der Server prüft trotzdem. */
 object PhoneRules {

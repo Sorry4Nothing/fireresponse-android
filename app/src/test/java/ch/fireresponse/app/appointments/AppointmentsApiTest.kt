@@ -4,6 +4,7 @@ import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.net.SessionStorage
+import ch.fireresponse.app.profile.Badge
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -35,11 +36,22 @@ class AppointmentsApiTest {
 
     private fun json(code: Int, body: String) = MockResponse.Builder().code(code).body(body).build()
 
+    /** Ein Listeneintrag im Format des Vertrags (`ProgrammListeneintrag`). */
     private val camp = """
-        {"id":"7c9e6679-7425-40de-944b-e07fc1f90ae7","titel":"Sommerlager","status":"aktiv","sichtbarkeit":"eltern",
+        {"id":"7c9e6679-7425-40de-944b-e07fc1f90ae7","titel":"Sommerlager","status":"aktiv",
          "ganztaegig":true,"beginn":null,"ende":null,"tagVon":"2027-07-10","tagBis":"2027-07-17",
-         "googleOrt":"Zeltplatz","treffpunkt":null,"schlussOrt":"Bahnhof","schlussZeit":"16:30",
-         "mitnehmen":"Schlafsack","stufen":[{"id":"a1","name":"Stufe A"}],"googleBeschreibung":null}
+         "anmeldungAb":"2027-05-29","teilnahmeOffen":false,
+         "einheit":{"id":"e1","name":"JF Beispielstadt","typ":"jf"},
+         "teilnehmende":[{"id":"k1","vorname":"Mia","status":"ja","abzeichen":{"sterne":2,"bildUrl":null}},
+                         {"id":"k2","vorname":"Noah","status":null,"abzeichen":null}]}
+    """.trimIndent()
+
+    /** Das Detail dazu (`ProgrammDetail`): Thema, Info, Aufgebot und die Kontaktperson. */
+    private val detail = camp.dropLast(1) + """
+        ,"thema":"Lagerleben","info":"Schlafsack mitnehmen","aufgebot":"Treffpunkt Bahnhof, 08:00",
+         "kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"stellvertretung","bildUrl":"/api/v1/personen/c1/bild",
+                    "abzeichen":{"sterne":null,"bildUrl":"/api/v1/raenge/r1/abzeichen"},"telefon":"079 000 00 00"},
+         "eigeneAnmeldung":"offen"}
     """.trimIndent()
 
     @Test
@@ -49,18 +61,41 @@ class AppointmentsApiTest {
         assertEquals("GET /api/v1/programme?von=2027-07-01&bis=2027-07-31 HTTP/1.1", server.takeRequest().requestLine)
         val p = (result as ApiResult.Ok).value.appointments.single()
         assertEquals("Sommerlager", p.title)
-        assertEquals("Zeltplatz", p.location)
-        assertEquals("Stufe A", p.squads.single().name)
-        assertEquals("16:30", p.closingTime)
+        assertEquals(AppointmentSquad("e1", "JF Beispielstadt", "jf"), p.squad)
+        assertEquals("2027-05-29", p.registrationFrom)
+        assertFalse(p.attendanceOpen)
+        assertEquals(
+            listOf(AppointmentParticipant("k1", "Mia", "ja", Badge(stars = 2)), AppointmentParticipant("k2", "Noah", null)),
+            p.participants,
+        )
+        assertNull("die Liste kennt kein Detail", p.topic)
+        assertNull(p.contact)
+        assertNull(p.ownRegistration)
     }
 
     @Test
-    fun detailReadsOneAppointment() {
-        server.enqueue(json(200, camp))
+    fun detailReadsTopicInfoCallUpAndContact() {
+        server.enqueue(json(200, detail))
         val p = (runBlocking { appointments.read("7c9e6679-7425-40de-944b-e07fc1f90ae7") } as ApiResult.Ok).value
-        assertEquals("Schlafsack", p.bringAlong)
-        assertEquals("Bahnhof", p.closingLocation)
+        assertEquals("Lagerleben", p.topic)
+        assertEquals("Schlafsack mitnehmen", p.info)
+        assertEquals("Treffpunkt Bahnhof, 08:00", p.callUp)
+        val contact = p.contact!!
+        assertEquals("Petra Beispiel", contact.name)
+        assertEquals("stellvertretung", contact.role)
+        assertEquals("079 000 00 00", contact.phone)
+        assertEquals("/api/v1/personen/c1/bild", contact.imageUrl)
+        assertEquals(Badge(stars = null, imageUrl = "/api/v1/raenge/r1/abzeichen"), contact.badge)
+        assertEquals("offen", p.ownRegistration)
         assertEquals("GET /api/v1/programme/7c9e6679-7425-40de-944b-e07fc1f90ae7 HTTP/1.1", server.takeRequest().requestLine)
+    }
+
+    @Test
+    fun detailWithoutContactAndTextsIsFine() {
+        server.enqueue(json(200, camp.dropLast(1) + ""","thema":null,"info":null,"aufgebot":null,"kontakt":null}"""))
+        val p = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
+        assertNull(p.contact)
+        assertNull(p.topic)
     }
 
     @Test
@@ -68,21 +103,6 @@ class AppointmentsApiTest {
         server.enqueue(json(404, """{"code":"NICHT_GEFUNDEN","message":"Nicht gefunden"}"""))
         val result = runBlocking { appointments.read("7c9e6679-7425-40de-944b-e07fc1f90ae7") }
         assertEquals(ApiResult.Failure(ApiError.NOT_FOUND), result)
-    }
-
-    @Test
-    fun meetingPointBeatsGoogleLocation() {
-        server.enqueue(json(200, camp.replace("\"treffpunkt\":null", "\"treffpunkt\":\"14:00 Uhr\\nMagazin\"")))
-        assertEquals("Magazin", (runBlocking { appointments.read("x") } as ApiResult.Ok).value.location)
-    }
-
-    @Test
-    fun meetingPointTextSplitsIntoTimeAndPlace() {
-        assertEquals(MeetingPoint("14:00", "Magazin\nEingang Nord"), parseMeetingPoint("14:00 Uhr\nMagazin\nEingang Nord"))
-        assertEquals(MeetingPoint("09:30", null), parseMeetingPoint("09:30 Uhr"))
-        assertEquals(MeetingPoint(null, "Bahnhof"), parseMeetingPoint("Bahnhof"))
-        assertEquals(MeetingPoint(null, null), parseMeetingPoint(null))
-        assertEquals(MeetingPoint(null, null), parseMeetingPoint("  \n "))
     }
 
     @Test
@@ -94,25 +114,14 @@ class AppointmentsApiTest {
     }
 
     @Test
-    fun detailReadsParticipantsAndOwnRegistration() {
-        val detail = camp.replace(
-            "\"googleBeschreibung\":null",
-            """"googleBeschreibung":null,"teilnahmeOffen":true,"darfErgaenzen":false,"eigeneAnmeldung":"offen",
-               "kinder":[{"id":"k1","vorname":"Mia","status":"ja"},{"id":"k2","vorname":"Noah","status":null}]""",
-        )
-        server.enqueue(json(200, detail))
-        val p = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
-        assertTrue(p.attendanceOpen)
-        assertEquals("offen", p.ownRegistration)
-        assertEquals(listOf(AppointmentParticipant("k1", "Mia", "ja"), AppointmentParticipant("k2", "Noah", null)), p.participants)
-    }
-
-    @Test
-    fun listEntryHasNoParticipantsAndNoRegistration() {
+    fun registrationOpensOnlyWhenTheWindowIsClosedAndInTheFuture() {
         server.enqueue(json(200, camp))
         val p = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
-        assertTrue(p.participants.isEmpty() && !p.attendanceOpen)
-        assertNull(p.ownRegistration)
+        assertEquals(LocalDate.of(2027, 5, 29), p.registrationOpensOn(LocalDate.of(2027, 5, 28)))
+        assertNull("am Tag selbst ist es offen", p.registrationOpensOn(LocalDate.of(2027, 5, 29)))
+        assertNull("offen: nichts anzukündigen", p.copy(attendanceOpen = true).registrationOpensOn(LocalDate.of(2027, 5, 1)))
+        assertNull("abgesagt: nichts anzukündigen", p.copy(status = "abgesagt").registrationOpensOn(LocalDate.of(2027, 5, 1)))
+        assertNull("kein gültiger Tag", p.copy(registrationFrom = "bald").registrationOpensOn(LocalDate.of(2027, 5, 1)))
     }
 
     @Test
@@ -144,108 +153,43 @@ class AppointmentsApiTest {
     }
 
     @Test
-    fun detailReadsVisibility() {
-        server.enqueue(json(200, camp))
-        val p = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
-        assertEquals("eltern", p.visibility)
-        assertFalse(p.unassigned)
-    }
-
-    @Test
-    fun appointmentWithoutSquadsIsUnassigned() {
-        server.enqueue(json(200, camp.replace("\"stufen\":[{\"id\":\"a1\",\"name\":\"Stufe A\"}]", "\"stufen\":[]")))
-        assertTrue((runBlocking { appointments.read("x") } as ApiResult.Ok).value.unassigned)
-    }
-
-    @Test
-    fun assignmentSendsFullStateAsPut() {
-        server.enqueue(MockResponse.Builder().code(204).build())
-        val result = runBlocking { appointments.assign("p1", AssignmentRequest(listOf("s1", "s2"), "leitende")) }
-        assertEquals(ApiResult.Ok(Unit), result)
-        val request = server.takeRequest()
-        assertEquals("PUT /api/v1/programme/p1/zuordnung HTTP/1.1", request.requestLine)
-        assertEquals("""{"stufen":["s1","s2"],"sichtbarkeit":"leitende"}""", request.body?.utf8())
-    }
-
-    @Test
-    fun forbiddenAssignmentIsAnError() {
-        server.enqueue(json(403, """{"code":"KEINE_BERECHTIGUNG","message":"nein"}"""))
+    fun windowNotYetOpenGivesOwnError() {
+        server.enqueue(json(409, """{"code":"ANMELDEFENSTER_NICHT_OFFEN","message":"Die Anmeldung öffnet am 23.01.2027."}"""))
         assertEquals(
-            ApiResult.Failure(ApiError.FORBIDDEN),
-            runBlocking { appointments.assign("p1", AssignmentRequest(emptyList(), "intern")) },
+            ApiResult.Failure(ApiError.REGISTRATION_NOT_OPEN, "ANMELDEFENSTER_NICHT_OFFEN"),
+            runBlocking { appointments.setAttendance("p1", "k1", attending = true) },
         )
     }
 
     @Test
-    fun squadsAndProfileAreRead() {
-        server.enqueue(json(200, """{"stufen":[{"id":"s1","name":"Einheit A","kuerzel":"PF","reihenfolge":1}]}"""))
+    fun startedAppointmentGivesOwnErrorForLeaders() {
+        server.enqueue(json(409, """{"code":"PROGRAMM_BEGONNEN","message":"begonnen"}"""))
         assertEquals(
-            listOf(AppointmentSquad("s1", "Einheit A")),
-            (runBlocking { appointments.squads() } as ApiResult.Ok).value.squads,
+            ApiResult.Failure(ApiError.APPOINTMENT_STARTED, "PROGRAMM_BEGONNEN"),
+            runBlocking { appointments.setLeaderRsvp("p1", attending = true) },
         )
-        assertEquals("GET /api/v1/stufen HTTP/1.1", server.takeRequest().requestLine)
-        server.enqueue(json(200, """{"id":"u1","admin":true,"rollen":[{"stufeId":"s1","typ":"stufenleitung"}]}"""))
+    }
+
+    @Test
+    fun profileReadsUnitsRolesAndParticipants() {
+        server.enqueue(
+            json(
+                200,
+                """{"id":"u1","name":"Sandra Muster","benutzername":"smuster","kantonsadmin":false,"zweiterFaktor":false,
+                    "einwilligung":true,"mussPasswortAendern":false,"telefon":null,"bildUrl":null,"pushProgramme":true,
+                    "pushAnmeldungen":false,
+                    "einheiten":[{"id":"e1","name":"JF Beispielstadt","typ":"jf","bezirk":"Bezirk Beispiel","rolle":"stellvertretung"}],
+                    "teilnehmende":[{"id":"k1","vorname":"Mia","nachname":"Muster","einheitId":"e1","art":"eltern"}]}""",
+            ),
+        )
         val profile = (runBlocking { appointments.profile() } as ApiResult.Ok).value
-        assertTrue(profile.admin && profile.isCommander("s1"))
-    }
-
-    @Test
-    fun withoutLocationThereIsNoLocation() {
-        server.enqueue(json(200, camp.replace("\"googleOrt\":\"Zeltplatz\"", "\"googleOrt\":\"  \"")))
-        assertNull((runBlocking { appointments.read("x") } as ApiResult.Ok).value.location)
-    }
-
-    @Test
-    fun contactsAreReadWithAndWithoutNumber() {
-        server.enqueue(
-            json(
-                200,
-                """{"kontakte":[{"id":"l1","name":"Beispiel Leitung A","telefon":"+41 79 000 00 01"},
-                   {"id":"l2","name":"Beispiel Leitung B","telefon":null}]}""",
-            ),
-        )
-        val contacts = (runBlocking { appointments.contacts("p1") } as ApiResult.Ok).value.contacts
-        assertEquals("GET /api/v1/programme/p1/kontakte HTTP/1.1", server.takeRequest().requestLine)
-        assertEquals(listOf("+41 79 000 00 01", null), contacts.map { it.phone })
-        assertEquals("Beispiel Leitung B", contacts[1].name)
-    }
-
-    @Test
-    fun noRegisteredLeaderMeansEmptyContacts() {
-        server.enqueue(json(200, """{"kontakte":[]}"""))
-        assertTrue((runBlocking { appointments.contacts("p1") } as ApiResult.Ok).value.contacts.isEmpty())
-    }
-
-    @Test
-    fun listEntryCarriesTheStatusOfOwnParticipants() {
-        server.enqueue(
-            json(
-                200,
-                """{"programme":[${camp.replace("\"googleBeschreibung\":null", "\"googleBeschreibung\":null,\"kinder\":[{\"id\":\"k1\",\"vorname\":\"Noah\",\"status\":\"ja\"},{\"id\":\"k2\",\"vorname\":\"Lena\",\"status\":null}]")}]}""",
-            ),
-        )
-        val p = (runBlocking { appointments.list(LocalDate.of(2027, 7, 1), LocalDate.of(2027, 7, 31)) } as ApiResult.Ok).value.appointments.single()
-        assertEquals(listOf("Noah" to "ja", "Lena" to null), p.participants.map { it.firstName to it.status })
-    }
-
-    @Test
-    fun contactImageUrlIsRead() {
-        server.enqueue(json(200, """{"kontakte":[{"id":"s1","name":"Sarah","bildUrl":"/api/v1/personen/s1/bild","telefon":null}]}"""))
-        val contacts = (runBlocking { appointments.contacts("p1") } as ApiResult.Ok).value
-        assertEquals("/api/v1/personen/s1/bild", contacts.contacts.single().imageUrl)
-    }
-
-    @Test
-    fun registrationsAreReadOnlyAGet() {
-        server.enqueue(json(200, """{"zahlen":{"kinder":{"ja":1,"nein":0,"offen":0},"leitende":{"ja":0,"nein":0,"offen":0}},"kinder":[{"id":"k1","vorname":"Lena","nachname":"Meier","stufeId":"s1","status":"ja"}],"leitende":[]}"""))
-        val result = (runBlocking { appointments.registrations("p1") } as ApiResult.Ok).value
-        assertEquals(1, result.participants.size)
-        assertEquals("GET /api/v1/programme/p1/teilnahmen HTTP/1.1", server.takeRequest().requestLine)
-    }
-
-    @Test
-    fun registrationsForbiddenForOtherSquadsIsForbidden() {
-        server.enqueue(json(403, """{"code":"KEINE_BERECHTIGUNG","message":"x"}"""))
-        assertEquals(ApiResult.Failure(ApiError.FORBIDDEN), runBlocking { appointments.registrations("p1") })
+        assertEquals("GET /api/v1/ich HTTP/1.1", server.takeRequest().requestLine)
+        assertTrue(profile.consented)
+        assertTrue(profile.isCommand("e1") && profile.isCommand && !profile.isLeader)
+        assertFalse(profile.isCommand("e2"))
+        assertEquals("Bezirk Beispiel", profile.squads.single().district)
+        assertEquals("e1", profile.participants.single().squadId)
+        assertEquals(false, profile.pushRegistrations)
+        assertFalse(profile.hasNoSquad)
     }
 }

@@ -38,6 +38,7 @@ import androidx.core.net.toUri
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.OutlinedPillButton
+import ch.fireresponse.app.ui.RankBadge
 import ch.fireresponse.app.ui.theme.Sizes
 import ch.fireresponse.app.ui.theme.Spacing
 
@@ -89,18 +90,20 @@ private fun ContactRow(contact: Contact) {
         horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(contact.title, size = 40.dp, imageUrl = contact.imageUrl, initialSize = 14.sp)
+        Avatar(contact.name, size = 40.dp, imageUrl = contact.imageUrl, initialSize = 14.sp)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
             Text(
                 stringResource(R.string.contact_person),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(contact.title, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
-            contact.fullName?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(contact.name, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
+                contact.badge?.stars?.let { RankBadge(it, height = 24.dp) }
+            }
         }
         if (canCall && intent != null) {
-            val description = stringResource(R.string.contact_call_name, contact.title)
+            val description = stringResource(R.string.contact_call_name, contact.name)
             Box(
                 Modifier
                     .size(Sizes.touchTarget)

@@ -478,8 +478,10 @@ fun WelcomeScreen(
     name: String,
     /** Namen der Einheiten des Kontos, wie der Server sie liefert; stehen als Überzeile. */
     squads: List<String>,
-    /** Vornamen der Teilnehmenden des Kontos. Das Rangabzeichen kommt dazu, sobald die API es liefert. */
+    /** Vornamen der Teilnehmenden des Kontos. */
     participants: List<String>,
+    /** Text der aktuellen Einwilligung, wie der Server ihn liefert. */
+    consentText: String,
     passwordSaved: Boolean,
     form: FormState,
     onReadPrivacy: () -> Unit,
@@ -559,6 +561,21 @@ fun WelcomeScreen(
                     if (participants.isEmpty()) stringResource(R.string.welcome_appointments_text) else stringResource(R.string.welcome_appointments_of, joinNames(participants)),
                 )
                 WelcomePoint(R.drawable.ic_check, stringResource(R.string.welcome_rsvp), stringResource(R.string.welcome_rsvp_text))
+            }
+            if (consentText.isNotBlank()) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.s2)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(scheme.surfaceContainerLow)
+                        .border(1.dp, scheme.outlineVariant, MaterialTheme.shapes.medium)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(stringResource(R.string.welcome_consent_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                    Text(consentText, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+                }
             }
         },
         bottom = {

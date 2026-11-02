@@ -108,8 +108,8 @@ private fun RegistrationsContent(data: Registrations) {
             } else {
                 if (data.leaders.isEmpty()) item { NoticeBanner(NoticeKind.INFO, stringResource(R.string.registrations_empty_leaders)) }
                 items(data.leaders, key = { it.id }) {
-                    val role = stringResource(if (it.isCommander) R.string.role_commander else R.string.role_leader)
-                    PersonRow(it.title, listOfNotNull(it.fullName, role).joinToString(" · "), it.imageUrl, it.status)
+                    val role = stringResource(if (it.isCommand) R.string.role_commander else R.string.role_leader)
+                    PersonRow(it.name, role, it.imageUrl, it.status)
                 }
             }
         }
