@@ -94,6 +94,10 @@ private val appointments = listOf(
         dayFrom = "2027-01-16", dayTo = "2027-01-17", registrationFrom = "2026-12-05", squad = squad,
         participants = listOf(AppointmentParticipant("k1", "Lena", null)),
     ),
+    Appointment(
+        id = "a6", title = "Vorstandssitzung", status = "aktiv", allDay = false, kind = "Sitzung", registrable = false,
+        start = "2027-01-20T18:00:00.000Z", end = "2027-01-20T19:30:00.000Z", squad = squad,
+    ),
 )
 
 private val profile = Profile(

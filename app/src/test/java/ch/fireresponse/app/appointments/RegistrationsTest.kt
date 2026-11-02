@@ -68,6 +68,11 @@ class RegistrationsTest {
     }
 
     @Test
+    fun withoutRegistrationThereIsNothingToSee() {
+        assertFalse(RegistrationsRules.maySee(appointment("e1").copy(registrable = false), profile(admin = true)))
+    }
+
+    @Test
     fun othersDoNotSeeTheEntry() {
         assertFalse(RegistrationsRules.maySee(appointment("e1"), profile(roles = arrayOf("e2" to "kommandant"))))
         assertFalse("Eltern ohne Rolle", RegistrationsRules.maySee(appointment("e1"), profile()))

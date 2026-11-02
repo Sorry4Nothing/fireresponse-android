@@ -100,7 +100,7 @@ class FakeBackend : Interceptor {
         }
         return """{"id":"$id","titel":"$title","status":"${if (cancelled) "abgesagt" else "aktiv"}","ganztaegig":false,""" +
             """"beginn":"$start","ende":"${start.plusSeconds(3 * 3600)}","tagVon":null,"tagBis":null,""" +
-            """"anmeldungAb":"$opensOn","teilnahmeOffen":$open,"einheit":{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf"},""" +
+            """"art":"Übung","anmeldbar":true,"anmeldungAb":"$opensOn","teilnahmeOffen":$open,"einheit":{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf"},""" +
             """"teilnehmende":[{"id":"k1","vorname":"Lena","status":${json("k1")},"abzeichen":{"sterne":1,"bildUrl":null}},""" +
             """{"id":"k2","vorname":"Noah","status":${json("k2")},"abzeichen":null}]$extra}"""
     }
