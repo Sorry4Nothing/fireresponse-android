@@ -175,7 +175,7 @@ class AuthViewModel(
             when (val result = api.signIn(username.trim(), password)) {
                 is ApiResult.Failure -> _form.value = failureForm(result, signInErrorText(result))
                 is ApiResult.Ok -> if (result.value.twoFactorRedirect) {
-                    // Konten mit zweitem Faktor (Kantonsadmin, Kommando) kann die App noch nicht anmelden: kein Sitzungscookie, auch kein halbes (`two_factor`).
+                    // Der zweite Faktor gilt nur im Admin-Bereich: In der App gibt es keinen Code-Schritt, also auch kein Sitzungscookie, auch kein halbes (`two_factor`).
                     forgetSession()
                     _form.value = FormState(error = R.string.login_admin_only)
                 } else {
