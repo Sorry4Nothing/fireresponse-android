@@ -2,5 +2,5 @@
 <resources>
     <color name="launcher_background">#D9381E</color>
     <!-- surface (Tag) aus dem Design -->
-    <color name="window_background">#F7F7FC</color>
+    <color name="window_background">#F5F3F0</color>
 </resources>
