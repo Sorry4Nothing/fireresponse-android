@@ -42,9 +42,15 @@ Stil «Feuerwache»: ruhiges, warmes Graphit als Grund. Akzent in der Nacht Warn
 
 ## Stand der Prüfung
 
-Geprüft: Build, Lint und Unit-Tests (inklusive Kontrast); Start, Offline-Zustand und Nachtmodus auf dem Emulator (API 37, Hochformat).
+Geprüft:
 
-**Nicht geprüft:** TalkBack, Switch Access und Voice Access auf einem Gerät; Querformat und Zwei-Spalten-Ansicht (der Emulator ging nicht ins Querformat, und die Ansicht liegt hinter dem Login); grosse Schrift (200 %); der Tag-Modus ausserhalb des Startbildschirms. Der Durchgang mit TalkBack ist für #35 noch zu machen, sobald ein Server zum Anmelden bereitsteht.
+- Build, Lint und Unit-Tests (inklusive Kontrast), strikte Abhängigkeitsprüfung für Debug und Release.
+- Auf dem Emulator (API 37) mit der Galerie: Login, Passwort, Willkommen, Liste, Detail, Anmeldungen, Profil und «Keine Einheit» in Tag, dazu Willkommen und Liste in Nacht, die Liste im breiten Format (Dock links).
+- Grosse Schrift (200 %): Das Layout bleibt lesbar; die dekorative Flamme entfällt ab 130 %, weil Text auf Rot kaum lesbar wäre.
+- Touch-Ziele im Detail: alle 8 klickbaren Elemente sind mindestens 48 dp gross (UI-Dump).
+- Release-Build mit R8, lokal mit dem Debug-Schlüssel signiert: Er startet ohne Absturz und zeigt den Offline-Zustand.
+
+**Nicht geprüft:** TalkBack, Switch Access und Voice Access auf einem Gerät; die Zwei-Spalten-Ansicht mit offenem Detail; Benachrichtigungen, Sperre und Lade-Zustand sind nur im Code durchgesehen. Der Durchgang mit TalkBack ist für #35 noch zu machen, sobald ein Server zum Anmelden bereitsteht.
 
 ## Platzhalter aus der Übernahme
 

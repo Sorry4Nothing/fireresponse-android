@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -116,8 +117,10 @@ private fun LogoPage(
     val motionEnabled = rememberMotionEnabled()
     val reveal = remember { Animatable(if (animateLogo && motionEnabled) 0f else 1f) }
     LaunchedEffect(Unit) { if (reveal.value < 1f) reveal.animateTo(1f, tween(LOGO_REVEAL_MS, easing = FastOutSlowInEasing)) }
+    // Bei grosser Schrift (ab 130 %) entfällt die Flamme: Sie ist Zierde, und der Text darüber wäre auf Rot kaum lesbar.
+    val showLogo = LocalDensity.current.fontScale < 1.3f
     Box(Modifier.fillMaxSize().clipToBounds()) {
-        Image(
+        if (showLogo) Image(
             painterResource(R.drawable.ic_logo),
             contentDescription = null,
             modifier = Modifier
