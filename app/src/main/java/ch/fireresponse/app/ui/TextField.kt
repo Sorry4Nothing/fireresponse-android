@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.semantics.contentDescription
@@ -60,6 +62,8 @@ fun LabeledTextField(
     trailing: (@Composable () -> Unit)? = null,
     /** Fläche des Feldes; der Login nutzt `surface`, das Passwort `surface-container-low` (Entwurf: weiss). */
     container: Color = MaterialTheme.colorScheme.surface,
+    /** Damit «Weiter» der Tastatur gezielt in dieses Feld springen kann (sonst landet der Fokus auf dem Auge-Knopf davor). */
+    focusRequester: FocusRequester? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
@@ -70,7 +74,7 @@ fun LabeledTextField(
         BasicTextField(
             value = value,
             onValueChange = { if (it.length <= maxChars) onValueChange(it) },
-            modifier = Modifier.fillMaxWidth().semantics {
+            modifier = Modifier.fillMaxWidth().then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier).semantics {
                 contentDescription = label
                 autofill?.let { this.contentType = it }
             },
@@ -87,7 +91,8 @@ fun LabeledTextField(
                 keyboardType = keyboardType,
                 imeAction = imeAction,
             ),
-            keyboardActions = KeyboardActions(onAny = { onImeAction?.invoke() }),
+            // Ohne eigene Aktion gilt das Standardverhalten der Tastatur (Weiter springt zum nächsten Feld); eine leere Aktion würde es überschreiben.
+            keyboardActions = onImeAction?.let { action -> KeyboardActions(onAny = { action() }) } ?: KeyboardActions.Default,
             decorationBox = { inner ->
                 // Mit Knopf am Ende (48 dp) bleibt im 52-dp-Feld nur ein schmaler Rand.
                 Row(

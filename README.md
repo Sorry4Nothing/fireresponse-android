@@ -14,6 +14,10 @@ Voraussetzung: JDK 21 und das Android SDK (`local.properties` mit `sdk.dir`, nic
 
 Das ist auch der Check `build` der CI. Die Adresse des Servers kommt aus `fireresponseApiBaseUrl` in `~/.gradle/gradle.properties`; die Release-Signierung steht in [docs/release.md](docs/release.md).
 
+## Ohne Backend ausprobieren
+
+Ein Debug-Build ohne `fireresponseApiBaseUrl` läuft gegen einen Fake-Server (`app/src/debug/…/FakeBackend.kt`): Er hält seinen Stand im Arbeitsspeicher und kennt ein erfundenes Konto, Benutzername `demo` und Startpasswort `startpasswort123`. Damit lässt sich der ganze Ablauf bis zur Zusage durchspielen. Die Galerie zeigt einzelne Bildschirme: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list` (Namen in `GalleryActivity.kt`). Beides gibt es nur im Debug-Build.
+
 ## Arbeitsweise
 
 - Ein Branch und ein Pull Request pro Issue, abgezweigt von `develop`: `feature/<nr>-<kurzname>`, für Bugs `fix/<nr>-<kurzname>`.

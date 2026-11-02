@@ -199,6 +199,8 @@ class ApiClient(
                 .followRedirects(false)
                 .followSslRedirects(false)
                 .addInterceptor(SessionInterceptor(storage, appVersion))
+                // Nur im Debug-Build gesetzt (siehe [NetworkDebug]); der Interceptor steht innen und beantwortet Anfragen selbst.
+                .apply { NetworkDebug.interceptor?.let(::addInterceptor) }
                 .build()
 
         fun create(context: Context): ApiClient {
