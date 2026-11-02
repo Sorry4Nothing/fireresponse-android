@@ -6,9 +6,11 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+private val SQUAD = AppointmentSquad("e1", "JF")
+
 class TimingTest {
     private fun timed(start: String?, end: String?) = Appointment(
-        id = "x", title = "T", status = "aktiv", allDay = false, start = start, end = end,
+        id = "x", title = "T", status = "aktiv", allDay = false, start = start, end = end, squad = SQUAD,
     )
 
     @Test
@@ -32,7 +34,7 @@ class TimingTest {
 
     @Test
     fun allDayTakesCalendarDaysUnchanged() {
-        val p = Appointment(id = "x", title = "T", status = "aktiv", allDay = true, dayFrom = "2027-03-01", dayTo = "2027-03-03")
+        val p = Appointment(id = "x", title = "T", status = "aktiv", allDay = true, dayFrom = "2027-03-01", dayTo = "2027-03-03", squad = SQUAD)
         assertEquals(Timing.AllDay(LocalDate.of(2027, 3, 1), LocalDate.of(2027, 3, 3)), p.time())
     }
 
@@ -40,6 +42,6 @@ class TimingTest {
     fun missingOrBrokenDataGiveNoTime() {
         assertNull(timed(null, null).time())
         assertNull(timed("morgen", "übermorgen").time())
-        assertNull(Appointment(id = "x", title = "T", status = "aktiv", allDay = true).time())
+        assertNull(Appointment(id = "x", title = "T", status = "aktiv", allDay = true, squad = SQUAD).time())
     }
 }

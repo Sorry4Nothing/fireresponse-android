@@ -28,7 +28,6 @@ enum class ChipKind(@DrawableRes val icon: Int) {
     NO(R.drawable.ic_cross),
     PENDING(R.drawable.ic_question),
     REVIEW(R.drawable.ic_warning),
-    UNASSIGNED(R.drawable.ic_unlinked),
 }
 
 /** Kleines Etikett für einen Zustand. Nicht bedienbar; bedienbar ist die Karte, auf der es sitzt. */
@@ -41,7 +40,6 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
         ChipKind.NO -> scheme.errorContainer to scheme.onErrorContainer
         ChipKind.PENDING -> Color.Transparent to scheme.onSurfaceVariant
         ChipKind.REVIEW -> colors.warningContainer to colors.onWarningContainer
-        ChipKind.UNASSIGNED -> scheme.secondaryContainer to scheme.onSecondaryContainer
     }
     Row(
         modifier

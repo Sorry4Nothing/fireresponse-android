@@ -4,12 +4,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
 
+private val SQUAD = AppointmentSquad("e1", "JF Beispielstadt")
+
 class DaysTest {
     private fun timed(id: String, start: String, end: String) =
-        Appointment(id = id, title = id, status = "aktiv", allDay = false, start = start, end = end)
+        Appointment(id = id, title = id, status = "aktiv", allDay = false, start = start, end = end, squad = SQUAD)
 
     private fun allDay(id: String, from: String, until: String) =
-        Appointment(id = id, title = id, status = "aktiv", allDay = true, dayFrom = from, dayTo = until)
+        Appointment(id = id, title = id, status = "aktiv", allDay = true, dayFrom = from, dayTo = until, squad = SQUAD)
 
     @Test
     fun sameDayGivesOneGroupWithSeveralAppointments() {
@@ -48,7 +50,7 @@ class DaysTest {
 
     @Test
     fun appointmentsWithoutReadableTimeStayTogetherWithoutDate() {
-        val without = Appointment(id = "x", title = "x", status = "aktiv", allDay = false)
+        val without = Appointment(id = "x", title = "x", status = "aktiv", allDay = false, squad = SQUAD)
         val days = groupByDay(listOf(without, without.copy(id = "y")))
         assertEquals(1, days.size)
         assertEquals(null, days.single().date)

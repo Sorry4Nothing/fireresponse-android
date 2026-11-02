@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import ch.fireresponse.app.R
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,6 +20,10 @@ data class AuthUser(val name: String = "", val mussPasswortAendern: Boolean = fa
 /** `GET /api/auth/get-session`: Sitzung und Person; ohne Sitzung antwortet der Server `null`. */
 @Serializable
 data class AuthSession(val user: AuthUser)
+
+/** `GET /api/v1/einwilligung`: Fassung und Text der aktuellen Einwilligung; `valid`: Die Person hat dieser Fassung zugestimmt. */
+@Serializable
+data class Consent(val version: Int, val text: String, @SerialName("gueltig") val valid: Boolean)
 
 @Serializable
 data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)

@@ -1,6 +1,7 @@
 package ch.fireresponse.app.appointments
 
 import androidx.compose.foundation.background
+import java.time.LocalDate
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import ch.fireresponse.app.ui.InitialsBadge
+import ch.fireresponse.app.ui.RankBadge
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +69,10 @@ fun RegistrationSection(
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
             modifier = Modifier.padding(top = 6.dp).semantics { heading() },
         )
-        if (!appointment.attendanceOpen) NoticeBanner(NoticeKind.INFO, stringResource(R.string.registration_closed))
+        if (!appointment.attendanceOpen) {
+            val opensOn = appointment.registrationOpensOn(LocalDate.now(SWISS_ZONE))
+            NoticeBanner(NoticeKind.INFO, if (opensOn != null) stringResource(R.string.registration_from, dayAndMonth(opensOn)) else stringResource(R.string.registration_closed))
+        }
 
         appointment.participants.forEach { participant ->
             RsvpRow(
@@ -77,6 +82,7 @@ fun RegistrationSection(
                 locked = rsvp.running,
                 pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == participant.id },
                 sentAt = rsvp.sentAt[participant.id],
+                rankStars = participant.badge?.stars,
                 onRsvp = { onParticipant(participant.id, it) },
             )
         }
@@ -107,6 +113,8 @@ private fun RsvpRow(
     pending: Boolean?,
     sentAt: String?,
     onRsvp: (Boolean) -> Unit,
+    /** Sterne des Rang-Abzeichens; `null` ohne Rang oder mit einem Bild-Abzeichen (das zeigt die App noch nicht). */
+    rankStars: Int? = null,
 ) {
     val colors = MaterialTheme.fire
     val scheme = MaterialTheme.colorScheme
@@ -120,7 +128,10 @@ private fun RsvpRow(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         InitialsBadge(name)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-            Text(name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
+                rankStars?.let { RankBadge(it, height = 24.dp) }
+            }
             // Ist die Anmeldung geschlossen, sagt schon das Etikett rechts denselben Stand: nicht doppelt zeigen.
             if (isOpen) {
                 Text(

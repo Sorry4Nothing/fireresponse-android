@@ -1,5 +1,7 @@
 package ch.fireresponse.app.appointments
 
+import ch.fireresponse.app.contacts.Contact
+import ch.fireresponse.app.profile.Badge
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Instant
@@ -11,60 +13,50 @@ import java.time.format.DateTimeParseException
 /** Die Einheit rechnet in Schweizer Zeit, unabhängig von der Zone des Geräts. */
 val SWISS_ZONE: ZoneId = ZoneId.of("Europe/Zurich")
 
+/** Die Einheit eines Termins; `type` ist «jf» (Jugendfeuerwehr) oder «kf» (Kinderfeuerwehr). */
 @Serializable
 data class AppointmentSquad(
     val id: String,
     val name: String,
+    @SerialName("typ") val type: String = "jf",
 )
 
-/** Eigene teilnehmende Person in einer Einheit des Termins. `status` ist «ja», «nein» oder `null` für noch offen. */
+/** Eigene teilnehmende Person in der Einheit des Termins. `status` ist «ja», «nein» oder `null` für noch offen. */
 @Serializable
-data class AppointmentParticipant(val id: String, @SerialName("vorname") val firstName: String, val status: String? = null)
+data class AppointmentParticipant(
+    val id: String,
+    @SerialName("vorname") val firstName: String,
+    val status: String? = null,
+    @SerialName("abzeichen") val badge: Badge? = null,
+)
 
-/** Listeneintrag und Detail der API. Die Felder ab `attendanceOpen` liefert nur das Detail. */
+/** Listeneintrag und Detail der API. Die Felder ab `topic` liefert nur das Detail. */
 @Serializable
 data class Appointment(
     val id: String,
     @SerialName("titel") val title: String,
     val status: String,
-    /** «intern», «leitende» oder «eltern»: wer das Termin ausser Admins und Kommandos sieht. */
-    @SerialName("sichtbarkeit") val visibility: String = "intern",
     @SerialName("ganztaegig") val allDay: Boolean,
     @SerialName("beginn") val start: String? = null,
     @SerialName("ende") val end: String? = null,
     @SerialName("tagVon") val dayFrom: String? = null,
     @SerialName("tagBis") val dayTo: String? = null,
-    @SerialName("googleOrt") val googleLocation: String? = null,
-    @SerialName("treffpunkt") val meetingPoint: String? = null,
-    @SerialName("schlussOrt") val closingLocation: String? = null,
-    @SerialName("schlussZeit") val closingTime: String? = null,
-    @SerialName("mitnehmen") val bringAlong: String? = null,
-    @SerialName("stufen") val squads: List<AppointmentSquad> = emptyList(),
-    /** Wahr, solange das Termin aktiv ist und nicht begonnen hat: nur dann lässt sich antworten. */
+    /** Schweizer Kalendertag (`JJJJ-MM-TT`), ab dem sich anmelden lässt; die App rechnet das Fenster nicht selbst. */
+    @SerialName("anmeldungAb") val registrationFrom: String? = null,
+    /** Wahr, solange der Termin aktiv ist, nicht begonnen hat und das Anmeldefenster offen ist: nur dann lässt sich antworten. */
     @SerialName("teilnahmeOffen") val attendanceOpen: Boolean = false,
-    @SerialName("kinder") val participants: List<AppointmentParticipant> = emptyList(),
-    /** «ja», «nein» oder «offen»; `null`, wenn die Person keine Leitung dieses Termins ist. */
+    @SerialName("einheit") val squad: AppointmentSquad,
+    @SerialName("teilnehmende") val participants: List<AppointmentParticipant> = emptyList(),
+    @SerialName("thema") val topic: String? = null,
+    val info: String? = null,
+    @SerialName("aufgebot") val callUp: String? = null,
+    /** Die Kontaktperson des Termins; `null`, wenn die Einheit keine Kommandantin und keinen Kommandanten hat. */
+    @SerialName("kontakt") val contact: Contact? = null,
+    /** «ja», «nein» oder «offen»; `null`, wenn die Person nicht zum Kommando oder zur Leitung der Einheit gehört. */
     @SerialName("eigeneAnmeldung") val ownRegistration: String? = null,
 ) {
     val cancelled get() = status == "abgesagt"
     val inReview get() = status == "pruefen"
-    val unassigned get() = squads.isEmpty()
-
-    /** Der Treffpunkt der Leitung, sonst der Ort aus dem Google-Kalender. */
-    val location get() = parseMeetingPoint(meetingPoint).place ?: googleLocation?.takeIf { it.isNotBlank() }
-}
-
-/** Zeit und Ort des Treffpunkts, wie der Server sie in einem Text liefert. */
-data class MeetingPoint(val time: String?, val place: String?)
-
-private val MEETING_TIME = Regex("""^(\d{2}:\d{2}) Uhr$""")
-
-/** Der Server schreibt «14:00 Uhr» in die erste Zeile, wenn die Webseite eine Zeit nennt; der Rest ist der Ort. */
-fun parseMeetingPoint(text: String?): MeetingPoint {
-    val lines = text.orEmpty().lines().map { it.trim() }.filter { it.isNotEmpty() }
-    val time = lines.firstOrNull()?.let { MEETING_TIME.matchEntire(it)?.groupValues?.get(1) }
-    val place = (if (time != null) lines.drop(1) else lines).joinToString("\n").ifEmpty { null }
-    return MeetingPoint(time, place)
 }
 
 @Serializable
@@ -90,3 +82,7 @@ fun Appointment.time(): Timing? = try {
 } catch (e: DateTimeParseException) {
     null
 }
+
+/** Der Tag, ab dem sich anmelden lässt, solange das noch aussteht (aktiv, Fenster zu, Tag in der Zukunft); sonst `null`. */
+fun Appointment.registrationOpensOn(today: LocalDate): LocalDate? =
+    registrationFrom?.let { runCatching { LocalDate.parse(it) }.getOrNull() }?.takeIf { !cancelled && !attendanceOpen && it.isAfter(today) }

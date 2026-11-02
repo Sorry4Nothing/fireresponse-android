@@ -1,7 +1,6 @@
 package ch.fireresponse.app.appointments
 
 import ch.fireresponse.app.profile.Profile
-import ch.fireresponse.app.profile.displayName
 import ch.fireresponse.app.ui.ChipKind
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,7 +12,10 @@ data class Counts(val ja: Int = 0, val nein: Int = 0, val offen: Int = 0) {
 }
 
 @Serializable
-data class RegistrationCounts(@SerialName("kinder") val participants: Counts, @SerialName("leitende") val leaders: Counts)
+data class RegistrationCounts(
+    @SerialName("teilnehmende") val participants: Counts,
+    @SerialName("leitende") val leaders: Counts,
+)
 
 @Serializable
 data class ParticipantRegistration(
@@ -25,33 +27,25 @@ data class ParticipantRegistration(
     val name get() = "$firstName $lastName".trim()
 }
 
-/** `role` ist «leitung» oder «stufenleitung». */
+/** Eine Rolle der Einheit mit ihrer Anmeldung; `role` ist «kommandant», «stellvertretung» oder «leitung». */
 @Serializable
 data class LeaderRegistration(
     val id: String,
     val name: String,
     @SerialName("rolle") val role: String,
     val status: String,
-    /** Spitzname; `null` oder leer ohne Angabe. */
-    val ceviName: String? = null,
     /** Pfad zum Profilbild (`GET /api/v1/personen/{id}/bild`); `null` ohne Bild. Teilnehmende haben keins. */
     @SerialName("bildUrl") val imageUrl: String? = null,
 ) {
-    val isCommander get() = role == "stufenleitung"
-
-    /** Titel der Zeile: der Spitzname, ohne ihn der volle Name. */
-    val title get() = displayName(name, ceviName)
-
-    /** Der volle Name darunter; nur, wenn der Titel ein Spitzname ist. */
-    val fullName get() = name.takeIf { title != name }
+    val isCommand get() = role == "kommandant" || role == "stellvertretung"
 }
 
 /** `GET /api/v1/programme/{id}/teilnahmen`: Zahlen und Listen. Sie zählen genau die gelieferten Listen. */
 @Serializable
 data class Registrations(
     @SerialName("zahlen") val counts: RegistrationCounts,
-    @SerialName("kinder") val participants: List<ParticipantRegistration>,
-    @SerialName("leitende") val leaders: List<LeaderRegistration>,
+    @SerialName("teilnehmende") val participants: List<ParticipantRegistration>,
+    @SerialName("leitende") val leaders: List<LeaderRegistration> = emptyList(),
 )
 
 /** «ja», «nein» oder «offen» als Chip. Was der Server sonst schickt, gilt als offen. */
@@ -63,11 +57,9 @@ fun registrationChip(status: String): ChipKind = when (status) {
 
 /** Wer die Übersicht ansehen darf; entschieden wird trotzdem beim Server (403). Ändern darf hier niemand etwas. */
 object RegistrationsRules {
-    /** Admins sowie Leitende und Kommandos einer Einheit des Termins. Ohne Einheit gibt es nichts zu zählen. */
-    fun maySee(appointment: Appointment, profile: Profile?): Boolean {
-        if (profile == null || appointment.unassigned) return false
-        return profile.admin || profile.roles.any { role -> appointment.squads.any { it.id == role.squadId } }
-    }
+    /** Kantonsadmin sowie Kommando und Leitende der Einheit des Termins. Eltern sehen nur ihre eigenen Personen im Detail. */
+    fun maySee(appointment: Appointment, profile: Profile?): Boolean =
+        profile != null && (profile.admin || profile.squads.any { it.id == appointment.squad.id })
 
     /** Anteil eines Wertes am Ganzen für die Breite des Balkens; 0, wenn niemand zählt. */
     fun share(count: Int, total: Int): Float = if (total <= 0) 0f else count.toFloat() / total

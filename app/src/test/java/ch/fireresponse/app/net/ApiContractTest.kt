@@ -82,6 +82,7 @@ class ApiContractTest {
         assertTrue(("GET" to "/api/v1/programme") in contract)
         assertTrue(("PUT" to "/api/v1/programme/{}/teilnahmen/{}") in contract)
         assertTrue(("POST" to "/api/auth/sign-in/username") in contract)
-        assertEquals(("GET" to "/api/v1/chats/{}/nachrichten").second, normalize("/api/v1/chats/\$chatId/nachrichten?vor=\$before"))
+        assertTrue(("GET" to "/api/v1/einwilligung") in contract)
+        assertEquals("/api/v1/programme/{}/teilnahmen/{}", normalize("/api/v1/programme/\$id/teilnahmen/\$participantId?x=\$y"))
     }
 }

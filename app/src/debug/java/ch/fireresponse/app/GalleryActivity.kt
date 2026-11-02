@@ -30,7 +30,7 @@ import ch.fireresponse.app.auth.StartScreen
 import ch.fireresponse.app.auth.ProfileScreen
 import ch.fireresponse.app.auth.WelcomeScreen
 import ch.fireresponse.app.contacts.Contact
-import ch.fireresponse.app.contacts.ContactList
+import ch.fireresponse.app.profile.Badge
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.profile.Profile
@@ -59,37 +59,47 @@ class GalleryActivity : ComponentActivity() {
 
 private val squad = AppointmentSquad("s1", "Jugendfeuerwehr Musterdorf")
 
+private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge(stars = 2))
+
 private val appointments = listOf(
     Appointment(
         id = "a1", title = "Schläuche kuppeln", status = "aktiv", allDay = false,
         start = "2026-11-14T13:00:00.000Z", end = "2026-11-14T16:00:00.000Z",
-        googleLocation = "Feuerwehrmagazin", meetingPoint = "13:45 Uhr\nParkplatz beim Magazin",
-        closingLocation = "Feuerwehrmagazin", closingTime = "17:00", bringAlong = "Festes Schuhwerk und eine Trinkflasche",
-        squads = listOf(squad), attendanceOpen = true,
-        participants = listOf(AppointmentParticipant("k1", "Lena", "ja"), AppointmentParticipant("k2", "Noah", null)),
+        registrationFrom = "2026-10-03", attendanceOpen = true, squad = squad,
+        participants = listOf(AppointmentParticipant("k1", "Lena", "ja", Badge(stars = 1)), AppointmentParticipant("k2", "Noah", null)),
+        topic = "Schläuche kuppeln und ausrollen",
+        info = "Festes Schuhwerk und eine Trinkflasche mitnehmen.",
+        callUp = "Treffpunkt 13:45 Uhr, Parkplatz beim Magazin",
+        contact = contact,
     ),
     Appointment(
         id = "a2", title = "Knotenkunde", status = "aktiv", allDay = false,
-        start = "2026-11-14T17:00:00.000Z", end = "2026-11-14T18:30:00.000Z", googleLocation = "Schulhaus",
-        squads = listOf(squad), attendanceOpen = true,
+        start = "2026-11-14T17:00:00.000Z", end = "2026-11-14T18:30:00.000Z",
+        registrationFrom = "2026-10-03", attendanceOpen = true, squad = squad,
         participants = listOf(AppointmentParticipant("k1", "Lena", "nein")),
+        contact = contact,
     ),
     Appointment(
         id = "a3", title = "Leiterübung", status = "abgesagt", allDay = false,
-        start = "2026-11-21T13:00:00.000Z", end = "2026-11-21T15:00:00.000Z", googleLocation = "Feuerwehrmagazin",
-        squads = listOf(squad),
+        start = "2026-11-21T13:00:00.000Z", end = "2026-11-21T15:00:00.000Z",
+        registrationFrom = "2026-10-10", squad = squad,
     ),
     Appointment(
         id = "a4", title = "Leitendensitzung", status = "aktiv", allDay = false,
-        start = "2026-11-28T18:00:00.000Z", end = "2026-11-28T19:30:00.000Z", googleLocation = "Magazin",
-        squads = listOf(squad), attendanceOpen = true, ownRegistration = "ja",
+        start = "2026-11-28T18:00:00.000Z", end = "2026-11-28T19:30:00.000Z",
+        registrationFrom = "2026-10-17", attendanceOpen = true, squad = squad, ownRegistration = "ja",
+    ),
+    Appointment(
+        id = "a5", title = "Winterlager", status = "aktiv", allDay = true,
+        dayFrom = "2027-01-16", dayTo = "2027-01-17", registrationFrom = "2026-12-05", squad = squad,
+        participants = listOf(AppointmentParticipant("k1", "Lena", null)),
     ),
 )
 
 private val profile = Profile(
-    id = "u1", name = "Sandra Muster", username = "smuster",
-    squads = listOf(ProfileSquad("s1", "Jugendfeuerwehr Musterdorf")),
-    participants = listOf(ProfileParticipant("k1", "s1", "Lena"), ProfileParticipant("k2", "s1", "Noah")),
+    id = "u1", name = "Sandra Muster", username = "smuster", consented = true,
+    squads = listOf(ProfileSquad("s1", "Jugendfeuerwehr Musterdorf", "jf", "Bezirk Beispiel", "leitung")),
+    participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1"), ProfileParticipant("k2", "Noah", "Beispiel", "s1")),
 )
 
 private val registrations = Registrations(
@@ -109,6 +119,7 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "welcome" to {
         WelcomeScreen(
             name = profile.name, squads = profile.squads.map { it.name }, participants = profile.participants.map { it.firstName },
+            consentText = "Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit und geben sie nicht weiter.",
             passwordSaved = true, form = FormState(), onReadPrivacy = {}, onAccept = {}, lockAvailable = true,
         )
     },
@@ -126,8 +137,8 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "notfound" to {
         MainScaffold(Destination.APPOINTMENTS, {}) {
             AppointmentDetailScreen(
-                ApiResult.Failure(ApiError.NOT_FOUND), RsvpState(), canAssign = false, canSeeRegistrations = false, contacts = null,
-                onParticipant = { _, _ -> }, onLeader = {}, onAssign = {}, onRegistrations = {}, onBack = {}, onRetry = {},
+                ApiResult.Failure(ApiError.NOT_FOUND), RsvpState(), canSeeRegistrations = false,
+                onParticipant = { _, _ -> }, onLeader = {}, onRegistrations = {}, onBack = {}, onRetry = {},
             )
         }
     },
@@ -139,9 +150,8 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
                 list = { AppointmentListScreen(ApiResult.Ok(AppointmentList(appointments)), {}, {}) },
                 detail = {
                     AppointmentDetailScreen(
-                        ApiResult.Ok(appointments[0]), RsvpState(), canAssign = false, canSeeRegistrations = true,
-                        contacts = ApiResult.Ok(ContactList(listOf(Contact("c1", "Petra Beispiel", phone = "079 000 00 00")))),
-                        onParticipant = { _, _ -> }, onLeader = {}, onAssign = {}, onRegistrations = {}, onBack = {}, onRetry = {},
+                        ApiResult.Ok(appointments[0]), RsvpState(), canSeeRegistrations = true,
+                        onParticipant = { _, _ -> }, onLeader = {}, onRegistrations = {}, onBack = {}, onRetry = {},
                     )
                 },
             )
@@ -151,9 +161,8 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "detail" to {
         MainScaffold(Destination.APPOINTMENTS, {}) {
             AppointmentDetailScreen(
-                ApiResult.Ok(appointments[0]), RsvpState(), canAssign = false, canSeeRegistrations = true,
-                contacts = ApiResult.Ok(ContactList(listOf(Contact("c1", "Petra Beispiel", phone = "079 000 00 00")))),
-                onParticipant = { _, _ -> }, onLeader = {}, onAssign = {}, onRegistrations = {}, onBack = {}, onRetry = {},
+                ApiResult.Ok(appointments[0]), RsvpState(), canSeeRegistrations = true,
+                onParticipant = { _, _ -> }, onLeader = {}, onRegistrations = {}, onBack = {}, onRetry = {},
             )
         }
     },

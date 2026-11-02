@@ -87,8 +87,6 @@ import ch.fireresponse.app.push.PushApi
 import ch.fireresponse.app.push.PushTarget
 import ch.fireresponse.app.push.PushToken
 import ch.fireresponse.app.push.PushViewModel
-import ch.fireresponse.app.appointments.AssignmentRules
-import ch.fireresponse.app.appointments.AssignmentScreen
 import ch.fireresponse.app.appointments.AppointmentDetailScreen
 import ch.fireresponse.app.appointments.AppointmentsApi
 import ch.fireresponse.app.appointments.AppointmentListScreen
@@ -214,10 +212,11 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                     name = current.profile.name,
                     squads = current.profile.squads.map { it.name },
                     participants = current.profile.participants.map { it.firstName },
+                    consentText = current.consent.text,
                     passwordSaved = passwordSaved,
                     form = form,
                     onReadPrivacy = openPrivacy,
-                    onAccept = auth::acceptPrivacy,
+                    onAccept = auth::acceptConsent,
                     lockAvailable = lockAvailable,
                     lockEnabled = lockEnabled,
                     onLockChange = onLockChange,
@@ -260,7 +259,6 @@ private sealed interface Screen {
     data object Notifications : Screen { override val depth = 1 }
     data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
     data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
-    data class Assign(val appointmentId: String) : Screen { override val depth = 2 }
 }
 
 @Composable
@@ -286,7 +284,6 @@ private fun MainContent(
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
-    var assigning by rememberSaveable { mutableStateOf(false) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
 
     // Pushes brauchen das Token dieses Geräts beim Server und, ab Android 13, die Erlaubnis (einmal fragen, danach im Profil).
@@ -300,7 +297,7 @@ private fun MainContent(
     // Das Tippen auf einen Push öffnet das Termin und schliesst, was davor offen war.
     LaunchedEffect(pushTarget) {
         val target = pushTarget ?: return@LaunchedEffect
-        notificationsOpen = false; assigning = false; viewingRegistrations = false
+        notificationsOpen = false; viewingRegistrations = false
         when (target) {
             is PushTarget.Appointment -> { destination = Destination.APPOINTMENTS; openedAppointment = target.id }
         }
@@ -308,7 +305,6 @@ private fun MainContent(
     }
     // Auch nach Drehen oder Prozess-Ende lädt das Offene neu: Daten bleiben nur im Arbeitsspeicher.
     LaunchedEffect(openedAppointment) { openedAppointment?.let(appointments::loadDetail) }
-    LaunchedEffect(assigning) { if (assigning) appointments.loadSquads() }
     LaunchedEffect(viewingRegistrations, openedAppointment) {
         val id = openedAppointment
         if (viewingRegistrations && id != null) appointments.loadRegistrations(id)
@@ -333,19 +329,15 @@ private fun MainContent(
             AppointmentDetailScreen(
                 detail,
                 appointments.rsvp.collectAsState().value,
-                canAssign = AssignmentRules.mayAssign(appointmentProfile),
                 canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
-                contacts = appointments.contacts.collectAsState().value,
                 onParticipant = { participantId, attending -> appointments.rsvpParticipant(id, participantId, attending) },
                 onLeader = { attending -> appointments.rsvpLeader(id, attending) },
-                onAssign = { assigning = true },
                 onRegistrations = { viewingRegistrations = true },
                 onBack = { openedAppointment = null },
                 onRetry = { appointments.loadDetail(id) },
             )
         }
         val target = when {
-            appointmentId != null && assigning && assignedAppointment != null -> Screen.Assign(appointmentId)
             appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
             appointmentId != null && !wide -> Screen.Appointment(appointmentId)
             notificationsOpen -> Screen.Notifications
@@ -358,21 +350,6 @@ private fun MainContent(
             label = "bildschirm",
         ) { screen ->
             when (screen) {
-                is Screen.Assign -> {
-                    val appointmentId = screen.appointmentId
-                    val assigned = assignedAppointment ?: return@AnimatedContent
-                    val leave = { assigning = false; appointments.resetEdit() }
-                    BackHandler(onBack = leave)
-                    val edit = appointments.edit.collectAsState().value
-                    ContentWidth {
-                    AssignmentScreen(
-                        assigned, appointments.squads.collectAsState().value, appointmentProfile, edit,
-                        onSave = { request -> appointments.saveAssignment(appointmentId, request, leave) },
-                        onBack = leave,
-                        onRetry = appointments::loadSquads,
-                    )
-                    }
-                }
                 is Screen.Registrations -> {
                     val appointmentId = screen.appointmentId
                     BackHandler { viewingRegistrations = false }

@@ -55,16 +55,15 @@ Geprüft:
 ## Platzhalter aus der Übernahme
 
 - **Logo:** eine neutrale Flamme (`ic_logo`, `ic_splash_logo`, `ic_stage_fallback`, `ic_stat_logo`, `ic_launcher_foreground`). Das echte Zeichen und das Wappen des Kantons Zürich ersetzen sie; das Design liefert beide als Platzhalter.
-- **Begriffe:** Einheit (mit Bezirk), Kommando, Teilnehmende und Termin; in der Oberfläche heisst ein Termin «Übung» und das Kommando «Leitung». Die Namen in der Schnittstelle (`@SerialName`) bleiben, bis der neue Vertrag (E4) kopiert wird.
+- **Begriffe:** Einheit (mit Bezirk), Kommando, Teilnehmende und Termin; in der Oberfläche heisst ein Termin «Übung» und das Kommando «Leitung». Die Namen in der Schnittstelle (`@SerialName`) sind die des Vertrags (`api-vertrag/openapi.yaml`): Einheit = `einheit`, Teilnehmende = `teilnehmende`, Termin = `programm`.
 
 ## Noch nicht umgesetzt
 
-Oberfläche und Komponenten sind nach der Vorlage gebaut. Offen ist, was Daten vom neuen API-Vertrag (E4) braucht oder dessen Design noch folgt:
+Oberfläche und Komponenten sind nach der Vorlage gebaut. Der Vertrag (E4) ist übernommen: Profil, Termine, Anmeldungen, Kontaktperson, Abzeichen (Sterne), Info und Aufgebot, «Anmeldung ab» und die Einwilligung mit Text vom Server sind gebaut. Offen ist, was ein Design oder eine Datei von aussen braucht:
 
-- **Rangabzeichen:** `ui/Brand.kt` hat die Komponente `RankBadge` (Bild mit Label, 0 bis 2 Sterne); sie hängt noch nirgends, weil der Rang als Bild von der API kommt (Anmeldungen, Profil, Willkommen, Kontaktperson).
-- **Kontaktperson pro Termin** mit Rolle und Rangabzeichen, **Info und Aufgebot** im Detail (A3, A2).
-- **Datenschutz** als Screen mit Abschnittskarten: Der Text kommt von der API; bis dahin öffnet die App die Seite im Browser.
-- **Einwilligung am Konto** (Willkommen): Die App sendet die Kenntnisnahme wie bisher; die neue Einwilligung am Konto kommt mit dem Vertrag.
+- **Abzeichen als Bild:** Der Vertrag liefert ein Rang-Abzeichen entweder als Sterne (0 bis 5) oder als Bild (`bildUrl`, PNG oder SVG). `RankBadge` zeigt Sterne, aber nur 0 bis 2 (die Platzhalter-Bilder reichen nicht weiter); Bild-Abzeichen zeigt die App noch nicht, weil sie SVG nicht ohne Zusatzbibliothek lesen kann und ein Original-Abzeichen fehlt.
+- **Zweiter Faktor:** Hat ein Konto (Kommando) den zweiten Faktor eingerichtet, verlangt die Anmeldung einen Code (`/api/auth/two-factor/verify-totp`). Die App führt diesen Schritt nicht aus und weist solche Konten ab; es fehlt ein Entwurf dafür.
+- **Datenschutz** als Screen mit Abschnittskarten: Bis dahin öffnet die App die Seite des Servers im Browser; die Einwilligung selbst steht im Willkommen.
 - **Kennzeichnung der Einheit in der Liste** und Push-Einstellungen im Profil (Design folgt), Info-Seite «Konto aufs Kind übertragen» (Design folgt).
 - **Wappen und Rangabzeichen** sind Platzhalter nach dem Entwurf; das offizielle Wappen mit Nutzungsrecht und das Original der Jugendfeuerwehr als Vektor ersetzen sie.
 
@@ -82,4 +81,5 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 - **Passwort wiederholen:** Die Vorlage hat zwei Felder (neu und wiederholen) mit der Regel «Stimmt überein»; die App folgt ihr. «Passwort anzeigen» bleibt daneben.
 - **Bildschirme nach den Entwürfen:** Login, Passwort, Willkommen, Liste, Detail, Profil und «Keine Einheit» sind gegen die Entwurfsdateien (`L1` bis `L13`, `S4`, `S9`) abgeglichen: echte Flamme und Zürcher Wappen, Titel 34/36 und Begrüssung 40/44, Inter 400 bis 800, Kontaktkarte mit Anrufen-Knopf, Zusage mit Initialen, Kalender-Knopf im Detail. Die Galerie `GalleryActivity` (nur Debug-Build, Beispieldaten) zeigt sie ohne Server: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list`.
 - **Kein Logo je Einheit:** Die Vorlage kennt es nicht mehr. Die Einheit steht als Text; Logos, ihr Laden und der Fallback entfallen.
-- **Keine Einheit:** Ein Konto ohne Rolle, Einheit und Teilnehmende zeigt den Zustand «Keine Einheit» mit dem Weg zurück zum Login. Wie der neue Server dies meldet, steht mit dem Vertrag fest.
+- **Keine Einheit:** Ein Konto ohne Rolle, Einheit und Teilnehmende zeigt den Zustand «Keine Einheit» mit dem Weg zurück zum Login.
+- **Kein Ort, keine Zuordnung:** Der Vertrag kennt keinen Treffpunkt, keinen Schlussort und kein «Mitnehmen» mehr, dafür Thema, Info und Aufgebot (Text, wie der Server ihn liefert). Termine ordnet die App keiner Einheit zu: Das geschieht im Admin-Bereich, die Seite «Einheiten und Sichtbarkeit» entfällt.
