@@ -211,7 +211,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 is AuthState.Welcome -> WelcomeScreen(
                     name = current.profile.name,
                     squads = current.profile.squads.map { it.name },
-                    participants = current.profile.participants.map { it.firstName },
+                    participants = current.profile.participants,
                     consentText = current.consent.text,
                     passwordSaved = passwordSaved,
                     form = form,

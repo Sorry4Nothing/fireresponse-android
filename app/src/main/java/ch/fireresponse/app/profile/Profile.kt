@@ -11,6 +11,8 @@ data class ProfileSquad(
     @SerialName("typ") val type: String = "jf",
     @SerialName("bezirk") val district: String = "",
     @SerialName("rolle") val role: String,
+    /** Das eigene Abzeichen in dieser Einheit; `null` ohne Rang. */
+    @SerialName("abzeichen") val badge: Badge? = null,
 )
 
 /** Eine aktive teilnehmende Person, für die das Konto antwortet; `kind` ist «eltern» oder «selbst». */
@@ -21,11 +23,16 @@ data class ProfileParticipant(
     @SerialName("nachname") val lastName: String = "",
     @SerialName("einheitId") val squadId: String,
     @SerialName("art") val kind: String = "eltern",
+    @SerialName("abzeichen") val badge: Badge? = null,
 )
 
-/** Das Rang-Abzeichen: entweder `stars` (0 bis 5) oder `imageUrl`, das andere ist `null`. Kein Objekt heisst kein Rang. */
+/**
+ * Das Rang-Abzeichen: `abbreviation` (Kürzel, höchstens 20 Zeichen) ist immer da, dazu entweder `stars` (0 bis 5) oder `imageUrl`;
+ * hat der Rang weder Sterne noch Bild, sind beide `null`. Kein Objekt heisst kein Rang.
+ */
 @Serializable
 data class Badge(
+    @SerialName("kuerzel") val abbreviation: String = "",
     @SerialName("sterne") val stars: Int? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
 ) {

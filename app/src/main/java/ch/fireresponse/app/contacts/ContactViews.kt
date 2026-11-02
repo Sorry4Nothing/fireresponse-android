@@ -38,7 +38,7 @@ import androidx.core.net.toUri
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.OutlinedPillButton
-import ch.fireresponse.app.ui.RankBadge
+import ch.fireresponse.app.ui.RankMark
 import ch.fireresponse.app.ui.theme.Sizes
 import ch.fireresponse.app.ui.theme.Spacing
 
@@ -99,7 +99,7 @@ private fun ContactRow(contact: Contact) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(contact.name, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
-                contact.badge?.shownStars?.let { RankBadge(it, height = 24.dp) }
+                contact.badge?.let { RankMark(it, height = 24.dp) }
             }
         }
         if (canCall && intent != null) {

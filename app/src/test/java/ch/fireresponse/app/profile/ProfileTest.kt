@@ -2,8 +2,8 @@ package ch.fireresponse.app.profile
 
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -43,6 +43,28 @@ class ProfileTest {
     fun onlyRanksTheBadgeCanShowAreShown() {
         assertEquals(listOf(0, 1, 2, null, null, null), (0..5).map { Badge(stars = it).shownStars })
         assertNull("Bild-Abzeichen", Badge(stars = null, imageUrl = "/api/v1/raenge/r1/abzeichen").shownStars)
+    }
+
+    @Test
+    fun aRankWithoutStarsAndImageIsOnlyTheAbbreviation() {
+        val badge = Json { ignoreUnknownKeys = true }.decodeFromString<Badge>("""{"kuerzel":"Oblt","sterne":null,"bildUrl":null}""")
+        assertEquals("Oblt", badge.abbreviation)
+        assertNull("kein Bild für die App", badge.shownStars)
+    }
+
+    @Test
+    fun participantsAndUnitsCarryTheirBadge() {
+        val profile = Json { ignoreUnknownKeys = true }.decodeFromString<Profile>(
+            """{"id":"u1","name":"Petra","einwilligung":true,
+                "einheiten":[{"id":"e1","name":"JF","typ":"jf","bezirk":"B","rolle":"kommandant","logoUrl":null,
+                               "abzeichen":{"kuerzel":"Oblt","sterne":null,"bildUrl":null}}],
+                "teilnehmende":[{"id":"k1","vorname":"Lena","nachname":"M","einheitId":"e1","art":"eltern",
+                                  "abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},
+                                 {"id":"k2","vorname":"Noah","nachname":"M","einheitId":"e1","art":"eltern","abzeichen":null}]}""",
+        )
+        assertEquals("Oblt", profile.squads.single().badge?.abbreviation)
+        assertEquals(Badge("R1", stars = 1), profile.participants.first().badge)
+        assertNull("kein Rang", profile.participants.last().badge)
     }
 
     @Test

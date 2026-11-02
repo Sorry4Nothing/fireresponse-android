@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.font.FontWeight
+import ch.fireresponse.app.profile.Badge
+import ch.fireresponse.app.ui.theme.Pill
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +72,29 @@ fun RankBadge(stars: Int, modifier: Modifier = Modifier, height: Dp = 34.dp, det
             .width(height * 100f / 130f)
             .semantics { contentDescription = if (detail == null) label else "$label, $detail" },
     )
+}
+
+/**
+ * Das Rang-Abzeichen einer Person: das Bild bei 0 bis 2 Sternen, sonst das Kürzel als kleiner Text. So fehlt ein Rang nie und wird
+ * nie falsch gezeigt (Ränge ab 3 Sternen und Bild-Abzeichen haben in der App noch kein Bild).
+ */
+@Composable
+fun RankMark(badge: Badge, modifier: Modifier = Modifier, height: Dp = 24.dp, detailed: Boolean = false) {
+    val stars = badge.shownStars
+    if (stars != null) {
+        RankBadge(stars, modifier, height, detailed)
+    } else if (badge.abbreviation.isNotBlank()) {
+        val description = stringResource(R.string.rank_named, badge.abbreviation)
+        Text(
+            badge.abbreviation,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh, Pill)
+                .padding(horizontal = 10.dp, vertical = 3.dp)
+                .semantics { contentDescription = description },
+        )
+    }
 }
 
 /** Initialen in einem runden Feld, wie bei den Teilnehmenden: `surface-container` mit `accent`, 12 sp fett (Entwurf: 36 dp). */

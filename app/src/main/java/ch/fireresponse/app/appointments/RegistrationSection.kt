@@ -19,7 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import ch.fireresponse.app.ui.InitialsBadge
-import ch.fireresponse.app.ui.RankBadge
+import ch.fireresponse.app.ui.RankMark
+import ch.fireresponse.app.profile.Badge
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,7 +83,7 @@ fun RegistrationSection(
                 locked = rsvp.running,
                 pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == participant.id },
                 sentAt = rsvp.sentAt[participant.id],
-                rankStars = participant.badge?.shownStars,
+                rank = participant.badge,
                 onRsvp = { onParticipant(participant.id, it) },
             )
         }
@@ -113,8 +114,7 @@ private fun RsvpRow(
     pending: Boolean?,
     sentAt: String?,
     onRsvp: (Boolean) -> Unit,
-    /** Sterne des Rang-Abzeichens; `null` ohne Rang oder mit einem Bild-Abzeichen (das zeigt die App noch nicht). */
-    rankStars: Int? = null,
+    rank: Badge? = null,
 ) {
     val colors = MaterialTheme.fire
     val scheme = MaterialTheme.colorScheme
@@ -130,7 +130,7 @@ private fun RsvpRow(
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
-                rankStars?.let { RankBadge(it, height = 24.dp) }
+                rank?.let { RankMark(it, height = 24.dp) }
             }
             // Ist die Anmeldung geschlossen, sagt schon das Etikett rechts denselben Stand: nicht doppelt zeigen.
             if (isOpen) {

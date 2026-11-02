@@ -42,7 +42,7 @@ class AppointmentsApiTest {
          "ganztaegig":true,"beginn":null,"ende":null,"tagVon":"2027-07-10","tagBis":"2027-07-17",
          "art":"Lager","anmeldbar":true,"anmeldungAb":"2027-05-29","teilnahmeOffen":false,
          "einheit":{"id":"e1","name":"JF Beispielstadt","typ":"jf"},
-         "teilnehmende":[{"id":"k1","vorname":"Mia","status":"ja","abzeichen":{"sterne":2,"bildUrl":null}},
+         "teilnehmende":[{"id":"k1","vorname":"Mia","status":"ja","abzeichen":{"kuerzel":"R2","sterne":2,"bildUrl":null}},
                          {"id":"k2","vorname":"Noah","status":null,"abzeichen":null}]}
     """.trimIndent()
 
@@ -50,7 +50,7 @@ class AppointmentsApiTest {
     private val detail = camp.dropLast(1) + """
         ,"thema":"Lagerleben","info":"Schlafsack mitnehmen","aufgebot":"Treffpunkt Bahnhof, 08:00",
          "kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"stellvertretung","bildUrl":"/api/v1/personen/c1/bild",
-                    "abzeichen":{"sterne":null,"bildUrl":"/api/v1/raenge/r1/abzeichen"},"telefon":"079 000 00 00"},
+                    "abzeichen":{"kuerzel":"Oblt","sterne":null,"bildUrl":"/api/v1/raenge/r1/abzeichen"},"telefon":"079 000 00 00"},
          "eigeneAnmeldung":"offen"}
     """.trimIndent()
 
@@ -67,7 +67,7 @@ class AppointmentsApiTest {
         assertTrue(p.registrable)
         assertFalse(p.attendanceOpen)
         assertEquals(
-            listOf(AppointmentParticipant("k1", "Mia", "ja", Badge(stars = 2)), AppointmentParticipant("k2", "Noah", null)),
+            listOf(AppointmentParticipant("k1", "Mia", "ja", Badge("R2", stars = 2)), AppointmentParticipant("k2", "Noah", null)),
             p.participants,
         )
         assertNull("die Liste kennt kein Detail", p.topic)
@@ -94,7 +94,7 @@ class AppointmentsApiTest {
         assertEquals("stellvertretung", contact.role)
         assertEquals("079 000 00 00", contact.phone)
         assertEquals("/api/v1/personen/c1/bild", contact.imageUrl)
-        assertEquals(Badge(stars = null, imageUrl = "/api/v1/raenge/r1/abzeichen"), contact.badge)
+        assertEquals(Badge("Oblt", stars = null, imageUrl = "/api/v1/raenge/r1/abzeichen"), contact.badge)
         assertEquals("offen", p.ownRegistration)
         assertEquals("GET /api/v1/programme/7c9e6679-7425-40de-944b-e07fc1f90ae7 HTTP/1.1", server.takeRequest().requestLine)
     }

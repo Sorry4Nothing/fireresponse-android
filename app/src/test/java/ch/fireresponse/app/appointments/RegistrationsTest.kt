@@ -44,6 +44,19 @@ class RegistrationsTest {
     }
 
     @Test
+    fun participantsAndLeadersCarryTheirBadge() {
+        val data = json.decodeFromString<Registrations>(
+            """{"zahlen":{"teilnehmende":{"ja":1,"nein":0,"offen":0},"leitende":{"ja":1,"nein":0,"offen":0}},
+                "teilnehmende":[{"id":"k1","vorname":"Lena","nachname":"Meier","status":"ja",
+                                  "abzeichen":{"kuerzel":"R3","sterne":3,"bildUrl":null}}],
+                "leitende":[{"id":"l1","name":"Sarah Meier","bildUrl":null,"rolle":"kommandant","status":"ja",
+                              "abzeichen":{"kuerzel":"Hptm","sterne":null,"bildUrl":null}}]}""",
+        )
+        assertEquals("R3", data.participants.single().badge?.abbreviation)
+        assertEquals("Hptm", data.leaders.single().badge?.abbreviation)
+    }
+
+    @Test
     fun parentsGetNoLeadersAtAll() {
         val data = json.decodeFromString<Registrations>(
             """{"zahlen":{"teilnehmende":{"ja":1,"nein":0,"offen":0},"leitende":{"ja":0,"nein":0,"offen":0}},

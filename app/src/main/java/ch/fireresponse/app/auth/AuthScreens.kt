@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.WindowInsets
 import ch.fireresponse.app.ui.InitialsBadge
+import ch.fireresponse.app.ui.RankMark
+import ch.fireresponse.app.profile.ProfileParticipant
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
@@ -478,8 +480,8 @@ fun WelcomeScreen(
     name: String,
     /** Namen der Einheiten des Kontos, wie der Server sie liefert; stehen als Überzeile. */
     squads: List<String>,
-    /** Vornamen der Teilnehmenden des Kontos. */
-    participants: List<String>,
+    /** Die Teilnehmenden des Kontos mit ihrem Rang. */
+    participants: List<ProfileParticipant>,
     /** Text der aktuellen Einwilligung, wie der Server ihn liefert. */
     consentText: String,
     passwordSaved: Boolean,
@@ -538,7 +540,8 @@ fun WelcomeScreen(
                         .background(scheme.surfaceContainerLow)
                         .border(1.dp, scheme.outlineVariant, MaterialTheme.shapes.medium),
                 ) {
-                    participants.forEachIndexed { index, firstName ->
+                    participants.forEachIndexed { index, participant ->
+                        val firstName = participant.firstName
                         if (index > 0) HorizontalDivider(Modifier.padding(start = 62.dp), color = scheme.outlineVariant)
                         Row(
                             Modifier
@@ -551,6 +554,7 @@ fun WelcomeScreen(
                         ) {
                             InitialsBadge(firstName)
                             Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                            participant.badge?.let { RankMark(it, height = 28.dp, detailed = true) }
                         }
                     }
                 }
@@ -558,7 +562,7 @@ fun WelcomeScreen(
             Column(Modifier.padding(top = Spacing.s2), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 WelcomePoint(
                     R.drawable.ic_calendar, stringResource(R.string.welcome_appointments),
-                    if (participants.isEmpty()) stringResource(R.string.welcome_appointments_text) else stringResource(R.string.welcome_appointments_of, joinNames(participants)),
+                    if (participants.isEmpty()) stringResource(R.string.welcome_appointments_text) else stringResource(R.string.welcome_appointments_of, joinNames(participants.map { it.firstName })),
                 )
                 WelcomePoint(R.drawable.ic_check, stringResource(R.string.welcome_rsvp), stringResource(R.string.welcome_rsvp_text))
             }

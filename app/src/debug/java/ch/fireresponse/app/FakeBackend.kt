@@ -81,8 +81,8 @@ class FakeBackend : Interceptor {
                 if (leader) { ownStatus = if ("\"ja\"" in body) "ja" else "nein"; noContent() } else reply(request, 403, """{"code":"KEINE_BERECHTIGUNG","message":"x"}""")
             path.endsWith("/teilnahmen") -> ok(
                 """{"zahlen":{"teilnehmende":{"ja":1,"nein":0,"offen":1},"leitende":{"ja":${if (ownStatus == "ja") 1 else 0},"nein":${if (ownStatus == "nein") 2 else 1},"offen":${if (ownStatus == "offen") 2 else 1}}},""" +
-                    """"teilnehmende":[{"id":"k1","vorname":"Lena","nachname":"Muster","status":"${participantStatus["k1"]}"},""" +
-                    """{"id":"k2","vorname":"Noah","nachname":"Beispiel","status":"${participantStatus["k2"]}"}],""" +
+                    """"teilnehmende":[{"id":"k1","vorname":"Lena","nachname":"Muster","status":"${participantStatus["k1"]}","abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},""" +
+                    """{"id":"k2","vorname":"Noah","nachname":"Beispiel","status":"${participantStatus["k2"]}","abzeichen":{"kuerzel":"R4","sterne":4,"bildUrl":null}}],""" +
                     (if (leader) leaders() else """"leitende":[]""") + "}",
             )
             else -> reply(request, 404, """{"code":"NICHT_GEFUNDEN","message":"x"}""")
@@ -90,9 +90,9 @@ class FakeBackend : Interceptor {
     }
 
     private fun leaders() =
-        """"leitende":[{"id":"l1","name":"Petra Beispiel","bildUrl":null,"rolle":"kommandant","status":"$ownStatus"},""" +
-            """{"id":"l2","name":"Tim Weber","bildUrl":null,"rolle":"stellvertretung","status":"offen"},""" +
-            """{"id":"l3","name":"Noah Keller","bildUrl":null,"rolle":"leitung","status":"nein"}]"""
+        """"leitende":[{"id":"l1","name":"Petra Beispiel","bildUrl":null,"rolle":"kommandant","status":"$ownStatus","abzeichen":{"kuerzel":"Oblt","sterne":null,"bildUrl":null}},""" +
+            """{"id":"l2","name":"Tim Weber","bildUrl":null,"rolle":"stellvertretung","status":"offen","abzeichen":{"kuerzel":"Lt","sterne":null,"bildUrl":null}},""" +
+            """{"id":"l3","name":"Noah Keller","bildUrl":null,"rolle":"leitung","status":"nein","abzeichen":null}]"""
 
     private fun consent() =
         """{"version":1,"gueltig":$consented,"text":"Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit. """ +
@@ -101,14 +101,14 @@ class FakeBackend : Interceptor {
     private fun profile() = if (leader) {
         """{"id":"u2","name":"Petra Beispiel","benutzername":"kommando","kantonsadmin":false,"zweiterFaktor":false,"einwilligung":$consented,""" +
             """"mussPasswortAendern":false,"telefon":"079 000 00 00","bildUrl":null,"pushProgramme":true,"pushAnmeldungen":true,""" +
-            """"einheiten":[{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf","bezirk":"Bezirk Beispiel","rolle":"kommandant","logoUrl":null}],""" +
+            """"einheiten":[{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf","bezirk":"Bezirk Beispiel","rolle":"kommandant","logoUrl":null,"abzeichen":{"kuerzel":"Oblt","sterne":null,"bildUrl":null}}],""" +
             """"teilnehmende":[]}"""
     } else {
         """{"id":"u1","name":"Sandra Muster","benutzername":"demo","kantonsadmin":false,"zweiterFaktor":false,"einwilligung":$consented,""" +
             """"mussPasswortAendern":$mustChange,"telefon":null,"bildUrl":null,"pushProgramme":true,""" +
             """"einheiten":[],"teilnehmende":[""" +
-            """{"id":"k1","vorname":"Lena","nachname":"Muster","einheitId":"s1","art":"eltern"},""" +
-            """{"id":"k2","vorname":"Noah","nachname":"Beispiel","einheitId":"s1","art":"eltern"}]}"""
+            """{"id":"k1","vorname":"Lena","nachname":"Muster","einheitId":"s1","art":"eltern","abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},""" +
+            """{"id":"k2","vorname":"Noah","nachname":"Beispiel","einheitId":"s1","art":"eltern","abzeichen":{"kuerzel":"R4","sterne":4,"bildUrl":null}}]}"""
     }
 
     private fun appointment(id: String, inDays: Long, hour: Int = 13, cancelled: Boolean = false, detail: Boolean = false): String {
@@ -120,7 +120,7 @@ class FakeBackend : Interceptor {
         val extra = if (detail) {
             ""","thema":"Schläuche kuppeln und ausrollen","info":"Festes Schuhwerk und eine Trinkflasche mitnehmen.",""" +
                 """"aufgebot":"Treffpunkt ${hour}:45 Uhr, Parkplatz beim Magazin",""" +
-                """"kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"kommandant","bildUrl":null,"abzeichen":{"sterne":2,"bildUrl":null},"telefon":"079 000 00 00"}"""
+                """"kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"kommandant","bildUrl":null,"abzeichen":{"kuerzel":"R2","sterne":2,"bildUrl":null},"telefon":"079 000 00 00"}"""
         } else {
             ""
         }
@@ -129,7 +129,7 @@ class FakeBackend : Interceptor {
         val participants = if (leader) {
             "[]"
         } else {
-            """[{"id":"k1","vorname":"Lena","status":${json("k1")},"abzeichen":{"sterne":1,"bildUrl":null}},""" +
+            """[{"id":"k1","vorname":"Lena","status":${json("k1")},"abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},""" +
                 """{"id":"k2","vorname":"Noah","status":${json("k2")},"abzeichen":null}]"""
         }
         return """{"id":"$id","titel":"$title","status":"${if (cancelled) "abgesagt" else "aktiv"}","ganztaegig":false,""" +

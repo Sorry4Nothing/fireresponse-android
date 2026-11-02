@@ -59,14 +59,14 @@ class GalleryActivity : ComponentActivity() {
 
 private val squad = AppointmentSquad("s1", "Jugendfeuerwehr Musterdorf")
 
-private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge(stars = 2))
+private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge("R2", stars = 2))
 
 private val appointments = listOf(
     Appointment(
         id = "a1", title = "Schläuche kuppeln", status = "aktiv", allDay = false,
         start = "2026-11-14T13:00:00.000Z", end = "2026-11-14T16:00:00.000Z",
         registrationFrom = "2026-10-03", attendanceOpen = true, squad = squad,
-        participants = listOf(AppointmentParticipant("k1", "Lena", "ja", Badge(stars = 1)), AppointmentParticipant("k2", "Noah", null)),
+        participants = listOf(AppointmentParticipant("k1", "Lena", "ja", Badge("R1", stars = 1)), AppointmentParticipant("k2", "Noah", null)),
         topic = "Schläuche kuppeln und ausrollen",
         info = "Festes Schuhwerk und eine Trinkflasche mitnehmen.",
         callUp = "Treffpunkt 13:45 Uhr, Parkplatz beim Magazin",
@@ -103,17 +103,17 @@ private val appointments = listOf(
 private val profile = Profile(
     id = "u1", name = "Sandra Muster", username = "smuster", consented = true,
     squads = listOf(ProfileSquad("s1", "Jugendfeuerwehr Musterdorf", "jf", "Bezirk Beispiel", "leitung")),
-    participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1"), ProfileParticipant("k2", "Noah", "Beispiel", "s1")),
+    participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1", badge = Badge("R1", stars = 1)), ProfileParticipant("k2", "Noah", "Beispiel", "s1", badge = Badge("R4", stars = 4))),
 )
 
 private val registrations = Registrations(
     counts = RegistrationCounts(Counts(ja = 11, nein = 3, offen = 6), Counts(ja = 3, nein = 0, offen = 1)),
     participants = listOf(
-        ParticipantRegistration("k1", "Lena", "Muster", "offen"),
-        ParticipantRegistration("k2", "Noah", "Beispiel", "ja"),
+        ParticipantRegistration("k1", "Lena", "Muster", "offen", Badge("R1", stars = 1)),
+        ParticipantRegistration("k2", "Noah", "Beispiel", "ja", Badge("R4", stars = 4)),
         ParticipantRegistration("k3", "Mia", "Probe", "nein"),
     ),
-    leaders = listOf(LeaderRegistration("l1", "Petra Beispiel", "leitung", "ja")),
+    leaders = listOf(LeaderRegistration("l1", "Petra Beispiel", "kommandant", "ja", badge = Badge("Oblt"))),
 )
 
 private val screens: Map<String, @Composable () -> Unit> = mapOf(
@@ -122,7 +122,7 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "password" to { PasswordScreen(form = FormState(), onSave = { _, _ -> }, startPasswordKnown = true) },
     "welcome" to {
         WelcomeScreen(
-            name = profile.name, squads = profile.squads.map { it.name }, participants = profile.participants.map { it.firstName },
+            name = profile.name, squads = profile.squads.map { it.name }, participants = profile.participants,
             consentText = "Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit und geben sie nicht weiter.",
             passwordSaved = true, form = FormState(), onReadPrivacy = {}, onAccept = {}, lockAvailable = true,
         )
