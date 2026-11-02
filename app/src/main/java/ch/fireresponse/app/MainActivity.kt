@@ -18,7 +18,6 @@ import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import android.Manifest
 import android.app.LocaleManager
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -57,7 +56,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -68,6 +66,8 @@ import ch.fireresponse.app.auth.AuthState
 import ch.fireresponse.app.auth.AuthViewModel
 import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.LoginScreen
+import ch.fireresponse.app.auth.PrivacyScreen
+import ch.fireresponse.app.auth.PrivacyViewModel
 import ch.fireresponse.app.auth.NoSquadScreen
 import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.ProfileScreen
@@ -169,7 +169,10 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
         val window = (context as? Activity)?.window
         if (lockEnabled) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
-    val openPrivacy = { openInBrowser(context, authApi.privacyUrl()) }
+    // Die Datenschutzerklärung vor der Einwilligung (Willkommen) zeigt die App selbst; der Text kommt vom Server.
+    val privacy = viewModel { PrivacyViewModel(authApi) }
+    var welcomePrivacyOpen by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(welcomePrivacyOpen) { if (welcomePrivacyOpen) privacy.load() }
     val motion = rememberMotionEnabled()
     Surface(Modifier.fillMaxSize()) {
         AnimatedContent(
@@ -208,14 +211,24 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 AuthState.MustChangePassword -> PasswordScreen(
                     form, onSave = auth::changePassword, startPasswordKnown = auth.startPasswordKnown.collectAsState().value,
                 )
-                is AuthState.Welcome -> WelcomeScreen(
+                is AuthState.Welcome -> if (welcomePrivacyOpen) {
+                    BackHandler { welcomePrivacyOpen = false }
+                    Box(Modifier.safeDrawingPadding()) {
+                        ContentWidth {
+                            PrivacyScreen(
+                                privacy.state.collectAsState().value, stringResource(R.string.privacy_back_welcome),
+                                onBack = { welcomePrivacyOpen = false }, onRetry = privacy::load,
+                            )
+                        }
+                    }
+                } else WelcomeScreen(
                     name = current.profile.name,
                     squads = current.profile.squads.map { it.name },
                     participants = current.profile.participants,
                     consentText = current.consent.text,
                     passwordSaved = passwordSaved,
                     form = form,
-                    onReadPrivacy = openPrivacy,
+                    onReadPrivacy = { welcomePrivacyOpen = true },
                     onAccept = auth::acceptConsent,
                     lockAvailable = lockAvailable,
                     lockEnabled = lockEnabled,
@@ -229,7 +242,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                             AppointmentsApi(client), PushApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,
                             pushTarget, onPushTargetHandled,
-                            onOpenPrivacy = openPrivacy,
+                            privacy = privacy,
                             lockAvailable = lockAvailable,
                             lockEnabled = lockEnabled,
                             onLockChange = onLockChange,
@@ -243,20 +256,13 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
     }
 }
 
-private fun openInBrowser(context: Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-    } catch (e: ActivityNotFoundException) {
-        // Kein Browser auf dem Gerät: Die Seite lässt sich dann nicht öffnen.
-    }
-}
-
 /** Der Bildschirm, den `MainContent` zeigt; `depth` bestimmt die Richtung des Übergangs (tiefer: von rechts herein). */
 private sealed interface Screen {
     val depth: Int
 
     data object Home : Screen { override val depth = 0 }
     data object Notifications : Screen { override val depth = 1 }
+    data object Privacy : Screen { override val depth = 1 }
     data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
     data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
 }
@@ -272,7 +278,7 @@ private fun MainContent(
     auth: AuthViewModel,
     pushTarget: PushTarget?,
     onPushTargetHandled: () -> Unit,
-    onOpenPrivacy: () -> Unit,
+    privacy: PrivacyViewModel,
     lockAvailable: Boolean,
     lockEnabled: Boolean,
     onLockChange: (Boolean) -> Unit,
@@ -285,6 +291,8 @@ private fun MainContent(
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
+    var privacyOpen by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(privacyOpen) { if (privacyOpen) privacy.load() }
 
     // Pushes brauchen das Token dieses Geräts beim Server und, ab Android 13, die Erlaubnis (einmal fragen, danach im Profil).
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -297,7 +305,7 @@ private fun MainContent(
     // Das Tippen auf einen Push öffnet das Termin und schliesst, was davor offen war.
     LaunchedEffect(pushTarget) {
         val target = pushTarget ?: return@LaunchedEffect
-        notificationsOpen = false; viewingRegistrations = false
+        notificationsOpen = false; viewingRegistrations = false; privacyOpen = false
         when (target) {
             is PushTarget.Appointment -> { destination = Destination.APPOINTMENTS; openedAppointment = target.id }
         }
@@ -340,6 +348,7 @@ private fun MainContent(
         val target = when {
             appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
             appointmentId != null && !wide -> Screen.Appointment(appointmentId)
+            privacyOpen -> Screen.Privacy
             notificationsOpen -> Screen.Notifications
             else -> Screen.Home
         }
@@ -370,6 +379,17 @@ private fun MainContent(
                     BackHandler { openedAppointment = null }
                     MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
                         detailPane(appointmentId)
+                    }
+                }
+                Screen.Privacy -> {
+                    BackHandler { privacyOpen = false }
+                    MainScaffold(Destination.PROFILE, onDestination = { destination = it; privacyOpen = false }) {
+                        ContentWidth {
+                            PrivacyScreen(
+                                privacy.state.collectAsState().value, stringResource(R.string.privacy_back_profile),
+                                onBack = { privacyOpen = false }, onRetry = privacy::load,
+                            )
+                        }
                     }
                 }
                 Screen.Notifications -> {
@@ -411,7 +431,7 @@ private fun MainContent(
                                 onPickImage = { uri -> auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, uri) } } },
                                 onRemoveImage = auth::removeImage,
                                 onOpenNotifications = { notificationsOpen = true },
-                                onOpenPrivacy = onOpenPrivacy,
+                                onOpenPrivacy = { privacyOpen = true },
                                 onSignOut = auth::signOut,
                                 onLeave = { auth.clearPasswordSaved(); auth.clearImageError() },
                                 lockAvailable = lockAvailable,

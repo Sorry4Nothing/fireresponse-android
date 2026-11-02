@@ -70,9 +70,6 @@ class ApiClient(
         storage?.write(null)
     }
 
-    /** Adresse einer Seite des Backends (z. B. `/datenschutz`), zum Öffnen im Browser. */
-    fun pageUrl(path: String): String = request(path).build().url.toString()
-
     /** Anfrage an `path` (mit führendem `/`, Query erlaubt). Header und Cookie setzt der [SessionInterceptor]. */
     fun request(path: String): Request.Builder =
         Request.Builder().url(requireNotNull(base.resolve(path)) { "Ungültiger Pfad" })

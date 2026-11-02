@@ -33,6 +33,6 @@ class AuthApi(private val api: ApiClient) {
     /** Löscht das eigene Profilbild; ohne Bild ebenfalls 204. */
     suspend fun removeImage(): ApiResult<Unit> = api.delete("/api/v1/ich/bild")
 
-    /** Adresse der Datenschutzerklärung auf dem Backend. */
-    fun privacyUrl(): String = api.pageUrl("/datenschutz")
+    /** Die Datenschutzerklärung als Text; öffentlich, auch vor der Anmeldung abrufbar. */
+    suspend fun privacy(): ApiResult<Privacy> = api.get("/api/v1/datenschutz")
 }
