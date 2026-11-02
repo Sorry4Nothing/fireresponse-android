@@ -28,7 +28,11 @@ data class ProfileParticipant(
 data class Badge(
     @SerialName("sterne") val stars: Int? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
-)
+) {
+    /** Die Sterne, die `RankBadge` zeigen kann (0 bis 2); Ränge 3 bis 5 zeigt die App nicht, statt sie falsch zu zeigen. */
+    // shortcut: die Platzhalter-Bilder reichen nur bis 2 Sterne, bis das Design die Abzeichen 3 bis 5 liefert.
+    val shownStars get() = stars?.takeIf { it in 0..2 }
+}
 
 /** Rollen des Kommandos. Auf Dateiebene: Ein privater `companion object` in einer `@Serializable`-Klasse versperrt dem Plug-in den Serializer. */
 private val COMMAND_ROLES = setOf("kommandant", "stellvertretung")

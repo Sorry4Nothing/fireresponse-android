@@ -40,6 +40,12 @@ class ProfileTest {
     }
 
     @Test
+    fun onlyRanksTheBadgeCanShowAreShown() {
+        assertEquals(listOf(0, 1, 2, null, null, null), (0..5).map { Badge(stars = it).shownStars })
+        assertNull("Bild-Abzeichen", Badge(stars = null, imageUrl = "/api/v1/raenge/r1/abzeichen").shownStars)
+    }
+
+    @Test
     fun theProfileIsReadAsTheContractSaysIt() {
         val profile = Json { ignoreUnknownKeys = true }.decodeFromString<Profile>(
             """{"id":"u1","name":"Sandra Muster","benutzername":"smuster","kantonsadmin":true,"zweiterFaktor":true,
