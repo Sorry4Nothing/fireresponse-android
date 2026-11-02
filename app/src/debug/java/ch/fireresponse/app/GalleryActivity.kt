@@ -25,6 +25,9 @@ import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.LockedScreen
 import ch.fireresponse.app.auth.LoginScreen
 import ch.fireresponse.app.auth.NoSquadScreen
+import ch.fireresponse.app.auth.Privacy
+import ch.fireresponse.app.auth.PrivacyScreen
+import ch.fireresponse.app.auth.PrivacySection
 import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.StartScreen
 import ch.fireresponse.app.auth.ProfileScreen
@@ -106,6 +109,16 @@ private val profile = Profile(
     participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1", badge = Badge("R1", stars = 1)), ProfileParticipant("k2", "Noah", "Beispiel", "s1", badge = Badge("R4", stars = 4))),
 )
 
+private val privacy = Privacy(
+    1,
+    listOf(
+        PrivacySection("Was wir speichern", "– Deinen Namen, Benutzernamen und deine Rolle\n\n– Bei Eltern: die Namen eurer Kinder\n\n– Deine Zusagen zu Übungen\n\n– Dein Profilbild"),
+        PrivacySection("Wer was sieht", "Übungen sehen alle in der Einheit. Zusagen sieht die Leitung."),
+        PrivacySection("Was wir nicht machen", "– Keine Werbung und keine Tracker\n\n– Keine Weitergabe an andere\n\n– Keine Namen in Mitteilungen"),
+        PrivacySection("Löschen", "Dein Konto löscht die Jugendfeuerwehr. Schreib dafür an die Leitung."),
+    ),
+)
+
 private val registrations = Registrations(
     counts = RegistrationCounts(Counts(ja = 11, nein = 3, offen = 6), Counts(ja = 3, nein = 0, offen = 1)),
     participants = listOf(
@@ -126,6 +139,11 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
             consentText = "Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit und geben sie nicht weiter.",
             passwordSaved = true, form = FormState(), onReadPrivacy = {}, onAccept = {}, lockAvailable = true,
         )
+    },
+    "privacy" to {
+        MainScaffold(Destination.PROFILE, {}) {
+            PrivacyScreen(ApiResult.Ok(privacy), "Zurück zu Profil", onBack = {}, onRetry = {})
+        }
     },
     "locked" to { LockedScreen(FormState(), onUnlock = {}, onUsePassword = {}) },
     "nosquad" to { NoSquadScreen {} },

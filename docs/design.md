@@ -63,7 +63,6 @@ Oberfläche und Komponenten sind nach der Vorlage gebaut. Der Vertrag (E4) ist �
 
 - **Abzeichen als Bild:** Der Vertrag liefert ein Rang-Abzeichen mit Kürzel (`kuerzel`, immer da) und entweder Sternen (0 bis 5) oder einem Bild (`bildUrl`, PNG oder SVG), oder mit beidem leer. `RankMark` zeigt das Abzeichen-Bild nur für 0 bis 2 Sterne (die Platzhalter-Bilder reichen nicht weiter); sonst (Ränge ab 3 Sternen, Bild-Abzeichen, Rang ohne Sterne und Bild) steht das Kürzel als kleiner Text neben dem Namen. Das gilt bei Kontaktperson, Zusagen, Profil (Teilnehmende und eigenes Abzeichen), Willkommen und Anmeldungen. Bild-Abzeichen zeigt die App nicht, weil sie SVG nicht ohne Zusatzbibliothek lesen kann und ein Original-Abzeichen fehlt; das Kürzel als Text ist eine Annahme, bis das Design es festlegt.
 - **Einheitslogo:** Der Vertrag liefert es jetzt (`logoUrl` in `/ich`, SVG oder PNG). Der Entwurf kennt kein Logo je Einheit, und SVG liest die App nicht ohne Zusatzbibliothek: Es bleibt aus, bis das Design es vorsieht.
-- **Datenschutz** als Screen mit Abschnittskarten: Bis dahin öffnet die App die Seite des Servers im Browser; die Einwilligung selbst steht im Willkommen.
 - **Kennzeichnung der Einheit in der Liste** und Push-Einstellungen im Profil (Design folgt), Info-Seite «Konto aufs Kind übertragen» (Design folgt).
 - **Wappen und Rangabzeichen** sind Platzhalter nach dem Entwurf; das offizielle Wappen mit Nutzungsrecht und das Original der Jugendfeuerwehr als Vektor ersetzen sie.
 

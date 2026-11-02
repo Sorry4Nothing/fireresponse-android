@@ -170,11 +170,6 @@ class ApiClientTest {
     }
 
     @Test
-    fun pageUrlPointsAtTheBackend() {
-        assertEquals(server.url("/datenschutz").toString(), client().pageUrl("/datenschutz"))
-    }
-
-    @Test
     fun retryAfterComesFromTheHeaderAndIsCapped() {
         fun failure(header: String?): ApiResult<Me> {
             val builder = MockResponse.Builder().code(429).body("{}")

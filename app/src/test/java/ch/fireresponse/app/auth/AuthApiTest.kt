@@ -168,9 +168,15 @@ class AuthApiTest {
     }
 
     @Test
-    fun privacyPageLivesOnTheBackend() {
-        assertTrue(auth.privacyUrl().endsWith("/datenschutz"))
-        assertTrue(auth.privacyUrl().startsWith(server.url("/").toString()))
+    fun thePrivacyTextComesFromTheServerBeforeSignIn() {
+        reply(200, """{"version":3,"abschnitte":[{"titel":"Was wir speichern","text":"– Namen\n\n– Zusagen"},{"titel":"Löschen","text":"Schreib an die Leitung."}]}""")
+        val privacy = (runBlocking { auth.privacy() } as ApiResult.Ok).value
+        assertEquals(3, privacy.version)
+        assertEquals(listOf("Was wir speichern", "Löschen"), privacy.sections.map { it.title })
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/api/v1/datenschutz", request.url.encodedPath)
+        assertNull("ohne Sitzung", request.headers["Cookie"])
     }
 
     @Test

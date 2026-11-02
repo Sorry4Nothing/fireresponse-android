@@ -61,6 +61,7 @@ class FakeBackend : Interceptor {
             }
             path == "/api/auth/change-password" -> { mustChange = false; ok("{}") }
             path == "/api/auth/sign-out" -> { signedIn = false; ok("""{"success":true}""", "fake_session=; Max-Age=0; Path=/") }
+            path == "/api/v1/datenschutz" -> ok(privacy())
             !signedIn -> reply(request, 401, """{"code":"NICHT_ANGEMELDET","message":"x"}""")
             path == "/api/v1/ich" && method == "GET" -> ok(profile())
             path == "/api/v1/einwilligung" && method == "GET" -> ok(consent())
@@ -93,6 +94,14 @@ class FakeBackend : Interceptor {
         """"leitende":[{"id":"l1","name":"Petra Beispiel","bildUrl":null,"rolle":"kommandant","status":"$ownStatus","abzeichen":{"kuerzel":"Oblt","sterne":null,"bildUrl":null}},""" +
             """{"id":"l2","name":"Tim Weber","bildUrl":null,"rolle":"stellvertretung","status":"offen","abzeichen":{"kuerzel":"Lt","sterne":null,"bildUrl":null}},""" +
             """{"id":"l3","name":"Noah Keller","bildUrl":null,"rolle":"leitung","status":"nein","abzeichen":null}]"""
+
+    /** Öffentlich, vor der Anmeldung abrufbar; Listenpunkte beginnen mit «– » und stehen durch Leerzeilen getrennt. */
+    private fun privacy() =
+        """{"version":1,"abschnitte":[""" +
+            """{"titel":"Was wir speichern","text":"– Deinen Namen, Benutzernamen und deine Rolle\n\n– Bei Eltern: die Namen eurer Kinder\n\n– Deine Zusagen zu Übungen\n\n– Dein Profilbild"},""" +
+            """{"titel":"Wer was sieht","text":"Übungen sehen alle in der Einheit. Zusagen sieht die Leitung."},""" +
+            """{"titel":"Was wir nicht machen","text":"– Keine Werbung und keine Tracker\n\n– Keine Weitergabe an andere\n\n– Keine Namen in Mitteilungen"},""" +
+            """{"titel":"Löschen","text":"Dein Konto löscht die Jugendfeuerwehr. Schreib dafür an die Leitung."}]}"""
 
     private fun consent() =
         """{"version":1,"gueltig":$consented,"text":"Wir speichern Namen, Telefonnummer und Antworten nur für den Betrieb der Einheit. """ +

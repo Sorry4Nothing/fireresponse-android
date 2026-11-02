@@ -165,7 +165,11 @@
     <string name="channel_appointments">Übungen</string>
     <string name="channel_messages">Mitteilungen</string>
     <string name="profile_privacy">Datenschutz</string>
-    <string name="profile_privacy_open">Im Browser öffnen</string>
+    <string name="profile_privacy_open">Datenschutz lesen</string>
+    <string name="privacy_loading">Datenschutz wird geladen</string>
+    <string name="privacy_version">Fassung %1$d</string>
+    <string name="privacy_back_profile">Zurück zu Profil</string>
+    <string name="privacy_back_welcome">Zurück zum Willkommen</string>
     <string name="profile_sign_out">Abmelden</string>
     <string name="role_commander">Kommando</string>
     <string name="role_leader">Leitung</string>
