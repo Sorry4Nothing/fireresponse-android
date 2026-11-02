@@ -1,5 +1,6 @@
 package ch.fireresponse.app.appointments
 
+import ch.fireresponse.app.profile.Badge
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.ui.ChipKind
 import kotlinx.serialization.SerialName
@@ -23,6 +24,7 @@ data class ParticipantRegistration(
     @SerialName("vorname") val firstName: String,
     @SerialName("nachname") val lastName: String,
     val status: String,
+    @SerialName("abzeichen") val badge: Badge? = null,
 ) {
     val name get() = "$firstName $lastName".trim()
 }
@@ -36,6 +38,7 @@ data class LeaderRegistration(
     val status: String,
     /** Pfad zum Profilbild (`GET /api/v1/personen/{id}/bild`); `null` ohne Bild. Teilnehmende haben keins. */
     @SerialName("bildUrl") val imageUrl: String? = null,
+    @SerialName("abzeichen") val badge: Badge? = null,
 ) {
     val isCommand get() = role == "kommandant" || role == "stellvertretung"
 }

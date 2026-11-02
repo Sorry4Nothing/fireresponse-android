@@ -53,6 +53,8 @@ import ch.fireresponse.app.ui.LoadingSkeleton
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.StatusChip
+import ch.fireresponse.app.ui.RankMark
+import ch.fireresponse.app.profile.Badge
 import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.ui.theme.Pill
 import ch.fireresponse.app.ui.theme.Sizes
@@ -104,12 +106,12 @@ private fun RegistrationsContent(data: Registrations) {
         ) {
             if (selected == Tab.CHILDREN) {
                 if (data.participants.isEmpty()) item { NoticeBanner(NoticeKind.INFO, stringResource(R.string.registrations_empty_participants)) }
-                items(data.participants, key = { it.id }) { PersonRow(it.name, null, null, it.status) }
+                items(data.participants, key = { it.id }) { PersonRow(it.name, null, null, it.status, it.badge) }
             } else {
                 if (data.leaders.isEmpty()) item { NoticeBanner(NoticeKind.INFO, stringResource(R.string.registrations_empty_leaders)) }
                 items(data.leaders, key = { it.id }) {
                     val role = stringResource(if (it.isCommand) R.string.role_commander else R.string.role_leader)
-                    PersonRow(it.name, role, it.imageUrl, it.status)
+                    PersonRow(it.name, role, it.imageUrl, it.status, it.badge)
                 }
             }
         }
@@ -186,7 +188,7 @@ internal fun TabPill(text: String, selected: Boolean, onClick: () -> Unit) {
 
 /** Eine Person: Profilbild oder Initiale, Name (bei Leitenden mit vollem Namen und Rolle darunter) und der Stand als Chip. Name und Stand lesen sich als ein Element. */
 @Composable
-private fun PersonRow(name: String, subtitle: String?, imageUrl: String?, status: String) {
+private fun PersonRow(name: String, subtitle: String?, imageUrl: String?, status: String, rank: Badge? = null) {
     val scheme = MaterialTheme.colorScheme
     val kind = registrationChip(status)
     val word = stringResource(
@@ -211,6 +213,7 @@ private fun PersonRow(name: String, subtitle: String?, imageUrl: String?, status
             Text(name, style = MaterialTheme.typography.bodyLarge)
             subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant) }
         }
+        rank?.let { RankMark(it, height = 24.dp) }
         StatusChip(kind, word)
     }
 }

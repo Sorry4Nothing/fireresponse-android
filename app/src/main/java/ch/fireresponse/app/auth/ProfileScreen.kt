@@ -57,6 +57,8 @@ import ch.fireresponse.app.push.SwitchRow
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.theme.BarlowCondensed
 import ch.fireresponse.app.ui.InitialsBadge
+import ch.fireresponse.app.ui.RankMark
+import ch.fireresponse.app.profile.Badge
 import ch.fireresponse.app.ui.DangerButton
 import ch.fireresponse.app.ui.DialogText
 import ch.fireresponse.app.ui.FireResponseDialog
@@ -151,7 +153,7 @@ fun ProfileScreen(
                 SettingsCard {
                     profile.participants.forEachIndexed { index, participant ->
                         if (index > 0) SettingsDivider()
-                        ParticipantRow(participant.firstName)
+                        ParticipantRow(participant.firstName, participant.badge)
                     }
                 }
             }
@@ -224,6 +226,8 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
             profile.username?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            // Das eigene Abzeichen: Kommando und Leitende mit Rang.
+            profile.squads.firstNotNullOfOrNull { it.badge }?.let { RankMark(it, Modifier.padding(top = 6.dp), height = 28.dp, detailed = true) }
         }
     }
 }
@@ -307,14 +311,15 @@ private fun SettingsRow(
 
 /** Eine Person aus den Teilnehmenden des Kontos: Initialen und Vorname. Nur zum Lesen. */
 @Composable
-private fun ParticipantRow(firstName: String) {
+private fun ParticipantRow(firstName: String, badge: Badge?) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = Spacing.s2).semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         InitialsBadge(firstName)
-        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+        badge?.let { RankMark(it, height = 28.dp, detailed = true) }
     }
 }
 
