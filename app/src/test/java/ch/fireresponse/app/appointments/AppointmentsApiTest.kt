@@ -76,6 +76,13 @@ class AppointmentsApiTest {
     }
 
     @Test
+    fun theListEntryCarriesTheOwnRegistrationOfLeaders() {
+        server.enqueue(json(200, """{"programme":[${camp.dropLast(1)},"eigeneAnmeldung":"offen"}]}"""))
+        val p = (runBlocking { appointments.list(LocalDate.of(2027, 7, 1), LocalDate.of(2027, 7, 31)) } as ApiResult.Ok).value.appointments.single()
+        assertEquals("offen", p.ownRegistration)
+    }
+
+    @Test
     fun detailReadsTopicInfoCallUpAndContact() {
         server.enqueue(json(200, detail))
         val p = (runBlocking { appointments.read("7c9e6679-7425-40de-944b-e07fc1f90ae7") } as ApiResult.Ok).value

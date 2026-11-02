@@ -120,11 +120,12 @@ class FakeBackend : Interceptor {
         val extra = if (detail) {
             ""","thema":"Schläuche kuppeln und ausrollen","info":"Festes Schuhwerk und eine Trinkflasche mitnehmen.",""" +
                 """"aufgebot":"Treffpunkt ${hour}:45 Uhr, Parkplatz beim Magazin",""" +
-                """"kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"kommandant","bildUrl":null,"abzeichen":{"sterne":2,"bildUrl":null},"telefon":"079 000 00 00"}""" +
-                (if (leader) ""","eigeneAnmeldung":"$ownStatus"""" else "")
+                """"kontakt":{"id":"c1","name":"Petra Beispiel","rolle":"kommandant","bildUrl":null,"abzeichen":{"sterne":2,"bildUrl":null},"telefon":"079 000 00 00"}"""
         } else {
             ""
         }
+        // Liste und Detail tragen den eigenen Stand von Kommando und Leitenden.
+        val own = if (leader) ""","eigeneAnmeldung":"$ownStatus"""" else ""
         val participants = if (leader) {
             "[]"
         } else {
@@ -134,7 +135,7 @@ class FakeBackend : Interceptor {
         return """{"id":"$id","titel":"$title","status":"${if (cancelled) "abgesagt" else "aktiv"}","ganztaegig":false,""" +
             """"beginn":"$start","ende":"${start.plusSeconds(3 * 3600)}","tagVon":null,"tagBis":null,""" +
             """"art":"Übung","anmeldbar":true,"anmeldungAb":"$opensOn","teilnahmeOffen":$open,""" +
-            """"einheit":{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf"},"teilnehmende":$participants$extra}"""
+            """"einheit":{"id":"s1","name":"Jugendfeuerwehr Musterdorf","typ":"jf"},"teilnehmende":$participants$own$extra}"""
     }
 
     /** «offen» heisst in der Liste `null`, sonst «ja» oder «nein». */
