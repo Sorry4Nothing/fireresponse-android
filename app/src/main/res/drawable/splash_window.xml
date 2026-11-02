@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Startfenster bis Android 11: Farbe der App und das Logo in der Mitte. Ab Android 12 zeigt das System stattdessen das Splash. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/window_background" />
+    <item
+        android:width="288dp"
+        android:height="288dp"
+        android:drawable="@drawable/ic_splash_logo"
+        android:gravity="center" />
+</layer-list>

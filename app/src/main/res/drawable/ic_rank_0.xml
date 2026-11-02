@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rangabzeichen ohne Stern nach dem Entwurf (Platzhalter, nie umfärben); das Original der Jugendfeuerwehr als Vektor ersetzt es. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="36dp"
+    android:viewportWidth="100"
+    android:viewportHeight="130">
+    <path android:fillColor="#0A1230" android:strokeColor="#1B2A5C" android:strokeWidth="2" android:pathData="M4,1 H96 Q99,1 99,4 V126 Q99,129 96,129 H4 Q1,129 1,126 V4 Q1,1 4,1 Z" />
+    <path android:fillColor="#E8B22E" android:pathData="M11,14 H89 V25 H11 Z M11,33 H89 V44 H11 Z" />
+    <group android:translateX="26" android:translateY="50" android:scaleX="0.2" android:scaleY="0.1925">
+        <path android:fillColor="#FFFFFF" android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+        <group>
+            <clip-path android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+            <path android:fillColor="#2764C7" android:pathData="m 1,0.98764 4.3125,181.6875 C 7.9334996,292.76272 168.85432,309.46046 219.5,232.76889 Z" />
+        </group>
+        <path android:fillColor="#00000000" android:strokeColor="#DDE9FA" android:strokeWidth="6" android:pathData="m 1,1 4.325489,181.67978 c 3.089633,129.77118 226.161731,129.77118 229.251371,0 L 238.90236,1 Z" />
+    </group>
+</vector>

@@ -1,0 +1,458 @@
+package ch.fireresponse.app
+
+import ch.fireresponse.app.ui.screenTransition
+import ch.fireresponse.app.ui.rememberMotionEnabled
+import ch.fireresponse.app.ui.loginTransition
+import ch.fireresponse.app.ui.fadeTransition
+import ch.fireresponse.app.security.LockOutcome
+import ch.fireresponse.app.security.BiometricPrompter
+import ch.fireresponse.app.security.AppLock
+import ch.fireresponse.app.auth.LockedScreen
+import ch.fireresponse.app.security.shouldRelock
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.compose.runtime.mutableLongStateOf
+import android.os.SystemClock
+import androidx.compose.runtime.SideEffect
+import android.view.WindowManager
+import android.app.Activity
+import androidx.compose.animation.AnimatedContent
+import android.Manifest
+import android.app.LocaleManager
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.Bundle
+import android.os.LocaleList
+import androidx.fragment.app.FragmentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import ch.fireresponse.app.ui.theme.WideBreakpoint
+import ch.fireresponse.app.ui.theme.Spacing
+import ch.fireresponse.app.ui.ContentWidth
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import ch.fireresponse.app.auth.AuthApi
+import ch.fireresponse.app.auth.AuthState
+import ch.fireresponse.app.auth.AuthViewModel
+import ch.fireresponse.app.auth.FormState
+import ch.fireresponse.app.auth.LoginScreen
+import ch.fireresponse.app.auth.NoSquadScreen
+import ch.fireresponse.app.auth.PasswordScreen
+import ch.fireresponse.app.auth.ProfileScreen
+import ch.fireresponse.app.auth.StartScreen
+import ch.fireresponse.app.auth.WelcomeScreen
+import ch.fireresponse.app.profile.Profile
+import ch.fireresponse.app.images.LocalProfileImages
+import ch.fireresponse.app.images.ProfileImageApi
+import ch.fireresponse.app.images.ProfileImageEncoder
+import ch.fireresponse.app.images.ProfileImages
+import ch.fireresponse.app.net.ApiClient
+import ch.fireresponse.app.net.ApiError
+import ch.fireresponse.app.net.ApiResult
+import ch.fireresponse.app.push.Notifications
+import ch.fireresponse.app.push.NotificationsScreen
+import ch.fireresponse.app.push.PushApi
+import ch.fireresponse.app.push.PushTarget
+import ch.fireresponse.app.push.PushToken
+import ch.fireresponse.app.push.PushViewModel
+import ch.fireresponse.app.appointments.AssignmentRules
+import ch.fireresponse.app.appointments.AssignmentScreen
+import ch.fireresponse.app.appointments.AppointmentDetailScreen
+import ch.fireresponse.app.appointments.AppointmentsApi
+import ch.fireresponse.app.appointments.AppointmentListScreen
+import ch.fireresponse.app.appointments.RegistrationsRules
+import ch.fireresponse.app.appointments.RegistrationsScreen
+import ch.fireresponse.app.appointments.startDay
+import ch.fireresponse.app.appointments.weekdayShort
+import ch.fireresponse.app.appointments.AppointmentsViewModel
+import ch.fireresponse.app.ui.MainScaffold
+import ch.fireresponse.app.ui.TwoPane
+import ch.fireresponse.app.ui.Destination
+import ch.fireresponse.app.ui.BusyOverlay
+import ch.fireresponse.app.ui.ErrorState
+import ch.fireresponse.app.ui.theme.FireResponseTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+
+/** So oft liest der offene Termin Stand und Kontakte still neu. */
+private const val DETAIL_POLL_INTERVAL_MS = 15_000L
+
+class MainActivity : FragmentActivity() {
+    /** Wohin das Tippen auf einen Push führt; bleibt stehen, bis die Person angemeldet ist und der Bildschirm es aufgreift. */
+    private var pushTarget by mutableStateOf<PushTarget?>(null)
+
+    private fun targetOf(intent: Intent?) = PushTarget.from(intent?.getStringExtra("typ"), intent?.getStringExtra("id"))
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        targetOf(intent)?.let { pushTarget = it }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Der Start lief mit dem Theme des Splash (Manifest); ab jetzt gilt das Theme der App.
+        setTheme(R.style.Theme_FireResponse)
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        // Auch auf einem englisch gestellten Gerät liest der Screenreader die App mit deutscher Aussprache vor (ab Android 13).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags("de")
+        }
+        Notifications.createChannels(applicationContext)
+        // Nach Drehen oder Prozess-Ende gilt der Push nicht noch einmal: Das Intent ist dann dasselbe wie beim ersten Start.
+        if (savedInstanceState == null) pushTarget = targetOf(intent)
+        val client = ApiClient.create(applicationContext)
+        val lock = AppLock(applicationContext)
+        val prompter = BiometricPrompter(this, lock)
+        setContent { FireResponseTheme { Root(client, lock, prompter, pushTarget) { pushTarget = null } } }
+    }
+}
+
+/** Je nach Anmeldestand: Start, Fehler, Anmelden, Passwort wählen, Willkommen oder die App selbst. */
+@Composable
+private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, pushTarget: PushTarget?, onPushTargetHandled: () -> Unit) {
+    val authApi = remember(client) { AuthApi(client) }
+    val auth = viewModel { AuthViewModel(authApi, client.unauthorized, client.forbidden, client::forgetSession, lock, client::hasSession) }
+    val state by auth.state.collectAsState()
+    val form by auth.form.collectAsState()
+    val passwordSaved by auth.passwordSaved.collectAsState()
+    val imageForm by auth.imageForm.collectAsState()
+    val pending by client.pending.collectAsState()
+    val context = LocalContext.current
+    val lockEnabled by auth.lockEnabled.collectAsState()
+    var stoppedAt by remember { mutableLongStateOf(0L) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { stoppedAt = SystemClock.elapsedRealtime() }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) {
+        if (shouldRelock(if (stoppedAt == 0L) null else SystemClock.elapsedRealtime() - stoppedAt)) auth.relock()
+        stoppedAt = 0L
+    }
+    val lockAvailable = remember { lock.isAvailable() }
+    val onLockChange: (Boolean) -> Unit = { on ->
+        if (on) {
+            prompter.enable { if (it == LockOutcome.Success) auth.lockTurnedOn() else if (it == LockOutcome.Failed) auth.unlockFailed() }
+        } else {
+            auth.turnLockOff()
+        }
+    }
+    // Ist das Entsperren an, zeigen weder Bildschirmfotos noch «Zuletzt benutzt» etwas von der App.
+    SideEffect {
+        val window = (context as? Activity)?.window
+        if (lockEnabled) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+    val openPrivacy = { openInBrowser(context, authApi.privacyUrl()) }
+    val motion = rememberMotionEnabled()
+    Surface(Modifier.fillMaxSize()) {
+        AnimatedContent(
+            state,
+            transitionSpec = { loginTransition(initialState, motion) },
+            contentKey = { it::class },
+            label = "anmeldung",
+        ) { current ->
+            when (current) {
+                AuthState.Loading -> StartScreen()
+                AuthState.Locked -> LockedScreen(
+                    form,
+                    onUnlock = {
+                        prompter.unlock {
+                            when (it) {
+                                LockOutcome.Success -> auth.unlock()
+                                LockOutcome.Invalidated -> auth.lockInvalidated()
+                                LockOutcome.Failed -> auth.unlockFailed()
+                                LockOutcome.Declined -> Unit
+                            }
+                        }
+                    },
+                    onUsePassword = auth::signOut,
+                )
+                is AuthState.Failed -> Box(Modifier.safeDrawingPadding()) { ErrorState(current.error, onRetry = auth::start) }
+                is AuthState.SignedOut -> {
+                    var loginRequested by rememberSaveable { mutableStateOf(false) }
+                    if (current.expired && !loginRequested) {
+                        Box(Modifier.safeDrawingPadding()) {
+                            ErrorState(ApiError.NOT_SIGNED_IN, onRetry = {}, onSignIn = { loginRequested = true })
+                        }
+                    } else {
+                        LoginScreen(form, onSignIn = auth::signIn)
+                    }
+                }
+                AuthState.MustChangePassword -> PasswordScreen(
+                    form, onSave = auth::changePassword, startPasswordKnown = auth.startPasswordKnown.collectAsState().value,
+                )
+                is AuthState.Welcome -> WelcomeScreen(
+                    name = current.profile.name,
+                    squads = current.profile.squads.map { it.name },
+                    participants = current.profile.participants.map { it.firstName },
+                    passwordSaved = passwordSaved,
+                    form = form,
+                    onReadPrivacy = openPrivacy,
+                    onAccept = auth::acceptPrivacy,
+                    lockAvailable = lockAvailable,
+                    lockEnabled = lockEnabled,
+                    onLockChange = onLockChange,
+                )
+                is AuthState.SignedIn -> if (current.profile.hasNoSquad) NoSquadScreen(onBackToLogin = auth::signOut) else CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
+                    // Die Bilder der Sitzung liegen im Speicher der Sitzung und verschwinden mit ihr.
+                    val images = viewModel { ProfileImages(ProfileImageApi(client)) }
+                    CompositionLocalProvider(LocalProfileImages provides images) {
+                        MainContent(
+                            AppointmentsApi(client), PushApi(client), current.profile,
+                            passwordSaved, form, imageForm, auth,
+                            pushTarget, onPushTargetHandled,
+                            onOpenPrivacy = openPrivacy,
+                            lockAvailable = lockAvailable,
+                            lockEnabled = lockEnabled,
+                            onLockChange = onLockChange,
+                        )
+                    }
+                }
+            }
+        }
+        // Über dem Start gibt es keinen zweiten Ladekreis.
+        BusyOverlay(busy = pending > 0 && state !is AuthState.Loading)
+    }
+}
+
+private fun openInBrowser(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (e: ActivityNotFoundException) {
+        // Kein Browser auf dem Gerät: Die Seite lässt sich dann nicht öffnen.
+    }
+}
+
+/** Der Bildschirm, den `MainContent` zeigt; `depth` bestimmt die Richtung des Übergangs (tiefer: von rechts herein). */
+private sealed interface Screen {
+    val depth: Int
+
+    data object Home : Screen { override val depth = 0 }
+    data object Notifications : Screen { override val depth = 1 }
+    data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
+    data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
+    data class Assign(val appointmentId: String) : Screen { override val depth = 2 }
+}
+
+@Composable
+private fun MainContent(
+    appointmentsApi: AppointmentsApi,
+    pushApi: PushApi,
+    account: Profile,
+    passwordSaved: Boolean,
+    form: FormState,
+    imageForm: FormState,
+    auth: AuthViewModel,
+    pushTarget: PushTarget?,
+    onPushTargetHandled: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    lockAvailable: Boolean,
+    lockEnabled: Boolean,
+    onLockChange: (Boolean) -> Unit,
+) {
+    val context = LocalContext.current
+    val resolver = context.contentResolver
+    val appointments = viewModel { AppointmentsViewModel(appointmentsApi) }
+    val push = viewModel { PushViewModel(pushApi, account) }
+    var notificationsOpen by rememberSaveable { mutableStateOf(false) }
+    var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
+    var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
+    var assigning by rememberSaveable { mutableStateOf(false) }
+    var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
+
+    // Pushes brauchen das Token dieses Geräts beim Server und, ab Android 13, die Erlaubnis (einmal fragen, danach im Profil).
+    val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(account.id) {
+        push.registerDevice { PushToken.fetch(context) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && Notifications.shouldAskOnce(context)) {
+            askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+    // Das Tippen auf einen Push öffnet das Termin und schliesst, was davor offen war.
+    LaunchedEffect(pushTarget) {
+        val target = pushTarget ?: return@LaunchedEffect
+        notificationsOpen = false; assigning = false; viewingRegistrations = false
+        when (target) {
+            is PushTarget.Appointment -> { destination = Destination.APPOINTMENTS; openedAppointment = target.id }
+        }
+        onPushTargetHandled()
+    }
+    // Auch nach Drehen oder Prozess-Ende lädt das Offene neu: Daten bleiben nur im Arbeitsspeicher.
+    LaunchedEffect(openedAppointment) { openedAppointment?.let(appointments::loadDetail) }
+    LaunchedEffect(assigning) { if (assigning) appointments.loadSquads() }
+    LaunchedEffect(viewingRegistrations, openedAppointment) {
+        val id = openedAppointment
+        if (viewingRegistrations && id != null) appointments.loadRegistrations(id)
+    }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    Surface(Modifier.fillMaxSize()) {
+        val appointmentId = openedAppointment
+        val detail by appointments.detail.collectAsState()
+        val appointmentProfile = (appointments.profile.collectAsState().value as? ApiResult.Ok)?.value
+        val assignedAppointment = (detail as? ApiResult.Ok)?.value?.takeIf { it.id == appointmentId }
+        // Ab 600 dp stehen Liste und Detail nebeneinander auf dem Hauptbildschirm.
+        val wide = LocalConfiguration.current.screenWidthDp >= WideBreakpoint.value
+        val detailPane: @Composable (String) -> Unit = { id ->
+            LaunchedEffect(id) {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    while (true) {
+                        delay(DETAIL_POLL_INTERVAL_MS)
+                        appointments.refreshDetail()
+                    }
+                }
+            }
+            AppointmentDetailScreen(
+                detail,
+                appointments.rsvp.collectAsState().value,
+                canAssign = AssignmentRules.mayAssign(appointmentProfile),
+                canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
+                contacts = appointments.contacts.collectAsState().value,
+                onParticipant = { participantId, attending -> appointments.rsvpParticipant(id, participantId, attending) },
+                onLeader = { attending -> appointments.rsvpLeader(id, attending) },
+                onAssign = { assigning = true },
+                onRegistrations = { viewingRegistrations = true },
+                onBack = { openedAppointment = null },
+                onRetry = { appointments.loadDetail(id) },
+            )
+        }
+        val target = when {
+            appointmentId != null && assigning && assignedAppointment != null -> Screen.Assign(appointmentId)
+            appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
+            appointmentId != null && !wide -> Screen.Appointment(appointmentId)
+            notificationsOpen -> Screen.Notifications
+            else -> Screen.Home
+        }
+        val motion = rememberMotionEnabled()
+        AnimatedContent(
+            target,
+            transitionSpec = { screenTransition(initialState.depth, targetState.depth, motion) },
+            label = "bildschirm",
+        ) { screen ->
+            when (screen) {
+                is Screen.Assign -> {
+                    val appointmentId = screen.appointmentId
+                    val assigned = assignedAppointment ?: return@AnimatedContent
+                    val leave = { assigning = false; appointments.resetEdit() }
+                    BackHandler(onBack = leave)
+                    val edit = appointments.edit.collectAsState().value
+                    ContentWidth {
+                    AssignmentScreen(
+                        assigned, appointments.squads.collectAsState().value, appointmentProfile, edit,
+                        onSave = { request -> appointments.saveAssignment(appointmentId, request, leave) },
+                        onBack = leave,
+                        onRetry = appointments::loadSquads,
+                    )
+                    }
+                }
+                is Screen.Registrations -> {
+                    val appointmentId = screen.appointmentId
+                    BackHandler { viewingRegistrations = false }
+                    val date = assignedAppointment?.startDay()?.let { "${weekdayShort(it)} ${it.dayOfMonth}.${it.monthValue}." }
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null; viewingRegistrations = false }) {
+                        ContentWidth {
+                        RegistrationsScreen(
+                            eyebrow = listOfNotNull(assignedAppointment?.title, date).joinToString(" · ").ifBlank { null },
+                            state = appointments.registrations.collectAsState().value,
+                            onBack = { viewingRegistrations = false },
+                            onRetry = { appointments.loadRegistrations(appointmentId) },
+                        )
+                        }
+                    }
+                }
+                is Screen.Appointment -> {
+                    val appointmentId = screen.appointmentId
+                    BackHandler { openedAppointment = null }
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
+                        detailPane(appointmentId)
+                    }
+                }
+                Screen.Notifications -> {
+                    val leave = { notificationsOpen = false; push.clearError() }
+                    BackHandler(onBack = leave)
+                    ContentWidth {
+                    NotificationsScreen(
+                        switches = push.switches.collectAsState().value,
+                        form = push.form.collectAsState().value,
+                        onAppointments = push::setAppointments,
+                        onRegistrations = push::setRegistrations,
+                        onBack = leave,
+                    )
+                    }
+                }
+                Screen.Home -> MainScaffold(destination, onDestination = { destination = it }) {
+                    AnimatedContent(
+                        destination,
+                        modifier = Modifier.fillMaxSize(),
+                        transitionSpec = { fadeTransition(motion) },
+                        label = "bereich",
+                    ) { tab ->
+                        if (tab == Destination.APPOINTMENTS) {
+                            val list: @Composable () -> Unit = {
+                                AppointmentListScreen(
+                                    appointments.list.collectAsState().value,
+                                    onOpen = { openedAppointment = it },
+                                    onRetry = appointments::loadList,
+                                )
+                            }
+                            if (wide) {
+                                TwoPane(list = list, detail = { if (appointmentId != null) detailPane(appointmentId) else DetailPlaceholder() })
+                            } else {
+                                list()
+                            }
+                        } else if (tab == Destination.PROFILE) ContentWidth {
+                            ProfileScreen(
+                                account, passwordSaved, form, imageForm,
+                                onPickImage = { uri -> auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, uri) } } },
+                                onRemoveImage = auth::removeImage,
+                                onOpenNotifications = { notificationsOpen = true },
+                                onOpenPrivacy = onOpenPrivacy,
+                                onSignOut = auth::signOut,
+                                onLeave = { auth.clearPasswordSaved(); auth.clearImageError() },
+                                lockAvailable = lockAvailable,
+                                lockEnabled = lockEnabled,
+                                onLockChange = onLockChange,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Rechte Spalte im Querformat, solange keine Übung offen ist. */
+@Composable
+private fun DetailPlaceholder() {
+    Box(Modifier.fillMaxSize().padding(Spacing.s6), contentAlignment = Alignment.Center) {
+        Text(stringResource(R.string.detail_placeholder), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flamme aus dem Entwurf (Platzhalter, nie umfärben): Signalrot mit gelbem Kern. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <path
+        android:fillColor="#D4161C"
+        android:pathData="M80,10C95,40 130,55 130,95C130,125 108,148 80,148C52,148 30,125 30,95C30,72 45,58 55,42C58,56 66,62 72,62C70,42 74,26 80,10Z" />
+    <path
+        android:fillColor="#FFC400"
+        android:pathData="M80,78C88,92 104,100 104,118C104,133 93,142 80,142C67,142 56,133 56,118C56,100 72,92 80,78Z" />
+</vector>
