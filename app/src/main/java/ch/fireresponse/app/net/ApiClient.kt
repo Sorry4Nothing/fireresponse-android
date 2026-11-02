@@ -154,9 +154,9 @@ class ApiClient(
 
     private fun <T> evaluate(response: Response, decode: (Response) -> T): ApiResult<T> {
         if (!response.isSuccessful) {
-            if (response.code == 401 && !response.request.url.encodedPath.startsWith(SIGN_IN_PATH)) _unauthorized.tryEmit(Unit)
+            if (response.code == 401 && SIGN_IN_PATHS.none { response.request.url.encodedPath.startsWith(it) }) _unauthorized.tryEmit(Unit)
             if (response.code == 403 && response.request.url.encodedPath.startsWith(API_PATH)) _forbidden.tryEmit(Unit)
-            val code = if (response.code == 400 || response.code == 409) errorCode(response) else null
+            val code = if (response.code == 400 || response.code == 401 || response.code == 409) errorCode(response) else null
             val retryAfter = if (response.code == 429) response.header(RETRY_AFTER)?.toIntOrNull()?.coerceIn(1, MAX_RETRY_AFTER) else null
             return ApiResult.Failure(ApiError.from(response.code, code), code, retryAfter)
         }
@@ -182,7 +182,8 @@ class ApiClient(
     private class ErrorBody(val code: String? = null)
 
     companion object {
-        private const val SIGN_IN_PATH = "/api/auth/sign-in"
+        /** Anmeldung und zweiter Faktor: Ein 401 dort heisst «falsche Angaben», nicht «Sitzung abgelaufen». */
+        private val SIGN_IN_PATHS = listOf("/api/auth/sign-in", "/api/auth/two-factor")
         private const val API_PATH = "/api/v1/"
 
         /** Wartezeit in Sekunden bei 429; eine Stunde ist die Obergrenze, was der Server schickt, ist nicht vertrauenswürdig. */

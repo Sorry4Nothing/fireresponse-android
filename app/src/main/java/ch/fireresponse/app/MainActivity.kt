@@ -68,6 +68,7 @@ import ch.fireresponse.app.auth.AuthState
 import ch.fireresponse.app.auth.AuthViewModel
 import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.LoginScreen
+import ch.fireresponse.app.auth.TwoFactorScreen
 import ch.fireresponse.app.auth.NoSquadScreen
 import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.ProfileScreen
@@ -208,6 +209,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 AuthState.MustChangePassword -> PasswordScreen(
                     form, onSave = auth::changePassword, startPasswordKnown = auth.startPasswordKnown.collectAsState().value,
                 )
+                AuthState.TwoFactor -> TwoFactorScreen(form, onVerify = auth::verifyCode, onCancel = auth::cancelTwoFactor)
                 is AuthState.Welcome -> WelcomeScreen(
                     name = current.profile.name,
                     squads = current.profile.squads.map { it.name },

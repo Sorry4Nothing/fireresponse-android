@@ -16,7 +16,7 @@ Das ist auch der Check `build` der CI. Die Adresse des Servers kommt aus `firere
 
 ## Ohne Backend ausprobieren
 
-Ein Debug-Build ohne `fireresponseApiBaseUrl` läuft gegen einen Fake-Server (`app/src/debug/…/FakeBackend.kt`): Er hält seinen Stand im Arbeitsspeicher und kennt ein erfundenes Konto, Benutzername `demo` und Startpasswort `startpasswort123`. Damit lässt sich der ganze Ablauf bis zur Zusage durchspielen. Die Galerie zeigt einzelne Bildschirme: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list` (Namen in `GalleryActivity.kt`). Beides gibt es nur im Debug-Build.
+Ein Debug-Build ohne `fireresponseApiBaseUrl` läuft gegen einen Fake-Server (`app/src/debug/…/FakeBackend.kt`): Er hält seinen Stand im Arbeitsspeicher und kennt zwei erfundene Konten mit Startpasswort `startpasswort123`: `demo` (Elternteil, muss das Passwort ändern) und `kommando` (Kommandantin mit zweitem Faktor, Code `123456` oder Ersatzcode `abcde-fghij`). Damit lässt sich der ganze Ablauf bis zur Zusage durchspielen. Die Galerie zeigt einzelne Bildschirme: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list` (Namen in `GalleryActivity.kt`). Beides gibt es nur im Debug-Build.
 
 ## Arbeitsweise
 

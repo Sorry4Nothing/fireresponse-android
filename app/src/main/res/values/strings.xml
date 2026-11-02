@@ -90,6 +90,17 @@
     <string name="rank_two_stars">zwei Sterne</string>
     <string name="start_loading">Wird geladen …</string>
     <string name="login_title">Schön, bist du da.</string>
+    <string name="two_factor_title">Zweiter Faktor</string>
+    <string name="two_factor_text">Gib den sechsstelligen Code aus deiner Authenticator-App ein.</string>
+    <string name="two_factor_text_backup">Gib einen deiner Ersatzcodes ein. Jeder gilt nur einmal.</string>
+    <string name="two_factor_code">Code</string>
+    <string name="two_factor_backup_code">Ersatzcode</string>
+    <string name="two_factor_use_backup">Ersatzcode verwenden</string>
+    <string name="two_factor_use_app">Code aus der App verwenden</string>
+    <string name="two_factor_submit">Bestätigen</string>
+    <string name="two_factor_cancel">Abbrechen</string>
+    <string name="two_factor_wrong">Der Code stimmt nicht. Bitte versuche es nochmals.</string>
+    <string name="two_factor_expired">Die Anmeldung ist abgelaufen. Bitte melde dich neu an.</string>
     <string name="login_username">Benutzername</string>
     <string name="login_password">Passwort</string>
     <string name="login_submit">Anmelden</string>
@@ -97,7 +108,6 @@
     <string name="login_forgot_link">Passwort vergessen?</string>
     <string name="login_forgot">Dann hilft dir die Leitung deiner Einheit weiter.</string>
     <string name="login_failed">Anmeldung nicht möglich. Bitte Benutzername und Passwort prüfen oder später nochmals versuchen. Sonst hilft die Leitung.</string>
-    <string name="login_admin_only">Für dieses Konto ist ein zweiter Faktor eingerichtet. Das geht in der App noch nicht; melde dich im Admin-Bereich an.</string>
     <string name="password_show">Passwort anzeigen</string>
     <string name="password_eyebrow_first">Erster Login</string>
     <string name="password_title_first">Eigenes Passwort wählen</string>

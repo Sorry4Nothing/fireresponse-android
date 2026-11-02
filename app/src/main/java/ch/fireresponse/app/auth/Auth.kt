@@ -21,6 +21,10 @@ data class AuthUser(val name: String = "", val mussPasswortAendern: Boolean = fa
 @Serializable
 data class AuthSession(val user: AuthUser)
 
+/** Der Code des zweiten Faktors: sechsstellig aus der Authenticator-App oder ein Ersatzcode (`xxxxx-xxxxx`). */
+@Serializable
+data class CodeRequest(val code: String)
+
 /** `GET /api/v1/einwilligung`: Fassung und Text der aktuellen Einwilligung; `valid`: Die Person hat dieser Fassung zugestimmt. */
 @Serializable
 data class Consent(val version: Int, val text: String, @SerialName("gueltig") val valid: Boolean)

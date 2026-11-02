@@ -11,6 +11,12 @@ class AuthApi(private val api: ApiClient) {
     suspend fun signIn(username: String, password: String): ApiResult<SignInResponse> =
         api.post("/api/auth/sign-in/username", SignInRequest(username, password))
 
+    /** Zweiter Schritt der Anmeldung: Der Server prüft Code und Zwischen-Cookie `two_factor` und stellt bei Erfolg die Sitzung aus. */
+    suspend fun verifyTotp(code: String): ApiResult<Unit> = api.postAction("/api/auth/two-factor/verify-totp", CodeRequest(code))
+
+    /** Dasselbe mit einem Ersatzcode; jeder gilt einmal. */
+    suspend fun verifyBackupCode(code: String): ApiResult<Unit> = api.postAction("/api/auth/two-factor/verify-backup-code", CodeRequest(code))
+
     /** Antwortet auch ohne Sitzung mit 200. Das Cookie löscht der Server per `Set-Cookie`. */
     suspend fun signOut(): ApiResult<Unit> = api.postWithoutBody("/api/auth/sign-out")
 

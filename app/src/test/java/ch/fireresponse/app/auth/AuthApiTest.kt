@@ -5,7 +5,11 @@ import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.net.SessionStorage
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import org.junit.After
@@ -27,11 +31,13 @@ class AuthApiTest {
     private lateinit var server: MockWebServer
     private val storage = MemoryStorage()
     private lateinit var auth: AuthApi
+    private lateinit var client: ApiClient
 
     @Before
     fun start() {
         server = MockWebServer().apply { start() }
-        auth = AuthApi(ApiClient(server.url("/").toString(), ApiClient.httpClient(storage, "1.2.3"), storage = storage))
+        client = ApiClient(server.url("/").toString(), ApiClient.httpClient(storage, "1.2.3"), storage = storage)
+        auth = AuthApi(client)
     }
 
     @After
@@ -72,8 +78,39 @@ class AuthApiTest {
         reply(200, """{"twoFactorRedirect":true,"twoFactorMethods":["totp"]}""", "two_factor=zwischen; Path=/; Max-Age=600")
         val result = runBlocking { auth.signIn("admin", "geheim") }
         assertEquals(ApiResult.Ok(SignInResponse(twoFactorRedirect = true)), result)
-        // Das Zwischen-Cookie steht jetzt im Speicher; die App wirft es weg (ApiClient.forgetSession).
+        // Das Zwischen-Cookie steht jetzt im Speicher: Der Code im nächsten Schritt schickt es mit.
         assertEquals("two_factor=zwischen", storage.value)
+    }
+
+    @Test
+    fun theTotpCodeGoesWithTheIntermediateCookieAndBecomesTheSession() {
+        storage.value = "two_factor=zwischen"
+        reply(200, """{"token":"t","user":{"id":"u","name":"Petra"}}""", "session_token=abc; Path=/; Max-Age=7776000", "two_factor=; Path=/; Max-Age=0")
+        assertEquals(ApiResult.Ok(Unit), runBlocking { auth.verifyTotp("012345") })
+        val request = server.takeRequest()
+        assertEquals("/api/auth/two-factor/verify-totp", request.url.encodedPath)
+        assertEquals("two_factor=zwischen", request.headers["Cookie"])
+        assertEquals("fireresponse://", request.headers["Origin"])
+        assertEquals("""{"code":"012345"}""", request.body?.utf8())
+        assertEquals("session_token=abc", storage.value)
+    }
+
+    @Test
+    fun aBackupCodeHasItsOwnRoute() {
+        storage.value = "two_factor=zwischen"
+        reply(200, """{"token":"t","user":{"id":"u","name":"Petra"}}""", "session_token=abc; Path=/")
+        assertEquals(ApiResult.Ok(Unit), runBlocking { auth.verifyBackupCode("abcde-fghij") })
+        assertEquals("/api/auth/two-factor/verify-backup-code", server.takeRequest().url.encodedPath)
+    }
+
+    @Test
+    fun aWrongCodeKeepsItsCodeAndDoesNotEndTheSession() = runBlocking {
+        storage.value = "two_factor=zwischen"
+        val ended = async(start = CoroutineStart.UNDISPATCHED) { withTimeoutOrNull(300) { client.unauthorized.first() } }
+        reply(401, """{"code":"INVALID_CODE","message":"Invalid code"}""")
+        val failure = auth.verifyTotp("000000") as ApiResult.Failure
+        assertEquals("INVALID_CODE", failure.code)
+        assertNull("ein falscher Code ist keine abgelaufene Sitzung", ended.await())
     }
 
     @Test

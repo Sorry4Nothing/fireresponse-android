@@ -271,6 +271,75 @@ fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
 
 private const val USERNAME_MAX_LENGTH = 64
 
+/**
+ * Zweiter Faktor: Konten mit eingerichtetem Faktor (Kantonsadmin, Kommando) geben nach dem Passwort den Code aus der
+ * Authenticator-App ein, ohne App einen Ersatzcode. Aufgebaut wie der Login; der Entwurf kennt diesen Schritt nicht
+ * (siehe docs/design.md). Der Code bleibt im Bildschirm und landet nie in gespeichertem Zustand.
+ */
+@Composable
+fun TwoFactorScreen(form: FormState, onVerify: (code: String, backup: Boolean) -> Unit, onCancel: () -> Unit) {
+    var code by remember { mutableStateOf("") }
+    var backup by rememberSaveable { mutableStateOf(false) }
+    val ready = code.length == if (backup) BACKUP_CODE_LENGTH else TOTP_CODE_LENGTH
+    val submit = { if (ready && !form.running) onVerify(code, backup) }
+    LogoPage(
+        top = {
+            DepartmentEyebrow(crest = false)
+            Text(
+                stringResource(R.string.two_factor_title),
+                style = MaterialTheme.typography.displayMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+        },
+        bottom = {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(CardShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CardShape)
+                    .padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Text(
+                    stringResource(if (backup) R.string.two_factor_text_backup else R.string.two_factor_text),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                LabeledTextField(
+                    label = stringResource(if (backup) R.string.two_factor_backup_code else R.string.two_factor_code),
+                    value = code,
+                    onValueChange = { code = it.trim() },
+                    maxChars = if (backup) BACKUP_CODE_LENGTH else TOTP_CODE_LENGTH,
+                    keyboardType = if (backup) KeyboardType.Ascii else KeyboardType.Number,
+                    autofill = ContentType.SmsOtpCode,
+                    imeAction = ImeAction.Done,
+                    onImeAction = submit,
+                    enabled = !form.running,
+                )
+                FormStatus(form)
+                PrimaryButton(
+                    stringResource(R.string.two_factor_submit),
+                    onClick = submit,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = ready,
+                    loading = form.running,
+                    loadingText = stringResource(R.string.login_running),
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    val link = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                    TextActionButton(stringResource(if (backup) R.string.two_factor_use_app else R.string.two_factor_use_backup), { backup = !backup; code = "" }, style = link)
+                    TextActionButton(stringResource(R.string.two_factor_cancel), onCancel, style = link)
+                }
+                CantonFooter(Modifier.align(Alignment.CenterHorizontally))
+            }
+        },
+    )
+}
+
+private const val TOTP_CODE_LENGTH = 6
+private const val BACKUP_CODE_LENGTH = 11
+
 /** Zustand eines Formulars unter den Feldern: Was läuft, zeigt der Knopf; dauert es lange, sagt es ein Hinweis; ein Fehler kommt sofort und mit Icon. */
 @Composable
 private fun FormStatus(form: FormState) {

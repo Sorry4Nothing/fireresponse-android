@@ -115,7 +115,8 @@ class ApiClientTest {
         )
         expected.forEach { (status, error) ->
             server.enqueue(response(status, """{"code":"X","message":"Server-Text"}"""))
-            assertEquals("Status $status", ApiResult.Failure(error, if (status == 409) "X" else null), runBlocking { client().get<Me>("/api/v1/ich") })
+            // Den Code des Servers liest die App bei 400, 401 (zweiter Faktor) und 409.
+            assertEquals("Status $status", ApiResult.Failure(error, if (status == 401 || status == 409) "X" else null), runBlocking { client().get<Me>("/api/v1/ich") })
         }
     }
 

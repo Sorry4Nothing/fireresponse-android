@@ -37,6 +37,9 @@ sealed interface AuthState {
     /** Niemand angemeldet. `expired`: Die Sitzung ist abgelaufen oder wurde beendet. */
     data class SignedOut(val expired: Boolean) : AuthState
 
+    /** Das Passwort stimmt, das Konto hat einen zweiten Faktor: Die Person gibt den Code ein. */
+    data object TwoFactor : AuthState
+
     /** Die Person hat noch ein Startpasswort und muss ein eigenes wählen. */
     data object MustChangePassword : AuthState
 
@@ -174,21 +177,56 @@ class AuthViewModel(
         viewModelScope.launch {
             when (val result = api.signIn(username.trim(), password)) {
                 is ApiResult.Failure -> _form.value = failureForm(result, signInErrorText(result))
-                is ApiResult.Ok -> if (result.value.twoFactorRedirect) {
-                    // Konten mit zweitem Faktor (Kantonsadmin, Kommando) kann die App noch nicht anmelden: kein Sitzungscookie, auch kein halbes (`two_factor`).
-                    forgetSession()
-                    _form.value = FormState(error = R.string.login_admin_only)
-                } else {
-                    // Das Passwort ist ein Ausweis wie die Biometrie: Wer sich damit anmeldet, wird nicht gleich noch einmal gefragt.
-                    unlocked = true
+                is ApiResult.Ok -> {
+                    // Das Passwort bleibt im Arbeitsspeicher: Nach dem Code kann noch der Pflichtwechsel kommen.
                     rememberStartPassword(password)
-                    resolve()
-                    // Wer nicht zum Pflichtwechsel kommt, braucht es nicht.
-                    if (_state.value !is AuthState.MustChangePassword) rememberStartPassword(null)
-                    _form.value = FormState()
+                    if (result.value.twoFactorRedirect) {
+                        // Das Zwischen-Cookie `two_factor` liegt jetzt im Speicher des Zugangs; der Code macht daraus die Sitzung.
+                        _state.value = AuthState.TwoFactor
+                        _form.value = FormState()
+                    } else {
+                        finishSignIn()
+                    }
                 }
             }
         }
+    }
+
+    /** Die Sitzung steht (Passwort oder Passwort und Code): Es geht zu Pflichtwechsel, Einwilligung oder Termine. */
+    private suspend fun finishSignIn() {
+        // Das Passwort ist ein Ausweis wie die Biometrie: Wer sich damit anmeldet, wird nicht gleich noch einmal gefragt.
+        unlocked = true
+        resolve()
+        // Wer nicht zum Pflichtwechsel kommt, braucht es nicht.
+        if (_state.value !is AuthState.MustChangePassword) rememberStartPassword(null)
+        _form.value = FormState()
+    }
+
+    /** Zweiter Schritt: Code aus der App oder Ersatzcode. Ein falscher Code lässt es beim Formular, ein abgelaufener Schritt führt zum Login. */
+    fun verifyCode(code: String, backup: Boolean) {
+        if (_form.value.running || _state.value !is AuthState.TwoFactor) return
+        _form.value = FormState(running = true)
+        viewModelScope.launch {
+            when (val result = if (backup) api.verifyBackupCode(code) else api.verifyTotp(code)) {
+                is ApiResult.Ok -> finishSignIn()
+                is ApiResult.Failure -> when (result.code) {
+                    "INVALID_CODE", "INVALID_BACKUP_CODE" -> _form.value = FormState(error = R.string.two_factor_wrong)
+                    "INVALID_TWO_FACTOR_COOKIE", "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE", "TOTP_NOT_ENABLED", "BACKUP_CODES_NOT_ENABLED" -> {
+                        leave(expired = false)
+                        _form.value = FormState(error = R.string.two_factor_expired)
+                    }
+                    else -> _form.value = failureForm(result, result.error.text)
+                }
+            }
+        }
+    }
+
+    /** Zurück zum Login: Das halbe Cookie und das Passwort im Arbeitsspeicher sind weg. */
+    fun cancelTwoFactor() {
+        forgetSession()
+        rememberStartPassword(null)
+        _form.value = FormState()
+        _state.value = AuthState.SignedOut(false)
     }
 
     /** `current` ist `null`, wenn die App das Startpasswort schon vom Login kennt. */
