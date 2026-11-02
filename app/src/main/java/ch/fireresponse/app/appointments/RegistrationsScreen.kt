@@ -60,8 +60,8 @@ import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
 
 /**
- * Wer zu einem Programm ja, nein oder noch nichts gesagt hat, für Leitende, Stufenleitungen und Admins. Nur zum Ansehen: Eine
- * fehlende Antwort bleibt offen, niemand ändert sie hier (Entscheid des Auftraggebers). `eyebrow` nennt Programm und Tag.
+ * Wer zu einem Termin ja, nein oder noch nichts gesagt hat, für Leitende, Kommandos und Admins. Nur zum Ansehen: Eine
+ * fehlende Antwort bleibt offen, niemand ändert sie hier (Entscheid des Auftraggebers). `eyebrow` nennt Termin und Tag.
  */
 @Composable
 fun RegistrationsScreen(

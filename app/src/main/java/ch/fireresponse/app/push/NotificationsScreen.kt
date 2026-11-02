@@ -52,7 +52,7 @@ import ch.fireresponse.app.ui.theme.fire
 
 /**
  * Welche Mitteilungen die Person bekommt: Mitteilungen und Erinnerungen, und für Leitende die An- und
- * Abmeldungen für Programme. Die Schalter gelten beim
+ * Abmeldungen für Termine. Die Schalter gelten beim
  * Server, nicht auf diesem Gerät; ob das Gerät der App Mitteilungen zeigen lässt, entscheidet das System, und der
  * Bildschirm sagt es, wenn es sie sperrt.
  */

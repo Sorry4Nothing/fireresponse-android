@@ -231,7 +231,7 @@ private fun PersonRow(profile: Profile, uploading: Boolean, onChangeImage: () ->
     }
 }
 
-/** Rollen und, bei Eltern, die Vornamen der Kinder, getrennt mit « · ». */
+/** Rollen und, bei Eltern, die Vornamen der Teilnehmenden, getrennt mit « · ». */
 @Composable
 private fun roleLine(profile: Profile): String {
     val parts = buildList {

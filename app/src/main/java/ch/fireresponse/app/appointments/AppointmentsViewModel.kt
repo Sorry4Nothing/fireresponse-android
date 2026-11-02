@@ -17,14 +17,14 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Zustand beim Speichern einer Antwort («ja» oder «nein»). `sentAt` merkt sich pro Kind (ID) oder für die eigene
+ * Zustand beim Speichern einer Antwort («ja» oder «nein»). `sentAt` merkt sich pro Teilnehmende (ID) oder für die eigene
  * Anmeldung ([LEADER_KEY]) die Uhrzeit des letzten Sendens: «Gesendet 12:10».
  */
 data class RsvpState(
     val running: Boolean = false,
     val error: ApiError? = null,
     val sentAt: Map<String, String> = emptyMap(),
-    /** Was gerade gespeichert wird: Schlüssel (Kind oder [LEADER_KEY]) und die gewählte Antwort. */
+    /** Was gerade gespeichert wird: Schlüssel (Teilnehmende oder [LEADER_KEY]) und die gewählte Antwort. */
     val pendingKey: String? = null,
     val pendingAttending: Boolean? = null,
 )
@@ -56,7 +56,7 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
     private val _edit = MutableStateFlow(EditState())
     val edit: StateFlow<EditState> = _edit.asStateFlow()
 
-    /** Für die Rechte bei der Zuordnung (Admin, Stufenleitung); `null`, solange es lädt. */
+    /** Für die Rechte bei der Zuordnung (Admin, Kommando); `null`, solange es lädt. */
     private val _profile = MutableStateFlow<ApiResult<Profile>?>(null)
     val profile: StateFlow<ApiResult<Profile>?> = _profile.asStateFlow()
 
@@ -120,7 +120,7 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
     }
 
     /**
-     * Liest Programm und Kontakte im Takt still neu: Es gibt keinen Ladezustand, ein Fehler lässt den alten Stand stehen, und
+     * Liest Termin und Kontakte im Takt still neu: Es gibt keinen Ladezustand, ein Fehler lässt den alten Stand stehen, und
      * während eine Antwort gespeichert wird, bleibt der Stand, den die Person gerade bestätigt.
      */
     fun refreshDetail() {
@@ -141,7 +141,7 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
         _rsvp.value = RsvpState()
         _contacts.value = null
         detailJob = viewModelScope.launch { _detail.value = api.read(id) }
-        // Die Kontakte stören das Programm nicht: Ein Fehler dort zeigt nur keinen Abschnitt.
+        // Die Kontakte stören das Termin nicht: Ein Fehler dort zeigt nur keinen Abschnitt.
         viewModelScope.launch {
             val result = api.contacts(id)
             if (openedId == id) _contacts.value = result
@@ -155,7 +155,7 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
         save(appointmentId, LEADER_KEY, attending) { api.setLeaderRsvp(appointmentId, attending) }
 
     /**
-     * Speichert und liest das Programm danach neu: Der Server ist die einzige Wahrheit über den Stand. Bei einem Fehler
+     * Speichert und liest das Termin danach neu: Der Server ist die einzige Wahrheit über den Stand. Bei einem Fehler
      * bleibt der alte Stand sichtbar, die Pillen springen also zurück.
      */
     private fun save(appointmentId: String, key: String, attending: Boolean, block: suspend () -> ApiResult<Unit>) {

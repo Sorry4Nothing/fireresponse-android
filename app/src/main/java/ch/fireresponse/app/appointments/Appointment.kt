@@ -8,7 +8,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeParseException
 
-/** Die Abteilung rechnet in Schweizer Zeit, unabhängig von der Zone des Geräts. */
+/** Die Einheit rechnet in Schweizer Zeit, unabhängig von der Zone des Geräts. */
 val SWISS_ZONE: ZoneId = ZoneId.of("Europe/Zurich")
 
 @Serializable
@@ -17,7 +17,7 @@ data class AppointmentSquad(
     val name: String,
 )
 
-/** Eigenes Kind in einer Stufe des Programms. `status` ist «ja», «nein» oder `null` für noch offen. */
+/** Eigene teilnehmende Person in einer Einheit des Termins. `status` ist «ja», «nein» oder `null` für noch offen. */
 @Serializable
 data class AppointmentParticipant(val id: String, @SerialName("vorname") val firstName: String, val status: String? = null)
 
@@ -27,7 +27,7 @@ data class Appointment(
     val id: String,
     @SerialName("titel") val title: String,
     val status: String,
-    /** «intern», «leitende» oder «eltern»: wer das Programm ausser Admins und Stufenleitungen sieht. */
+    /** «intern», «leitende» oder «eltern»: wer das Termin ausser Admins und Kommandos sieht. */
     @SerialName("sichtbarkeit") val visibility: String = "intern",
     @SerialName("ganztaegig") val allDay: Boolean,
     @SerialName("beginn") val start: String? = null,
@@ -40,10 +40,10 @@ data class Appointment(
     @SerialName("schlussZeit") val closingTime: String? = null,
     @SerialName("mitnehmen") val bringAlong: String? = null,
     @SerialName("stufen") val squads: List<AppointmentSquad> = emptyList(),
-    /** Wahr, solange das Programm aktiv ist und nicht begonnen hat: nur dann lässt sich antworten. */
+    /** Wahr, solange das Termin aktiv ist und nicht begonnen hat: nur dann lässt sich antworten. */
     @SerialName("teilnahmeOffen") val attendanceOpen: Boolean = false,
     @SerialName("kinder") val participants: List<AppointmentParticipant> = emptyList(),
-    /** «ja», «nein» oder «offen»; `null`, wenn die Person keine Leitung dieses Programms ist. */
+    /** «ja», «nein» oder «offen»; `null`, wenn die Person keine Leitung dieses Termins ist. */
     @SerialName("eigeneAnmeldung") val ownRegistration: String? = null,
 ) {
     val cancelled get() = status == "abgesagt"

@@ -114,7 +114,7 @@ fun StatePage(
 
 /**
  * Die Fehlerseite zu einem [ApiError]. Eine Aktion, die es nicht gibt, fehlt auch als Knopf: «Anmelden» erscheint nur, wo
- * `onSignIn` gesetzt ist (nach abgelaufener Sitzung), «Zu den Programmen» nur, wo `onToAppointments` gesetzt ist.
+ * `onSignIn` gesetzt ist (nach abgelaufener Sitzung), «Zu den Übungen» nur, wo `onToAppointments` gesetzt ist.
  */
 @Composable
 fun ErrorState(

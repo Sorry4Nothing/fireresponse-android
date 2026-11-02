@@ -33,7 +33,7 @@ data class Profile(
     @SerialName("bildUrl") val imageUrl: String? = null,
     /** Die Push-Schalter beim Server: Sie sind standardmässig an. */
     @SerialName("pushProgramme") val pushAppointments: Boolean = true,
-    /** Der Server liefert ihn nur Personen mit Stufenrolle; `null`: kein Schalter anzeigen. */
+    /** Der Server liefert ihn nur Personen mit Einheitsrolle; `null`: kein Schalter anzeigen. */
     @SerialName("pushAnmeldungen") val pushRegistrations: Boolean? = null,
     /** Spitzname; `null` oder leer ohne Angabe. */
     val ceviName: String? = null,

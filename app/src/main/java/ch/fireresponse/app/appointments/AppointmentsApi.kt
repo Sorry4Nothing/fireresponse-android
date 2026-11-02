@@ -11,13 +11,13 @@ import java.time.LocalDate
 private data class RsvpRequest(val status: String)
 
 class AppointmentsApi(private val api: ApiClient) {
-    /** Programme, die das Fenster `from` bis `until` (Schweizer Kalendertage, inklusive) berühren. */
+    /** Termine, die das Fenster `from` bis `until` (Schweizer Kalendertage, inklusive) berühren. */
     suspend fun list(from: LocalDate, until: LocalDate): ApiResult<AppointmentList> =
         api.get("/api/v1/programme?von=$from&bis=$until")
 
     suspend fun read(id: String): ApiResult<Appointment> = api.get("/api/v1/programme/$id")
 
-    /** Meldet ein eigenes Kind an («ja») oder ab («nein»); eine frühere Antwort wird überschrieben. */
+    /** Meldet eine eigene teilnehmende Person an («ja») oder ab («nein»); eine frühere Antwort wird überschrieben. */
     suspend fun setAttendance(id: String, participantId: String, attending: Boolean): ApiResult<Unit> =
         api.put("/api/v1/programme/$id/teilnahmen/$participantId", rsvpBody(attending))
 
@@ -25,16 +25,16 @@ class AppointmentsApi(private val api: ApiClient) {
     suspend fun setLeaderRsvp(id: String, attending: Boolean): ApiResult<Unit> =
         api.put("/api/v1/programme/$id/leitung", rsvpBody(attending))
 
-    /** Setzt Stufen und Sichtbarkeit; die App schickt den vollen neuen Stand, wie die API es verlangt. */
+    /** Setzt Einheiten und Sichtbarkeit; die App schickt den vollen neuen Stand, wie die API es verlangt. */
     suspend fun assign(id: String, request: AssignmentRequest): ApiResult<Unit> =
         api.put("/api/v1/programme/$id/zuordnung", request)
 
     suspend fun squads(): ApiResult<SquadList> = api.get("/api/v1/stufen")
 
-    /** Die Stufenleitungen der Stufen des Programms, ohne die, die abgesagt haben («nein»); der Hauptkontakt steht zuerst. Leer nur, wenn die Stufe keine SL hat. */
+    /** Die Kommandos der Einheiten des Termins, ohne die, die abgesagt haben («nein»); der Hauptkontakt steht zuerst. Leer nur, wenn die Einheit keine SL hat. */
     suspend fun contacts(id: String): ApiResult<ContactList> = api.get("/api/v1/programme/$id/kontakte")
 
-    /** Zahlen und Listen der Anmeldungen (nur ansehen): Admins sowie Leitende und Stufenleitungen der Stufen des Programms. */
+    /** Zahlen und Listen der Anmeldungen (nur ansehen): Admins sowie Leitende und Kommandos der Einheiten des Termins. */
     suspend fun registrations(id: String): ApiResult<Registrations> = api.get("/api/v1/programme/$id/teilnahmen")
 
     suspend fun profile(): ApiResult<Profile> = api.get("/api/v1/ich")

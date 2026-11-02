@@ -48,7 +48,7 @@ import ch.fireresponse.app.ui.theme.Pill
 import ch.fireresponse.app.ui.theme.fire
 
 /**
- * Ja/Nein für die eigenen Kinder und, falls vorhanden, für die eigene Anmeldung als Leitung.
+ * Ja/Nein für die eigenen Teilnehmenden und, falls vorhanden, für die eigene Anmeldung als Leitung.
  * Die Pillen erscheinen nur, solange die API `attendanceOpen` meldet; sonst steht nur der Stand da.
  */
 @Composable

@@ -88,7 +88,7 @@ fun OutlinedPillButton(
     ) { ButtonContent(text, icon, loading) }
 }
 
-/** Ruhige Aktion in `accent`, z. B. «Abbrechen» oder «Zu den Programmen». */
+/** Ruhige Aktion in `accent`, z. B. «Abbrechen» oder «Zu den Übungen». */
 @Composable
 fun TextActionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.labelLarge) {
     TextButton(

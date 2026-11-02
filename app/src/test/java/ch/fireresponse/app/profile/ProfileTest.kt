@@ -21,7 +21,7 @@ class ProfileTest {
 
     @Test
     fun displayNamePrefersANonBlankNickname() {
-        assertEquals("Fuchs", displayName("Anna Muster", "Fuchs"))
+        assertEquals("Blitz", displayName("Anna Muster", "Blitz"))
         assertEquals("Anna Muster", displayName("Anna Muster", null))
         assertEquals("Anna Muster", displayName("Anna Muster", "   "))
     }

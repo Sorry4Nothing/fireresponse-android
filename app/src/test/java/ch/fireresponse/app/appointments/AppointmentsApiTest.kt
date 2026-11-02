@@ -72,13 +72,13 @@ class AppointmentsApiTest {
 
     @Test
     fun meetingPointBeatsGoogleLocation() {
-        server.enqueue(json(200, camp.replace("\"treffpunkt\":null", "\"treffpunkt\":\"14:00 Uhr\\nPfadiheim\"")))
-        assertEquals("Pfadiheim", (runBlocking { appointments.read("x") } as ApiResult.Ok).value.location)
+        server.enqueue(json(200, camp.replace("\"treffpunkt\":null", "\"treffpunkt\":\"14:00 Uhr\\nMagazin\"")))
+        assertEquals("Magazin", (runBlocking { appointments.read("x") } as ApiResult.Ok).value.location)
     }
 
     @Test
     fun meetingPointTextSplitsIntoTimeAndPlace() {
-        assertEquals(MeetingPoint("14:00", "Pfadiheim\nEingang Nord"), parseMeetingPoint("14:00 Uhr\nPfadiheim\nEingang Nord"))
+        assertEquals(MeetingPoint("14:00", "Magazin\nEingang Nord"), parseMeetingPoint("14:00 Uhr\nMagazin\nEingang Nord"))
         assertEquals(MeetingPoint("09:30", null), parseMeetingPoint("09:30 Uhr"))
         assertEquals(MeetingPoint(null, "Bahnhof"), parseMeetingPoint("Bahnhof"))
         assertEquals(MeetingPoint(null, null), parseMeetingPoint(null))
@@ -178,9 +178,9 @@ class AppointmentsApiTest {
 
     @Test
     fun squadsAndProfileAreRead() {
-        server.enqueue(json(200, """{"stufen":[{"id":"s1","name":"Pfadi","kuerzel":"PF","reihenfolge":1}]}"""))
+        server.enqueue(json(200, """{"stufen":[{"id":"s1","name":"Einheit A","kuerzel":"PF","reihenfolge":1}]}"""))
         assertEquals(
-            listOf(AppointmentSquad("s1", "Pfadi")),
+            listOf(AppointmentSquad("s1", "Einheit A")),
             (runBlocking { appointments.squads() } as ApiResult.Ok).value.squads,
         )
         assertEquals("GET /api/v1/stufen HTTP/1.1", server.takeRequest().requestLine)

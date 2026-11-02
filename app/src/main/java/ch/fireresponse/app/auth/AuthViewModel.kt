@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Die ViewModels (Programme, Chat) einer angemeldeten Person. Sie liegen in einem eigenen Speicher, der beim Abmelden
+ * Die ViewModels (Termine, Chat) einer angemeldeten Person. Sie liegen in einem eigenen Speicher, der beim Abmelden
  * geleert wird: Die nächste Person sieht nichts von der vorherigen, auch nicht im Arbeitsspeicher.
  */
 class SessionScope : ViewModelStoreOwner {

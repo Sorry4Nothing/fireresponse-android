@@ -12,7 +12,7 @@ enum class ApiError(@StringRes val text: Int) {
     TOO_MANY_REQUESTS(R.string.error_too_many_requests),
     REGISTRATION_CLOSED(R.string.error_registration_closed),
 
-    /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Programme gehen noch). */
+    /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Termine gehen noch). */
     APPOINTMENT_STARTED(R.string.error_appointment_started),
     NETWORK(R.string.error_network),
     UNKNOWN(R.string.error_unknown);

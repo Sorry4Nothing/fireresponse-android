@@ -4,7 +4,7 @@ import ch.fireresponse.app.profile.displayName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Eine Kontaktperson (Stufenleitung). `phone` ist nur für Eltern mit einem aktiven Kind in der Stufe gefüllt, sonst `null`. */
+/** Eine Kontaktperson (Kommando). `phone` ist nur für Eltern mit einer aktiven teilnehmenden Person in der Einheit gefüllt, sonst `null`. */
 @Serializable
 data class Contact(
     val id: String,

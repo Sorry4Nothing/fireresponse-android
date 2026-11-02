@@ -53,7 +53,7 @@ import ch.fireresponse.app.ui.theme.Spacing
 
 private val CARD = RoundedCornerShape(16.dp)
 
-/** Stufen und Sichtbarkeit eines Programms setzen. Die App schickt den vollen neuen Stand, wie es die API verlangt. */
+/** Einheiten und Sichtbarkeit eines Termins setzen. Die App schickt den vollen neuen Stand, wie es die API verlangt. */
 @Composable
 fun AssignmentScreen(
     appointment: Appointment,

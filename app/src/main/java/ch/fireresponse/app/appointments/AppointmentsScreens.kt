@@ -98,7 +98,7 @@ fun AppointmentListScreen(
     }
 }
 
-/** Die Liste als Zeitleiste: links das Datum an einer Linie, rechts die Programme dieses Tages als Karten. */
+/** Die Liste als Zeitleiste: links das Datum an einer Linie, rechts die Termine dieses Tages als Karten. */
 @Composable
 private fun Timeline(days: List<Day>, onOpen: (String) -> Unit) {
     LazyColumn(contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
@@ -220,8 +220,8 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
 }
 
 /**
- * Abgesagt, «wird noch geprüft» oder «nicht zugeordnet» (nur Leitungen sehen solche Programme): als Etikett mit Icon und
- * Wort. Ein aktives, zugeordnetes Programm braucht keins.
+ * Abgesagt, «wird noch geprüft» oder «nicht zugeordnet» (nur Leitungen sehen solche Termine): als Etikett mit Icon und
+ * Wort. Ein aktives, zugeordnetes Termin braucht keins.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -352,8 +352,8 @@ private fun calendarIntent(appointment: Appointment): Intent? {
 }
 
 /**
- * Aktionen für Leitende: die Anmeldungen ansehen (Admins sowie Leitende und SL der Stufen) und, nur für Admins und
- * Stufenleitungen, Stufen und Sichtbarkeit setzen.
+ * Aktionen für Leitende: die Anmeldungen ansehen (Admins sowie Leitende und SL der Einheiten) und, nur für Admins und
+ * Kommandos, Einheiten und Sichtbarkeit setzen.
  */
 @Composable
 private fun LeaderSection(

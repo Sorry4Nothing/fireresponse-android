@@ -84,9 +84,9 @@ class RegistrationsTest {
     }
 
     @Test
-    fun leadersShowTheCeviNameAboveTheFullName() {
-        val withNickname = LeaderRegistration("1", "Anna Muster", "leitung", "ja", ceviName = "Fuchs")
-        assertEquals("Fuchs", withNickname.title)
+    fun leadersShowTheNicknameAboveTheFullName() {
+        val withNickname = LeaderRegistration("1", "Anna Muster", "leitung", "ja", ceviName = "Blitz")
+        assertEquals("Blitz", withNickname.title)
         assertEquals("Anna Muster", withNickname.fullName)
         val without = LeaderRegistration("2", "Ben Beispiel", "stufenleitung", "nein")
         assertEquals("Ben Beispiel", without.title)

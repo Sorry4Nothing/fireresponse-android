@@ -4,7 +4,7 @@ import ch.fireresponse.app.profile.Profile
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Die Stufen der Abteilung (`GET /api/v1/stufen`); gelesen werden nur ID und Name. */
+/** Die Einheiten der Einheit (`GET /api/v1/stufen`); gelesen werden nur ID und Name. */
 @Serializable
 data class SquadList(@SerialName("stufen") val squads: List<AppointmentSquad>)
 
@@ -15,7 +15,7 @@ data class AssignmentRequest(
     @SerialName("sichtbarkeit") val visibility: String,
 )
 
-/** Wer ein Programm ausser Admins und Stufenleitungen sieht. Die Reihenfolge ist die der Stufen im Dialog. */
+/** Wer ein Termin ausser Admins und Kommandos sieht. Die Reihenfolge ist die der Einheiten im Dialog. */
 enum class Visibility(val api: String) {
     INTERN("intern"),
     LEADERS("leitende"),
@@ -23,24 +23,24 @@ enum class Visibility(val api: String) {
 }
 
 /**
- * Zuordnung von Stufen und Sichtbarkeit. Admins dürfen alles, Stufenleitungen nur Stufen, in denen sie selbst Stufenleitung
+ * Zuordnung von Einheiten und Sichtbarkeit. Admins dürfen alles, Kommandos nur Einheiten, in denen sie selbst Kommando
  * sind. Leitende und Eltern nie. Die Entscheidung trifft der Server; eine Aktion, die er ablehnt, zeigt die App als Fehler.
  */
 object AssignmentRules {
     fun mayAssign(profile: Profile?) = profile != null && (profile.admin || profile.roles.any { it.type == "stufenleitung" })
 
-    /** Die Stufen, die die Person zuordnen darf. */
+    /** Die Einheiten, die die Person zuordnen darf. */
     fun choices(all: List<AppointmentSquad>, profile: Profile): List<AppointmentSquad> =
         if (profile.admin) all else all.filter { profile.isCommander(it.id) }
 
-    /** Stufen, die das Programm schon hat und die die Person nicht ändern darf: Sie bleiben im neuen Stand. */
+    /** Einheiten, die das Termin schon hat und die die Person nicht ändern darf: Sie bleiben im neuen Stand. */
     fun fixed(appointment: Appointment, choices: List<AppointmentSquad>): List<AppointmentSquad> =
         appointment.squads.filter { group -> choices.none { it.id == group.id } }
 
-    /** Die Sichtbarkeit ändern darf nur, wem alle bisherigen und neuen Stufen gehören: Es darf keine fremde Stufe bleiben. */
+    /** Die Sichtbarkeit ändern darf nur, wem alle bisherigen und neuen Einheiten gehören: Es darf keine fremde Einheit bleiben. */
     fun mayChangeVisibility(fixed: List<AppointmentSquad>) = fixed.isEmpty()
 
-    /** Ohne Stufe ist nur «intern» erlaubt. */
+    /** Ohne Einheit ist nur «intern» erlaubt. */
     fun valid(selected: Set<String>, fixed: List<AppointmentSquad>, visibility: Visibility) =
         selected.isNotEmpty() || fixed.isNotEmpty() || visibility == Visibility.INTERN
 

@@ -34,7 +34,7 @@ data class LeaderRegistration(
     val status: String,
     /** Spitzname; `null` oder leer ohne Angabe. */
     val ceviName: String? = null,
-    /** Pfad zum Profilbild (`GET /api/v1/personen/{id}/bild`); `null` ohne Bild. Kinder haben keins. */
+    /** Pfad zum Profilbild (`GET /api/v1/personen/{id}/bild`); `null` ohne Bild. Teilnehmende haben keins. */
     @SerialName("bildUrl") val imageUrl: String? = null,
 ) {
     val isCommander get() = role == "stufenleitung"
@@ -63,7 +63,7 @@ fun registrationChip(status: String): ChipKind = when (status) {
 
 /** Wer die Übersicht ansehen darf; entschieden wird trotzdem beim Server (403). Ändern darf hier niemand etwas. */
 object RegistrationsRules {
-    /** Admins sowie Leitende und Stufenleitungen einer Stufe des Programms. Ohne Stufe gibt es nichts zu zählen. */
+    /** Admins sowie Leitende und Kommandos einer Einheit des Termins. Ohne Einheit gibt es nichts zu zählen. */
     fun maySee(appointment: Appointment, profile: Profile?): Boolean {
         if (profile == null || appointment.unassigned) return false
         return profile.admin || profile.roles.any { role -> appointment.squads.any { it.id == role.squadId } }

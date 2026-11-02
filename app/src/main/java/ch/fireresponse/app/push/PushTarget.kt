@@ -1,6 +1,6 @@
 package ch.fireresponse.app.push
 
-/** Wohin ein Push führt: in ein Programm. */
+/** Wohin ein Push führt: in ein Termin. */
 sealed interface PushTarget {
     val id: String
 

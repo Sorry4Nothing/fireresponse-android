@@ -297,7 +297,7 @@ private fun MainContent(
             askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
-    // Das Tippen auf einen Push öffnet das Programm und schliesst, was davor offen war.
+    // Das Tippen auf einen Push öffnet das Termin und schliesst, was davor offen war.
     LaunchedEffect(pushTarget) {
         val target = pushTarget ?: return@LaunchedEffect
         notificationsOpen = false; assigning = false; viewingRegistrations = false

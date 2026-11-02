@@ -4,10 +4,10 @@ import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
-/** Programme eines Kalendertages (Schweizer Zeit). `date` ist `null`, wenn das Programm keine lesbare Zeit hat. */
+/** Termine eines Kalendertages (Schweizer Zeit). `date` ist `null`, wenn das Termin keine lesbare Zeit hat. */
 data class Day(val date: LocalDate?, val appointments: List<Appointment>)
 
-/** Der Tag, an dem das Programm beginnt: bei ganztägigen `dayFrom`, sonst der Beginn in Schweizer Zeit. */
+/** Der Tag, an dem das Termin beginnt: bei ganztägigen `dayFrom`, sonst der Beginn in Schweizer Zeit. */
 fun Appointment.startDay(): LocalDate? = when (val time = time()) {
     is Timing.AllDay -> time.from
     is Timing.Timed -> time.start.toLocalDate()
@@ -16,7 +16,7 @@ fun Appointment.startDay(): LocalDate? = when (val time = time()) {
 
 /**
  * Gruppiert die Liste nach Beginn-Tag. Der Server sortiert nach Beginn, deshalb liegen gleiche Tage hintereinander;
- * ein Datum erscheint in der Zeitleiste nur einmal, auch bei mehreren Programmen am selben Tag.
+ * ein Datum erscheint in der Zeitleiste nur einmal, auch bei mehreren Terminen am selben Tag.
  */
 fun groupByDay(appointments: List<Appointment>): List<Day> {
     val days = mutableListOf<Day>()

@@ -8,10 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AssignmentTest {
-    private val pfadi = AppointmentSquad("s1", "Pfadi")
-    private val woelfe = AppointmentSquad("s2", "Wölfe")
+    private val squadA = AppointmentSquad("s1", "Einheit A")
+    private val squadB = AppointmentSquad("s2", "Einheit B")
 
-    private fun appointment(squads: List<AppointmentSquad> = listOf(pfadi), visibility: String = "eltern") = Appointment(
+    private fun appointment(squads: List<AppointmentSquad> = listOf(squadA), visibility: String = "eltern") = Appointment(
         id = "p1", title = "Hock", status = "aktiv", visibility = visibility, allDay = false,
         squads = squads,
     )
@@ -32,20 +32,20 @@ class AssignmentTest {
 
     @Test
     fun adminsChooseAllCommandersOnlyTheirOwn() {
-        val all = listOf(pfadi, woelfe)
+        val all = listOf(squadA, squadB)
         assertEquals(all, AssignmentRules.choices(all, admin))
-        assertEquals(listOf(pfadi), AssignmentRules.choices(all, commander))
+        assertEquals(listOf(squadA), AssignmentRules.choices(all, commander))
         assertTrue(AssignmentRules.choices(all, leader).isEmpty())
     }
 
     @Test
     fun foreignSquadsStayAndLockVisibility() {
-        val appointment = appointment(squads = listOf(pfadi, woelfe))
-        val choices = AssignmentRules.choices(listOf(pfadi, woelfe), commander)
+        val appointment = appointment(squads = listOf(squadA, squadB))
+        val choices = AssignmentRules.choices(listOf(squadA, squadB), commander)
         val fixed = AssignmentRules.fixed(appointment, choices)
-        assertEquals(listOf(woelfe), fixed)
+        assertEquals(listOf(squadB), fixed)
         assertFalse(AssignmentRules.mayChangeVisibility(fixed))
-        assertTrue(AssignmentRules.mayChangeVisibility(AssignmentRules.fixed(appointment, listOf(pfadi, woelfe))))
+        assertTrue(AssignmentRules.mayChangeVisibility(AssignmentRules.fixed(appointment, listOf(squadA, squadB))))
         val request = AssignmentRules.request(setOf("s1"), fixed, Visibility.PARENTS)
         assertEquals(setOf("s1", "s2"), request.squadIds.toSet())
         assertEquals("eltern", request.visibility)
@@ -57,6 +57,6 @@ class AssignmentTest {
         assertFalse(AssignmentRules.valid(emptySet(), emptyList(), Visibility.LEADERS))
         assertFalse(AssignmentRules.valid(emptySet(), emptyList(), Visibility.PARENTS))
         assertTrue(AssignmentRules.valid(setOf("s1"), emptyList(), Visibility.PARENTS))
-        assertTrue("eine fremde Stufe bleibt", AssignmentRules.valid(emptySet(), listOf(woelfe), Visibility.PARENTS))
+        assertTrue("eine fremde Stufe bleibt", AssignmentRules.valid(emptySet(), listOf(squadB), Visibility.PARENTS))
     }
 }
