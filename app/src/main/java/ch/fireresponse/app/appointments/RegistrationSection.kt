@@ -82,7 +82,7 @@ fun RegistrationSection(
                 locked = rsvp.running,
                 pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == participant.id },
                 sentAt = rsvp.sentAt[participant.id],
-                rankStars = participant.badge?.stars,
+                rankStars = participant.badge?.shownStars,
                 onRsvp = { onParticipant(participant.id, it) },
             )
         }
