@@ -317,6 +317,7 @@ fun PasswordScreen(
     var currentVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
     var repeat by remember { mutableStateOf("") }
+    var repeatVisible by remember { mutableStateOf(false) }
     val repeatFocus = remember { FocusRequester() }
     val askCurrent = !startPasswordKnown
     val bisher = if (askCurrent) current else null
@@ -382,12 +383,12 @@ fun PasswordScreen(
                     onValueChange = { repeat = it },
                     maxChars = PasswordRules.MAX_LENGTH,
                     keyboardType = KeyboardType.Password,
-                    masked = !newVisible,
+                    masked = !repeatVisible,
                     autofill = ContentType.NewPassword,
                     imeAction = ImeAction.Done,
                     onImeAction = save,
                     enabled = !form.running,
-                    trailing = { ShowPasswordSwitch(newVisible) { newVisible = it } },
+                    trailing = { ShowPasswordSwitch(repeatVisible) { repeatVisible = it } },
                 )
                     if (repeat.isNotEmpty()) {
                         Box(Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
