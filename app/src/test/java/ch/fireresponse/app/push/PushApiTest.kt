@@ -116,9 +116,14 @@ class PushApiTest {
     }
 
     @Test
-    fun unknownChannelsFallBackToMessages() {
-        assertEquals(Notifications.APPOINTMENTS_CHANNEL, Notifications.channelOf("programme"))
-        assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf("chat"))
-        assertEquals(Notifications.MESSAGES_CHANNEL, Notifications.channelOf(null))
+    fun channelsMatchTheServer() {
+        assertEquals(Notifications.APPOINTMENTS_CHANNEL, Notifications.channelOf("termine"))
+        assertEquals(Notifications.REGISTRATIONS_CHANNEL, Notifications.channelOf("anmeldungen"))
+    }
+
+    @Test
+    fun unknownChannelsFallBackToAppointments() {
+        assertEquals(Notifications.APPOINTMENTS_CHANNEL, Notifications.channelOf("chat"))
+        assertEquals(Notifications.APPOINTMENTS_CHANNEL, Notifications.channelOf(null))
     }
 }

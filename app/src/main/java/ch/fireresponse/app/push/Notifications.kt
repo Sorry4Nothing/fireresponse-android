@@ -15,8 +15,8 @@ import ch.fireresponse.app.R
 
 object Notifications {
     /** Die Kanäle, die der Server in jedem Push nennt: Ein Kanal, den das Gerät nicht kennt, zeigt den Push nicht. */
-    const val APPOINTMENTS_CHANNEL = "programme"
-    const val MESSAGES_CHANNEL = "mitteilungen"
+    const val APPOINTMENTS_CHANNEL = "termine"
+    const val REGISTRATIONS_CHANNEL = "anmeldungen"
 
     private const val PREFS = "push"
     private const val ASKED = "permission_asked"
@@ -26,15 +26,15 @@ object Notifications {
         manager.createNotificationChannels(
             listOf(
                 NotificationChannel(APPOINTMENTS_CHANNEL, context.getString(R.string.channel_appointments), NotificationManager.IMPORTANCE_DEFAULT),
-                NotificationChannel(MESSAGES_CHANNEL, context.getString(R.string.channel_messages), NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(REGISTRATIONS_CHANNEL, context.getString(R.string.channel_registrations), NotificationManager.IMPORTANCE_DEFAULT),
             ),
         )
     }
 
-    private val CHANNELS = setOf(APPOINTMENTS_CHANNEL, MESSAGES_CHANNEL)
+    private val CHANNELS = setOf(APPOINTMENTS_CHANNEL, REGISTRATIONS_CHANNEL)
 
-    /** Der Kanal aus dem Push, wenn die App ihn kennt, sonst «Mitteilungen». Der Inhalt kommt von aussen. */
-    fun channelOf(channel: String?): String = channel?.takeIf { it in CHANNELS } ?: MESSAGES_CHANNEL
+    /** Der Kanal aus dem Push, wenn die App ihn kennt, sonst «Übungen». Der Inhalt kommt von aussen. */
+    fun channelOf(channel: String?): String = channel?.takeIf { it in CHANNELS } ?: APPOINTMENTS_CHANNEL
 
     /**
      * Zeigt einen Push selbst: Firebase tut es nur, solange die App im Hintergrund ist. Titel und Text liefert der Server (nie
