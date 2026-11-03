@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     // Die Abfrage braucht FragmentActivity; biometric bringt nur eine alte Fassung mit.
     implementation(libs.androidx.fragment)
+    implementation(libs.androidsvg)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
