@@ -163,7 +163,7 @@
     <string name="notifications_open_settings">In den Einstellungen erlauben</string>
     <string name="notifications_privacy">Eine Benachrichtigung sagt nur, dass es etwas Neues gibt. Der Text einer Nachricht und Namen stehen nie darin.</string>
     <string name="channel_appointments">Übungen</string>
-    <string name="channel_messages">Mitteilungen</string>
+    <string name="channel_registrations">Anmeldungen</string>
     <string name="profile_privacy">Datenschutz</string>
     <string name="profile_privacy_open">Datenschutz lesen</string>
     <string name="privacy_loading">Datenschutz wird geladen</string>
