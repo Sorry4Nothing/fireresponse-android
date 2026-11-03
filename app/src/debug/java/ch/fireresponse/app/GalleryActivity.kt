@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import ch.fireresponse.app.images.LocalRankImages
+import ch.fireresponse.app.images.RankImages
 import androidx.compose.ui.Modifier
 import ch.fireresponse.app.appointments.Appointment
 import ch.fireresponse.app.appointments.AppointmentDetailScreen
@@ -47,6 +50,10 @@ import ch.fireresponse.app.ui.MainScaffold
 import ch.fireresponse.app.ui.TwoPane
 import ch.fireresponse.app.ui.theme.FireResponseTheme
 
+/** Beispiel eines Bild-Abzeichens vom Server (SVG wie die Miliz-Ränge): Die Galerie liefert es ohne Netz. */
+private const val RANK_URL = "/api/v1/raenge/7c9e6679-7425-40de-944b-e07fc1f90ae7/abzeichen"
+private const val RANK_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="-230.37 102.85 1166.57 1516.54"><g><path d="M0,1516.537h705.827V205.7H0V1516.537z"/><path fill="#EDD010" d="M93.543,1363.464h518.74v-34.017H93.543V1363.464z"/></g></svg>"""
+
 /**
  * Nur im Debug-Build: zeigt einen Bildschirm mit erfundenen Beispieldaten, damit Gestaltung und Querformat ohne Server zu sehen
  * sind. Start mit `--es screen <name>`; die Namen stehen in [screens].
@@ -56,13 +63,18 @@ class GalleryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val name = intent.getStringExtra("screen") ?: "login"
-        setContent { FireResponseTheme { Surface(Modifier.fillMaxSize()) { screens[name]?.invoke() } } }
+        val rankImages = RankImages { ApiResult.Ok(RANK_SVG.toByteArray()) }
+        setContent {
+            CompositionLocalProvider(LocalRankImages provides rankImages) {
+                FireResponseTheme { Surface(Modifier.fillMaxSize()) { screens[name]?.invoke() } }
+            }
+        }
     }
 }
 
 private val squad = AppointmentSquad("s1", "Jugendfeuerwehr Musterdorf")
 
-private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge("R2", stars = 2))
+private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge("Gfr", imageUrl = RANK_URL))
 
 private val appointments = listOf(
     Appointment(
@@ -126,7 +138,7 @@ private val registrations = Registrations(
         ParticipantRegistration("k2", "Noah", "Beispiel", "ja", Badge("R4", stars = 4)),
         ParticipantRegistration("k3", "Mia", "Probe", "nein"),
     ),
-    leaders = listOf(LeaderRegistration("l1", "Petra Beispiel", "kommandant", "ja", badge = Badge("Oblt"))),
+    leaders = listOf(LeaderRegistration("l1", "Petra Beispiel", "kommandant", "ja", badge = Badge("Gfr", imageUrl = RANK_URL))),
 )
 
 private val screens: Map<String, @Composable () -> Unit> = mapOf(

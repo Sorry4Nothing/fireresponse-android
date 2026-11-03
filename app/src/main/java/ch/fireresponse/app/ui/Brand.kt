@@ -1,7 +1,17 @@
 package ch.fireresponse.app.ui
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
+import ch.fireresponse.app.images.LocalRankImages
+import ch.fireresponse.app.images.RankImages
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -75,26 +85,65 @@ fun RankBadge(stars: Int, modifier: Modifier = Modifier, height: Dp = 34.dp, det
 }
 
 /**
- * Das Rang-Abzeichen einer Person: das Bild bei 0 bis 2 Sternen, sonst das Kürzel als kleiner Text. So fehlt ein Rang nie und wird
- * nie falsch gezeigt (Ränge ab 3 Sternen und Bild-Abzeichen haben in der App noch kein Bild).
+ * Das Rang-Abzeichen einer Person als Bild: bei 0 bis 2 Sternen das mitgelieferte, sonst das Bild vom Server (SVG oder PNG, siehe
+ * `RankImages`). Nur wenn es kein Bild gibt oder es nicht lädt, steht das Kürzel als kleiner Text da. So fehlt ein Rang nie und
+ * wird nie falsch gezeigt.
  */
 @Composable
 fun RankMark(badge: Badge, modifier: Modifier = Modifier, height: Dp = 24.dp, detailed: Boolean = false) {
     val stars = badge.shownStars
+    val images = LocalRankImages.current
+    val url = badge.imageUrl
     if (stars != null) {
         RankBadge(stars, modifier, height, detailed)
-    } else if (badge.abbreviation.isNotBlank()) {
-        val description = stringResource(R.string.rank_named, badge.abbreviation)
-        Text(
-            badge.abbreviation,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+    } else if (url != null && images != null) {
+        RankImage(badge, url, images, modifier, height)
+    } else {
+        RankText(badge, modifier)
+    }
+}
+
+/** Das Bild-Abzeichen vom Server. Es lädt kurz: Der Platz bleibt frei, damit nichts springt. Lädt es nicht, steht das Kürzel da. */
+@Composable
+private fun RankImage(badge: Badge, url: String, images: RankImages, modifier: Modifier, height: Dp) {
+    var failed by remember(url) { mutableStateOf(false) }
+    val bitmap by produceState<Bitmap?>(null, url) {
+        value = images.get(url)
+        failed = value == null
+    }
+    val shown = bitmap
+    if (shown != null) {
+        val description = if (badge.abbreviation.isBlank()) stringResource(R.string.rank_badge) else stringResource(R.string.rank_named, badge.abbreviation)
+        Image(
+            shown.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
             modifier = modifier
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh, Pill)
-                .padding(horizontal = 10.dp, vertical = 3.dp)
+                .height(height)
+                .width(height * shown.width / shown.height)
                 .semantics { contentDescription = description },
         )
+    } else if (failed) {
+        RankText(badge, modifier)
+    } else {
+        Spacer(modifier.height(height).width(height * 100f / 130f))
     }
+}
+
+/** Ersatz, wenn es kein Bild gibt oder es nicht lädt: das Kürzel als kleiner Text. */
+@Composable
+private fun RankText(badge: Badge, modifier: Modifier) {
+    if (badge.abbreviation.isBlank()) return
+    val description = stringResource(R.string.rank_named, badge.abbreviation)
+    Text(
+        badge.abbreviation,
+        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, Pill)
+            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .semantics { contentDescription = description },
+    )
 }
 
 /** Initialen in einem runden Feld, wie bei den Teilnehmenden: `surface-container` mit `accent`, 12 sp fett (Entwurf: 36 dp). */

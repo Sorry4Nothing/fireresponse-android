@@ -75,6 +75,9 @@ import ch.fireresponse.app.auth.StartScreen
 import ch.fireresponse.app.auth.WelcomeScreen
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.images.LocalProfileImages
+import ch.fireresponse.app.images.LocalRankImages
+import ch.fireresponse.app.images.RankImageApi
+import ch.fireresponse.app.images.RankImages
 import ch.fireresponse.app.images.ProfileImageApi
 import ch.fireresponse.app.images.ProfileImageEncoder
 import ch.fireresponse.app.images.ProfileImages
@@ -237,7 +240,8 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 is AuthState.SignedIn -> if (current.profile.hasNoSquad) NoSquadScreen(onBackToLogin = auth::signOut) else CompositionLocalProvider(LocalViewModelStoreOwner provides current.scope) {
                     // Die Bilder der Sitzung liegen im Speicher der Sitzung und verschwinden mit ihr.
                     val images = viewModel { ProfileImages(ProfileImageApi(client)) }
-                    CompositionLocalProvider(LocalProfileImages provides images) {
+                    val rankImages = viewModel { RankImages(RankImageApi(client)::load) }
+                    CompositionLocalProvider(LocalProfileImages provides images, LocalRankImages provides rankImages) {
                         MainContent(
                             AppointmentsApi(client), PushApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,

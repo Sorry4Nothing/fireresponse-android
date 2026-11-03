@@ -36,7 +36,7 @@ data class Badge(
     @SerialName("sterne") val stars: Int? = null,
     @SerialName("bildUrl") val imageUrl: String? = null,
 ) {
-    /** Die Sterne, die `RankBadge` zeigen kann (0 bis 2); Ränge 3 bis 5 zeigt die App nicht, statt sie falsch zu zeigen. */
+    /** Die Sterne, die `RankBadge` zeigen kann (0 bis 2); darüber, und bei Bild-Abzeichen, lädt `RankMark` das Bild vom Server. */
     // shortcut: die Platzhalter-Bilder reichen nur bis 2 Sterne, bis das Design die Abzeichen 3 bis 5 liefert.
     val shownStars get() = stars?.takeIf { it in 0..2 }
 }
