@@ -59,6 +59,7 @@ import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.OutlinedPillButton
 import ch.fireresponse.app.ui.StatusChip
+import ch.fireresponse.app.ui.SquadMark
 import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
@@ -182,7 +183,7 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
     )
     val opensOn = appointment.registrationOpensOn(LocalDate.now(SWISS_ZONE))?.let { stringResource(R.string.registration_from, dayAndMonth(it)) }
     val spoken = (
-        listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title) +
+        listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title, appointment.squad.name) +
             chips + lines.map { it.text } + listOfNotNull(opensOn)
         ).filter { it.isNotBlank() }.joinToString(", ")
     Box(
@@ -202,8 +203,13 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
                 headerLine,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"),
                 color = MaterialTheme.fire.accent,
+                modifier = Modifier.padding(end = LOGO_SPACE),
             )
-            Text(appointment.title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp))
+            Text(
+                appointment.title,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 24.sp),
+                modifier = Modifier.padding(end = LOGO_SPACE),
+            )
             lines.forEachIndexed { index, line ->
                 Row(
                     Modifier.padding(top = if (index == 0) 6.dp else 0.dp),
@@ -226,8 +232,12 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
             }
             AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
         }
+        SquadMark(appointment.squad.id, appointment.squad.type, Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = Spacing.s3))
     }
 }
+
+/** Platz rechts der ersten beiden Zeilen einer Karte für das Logo der Einheit (40 dp und Abstand). */
+private val LOGO_SPACE = 52.dp
 
 /** Abgesagt oder «wird noch geprüft» (nur Leitungen sehen solche Termine): als Etikett mit Icon und Wort. Ein aktiver Termin braucht keins. */
 @OptIn(ExperimentalLayoutApi::class)

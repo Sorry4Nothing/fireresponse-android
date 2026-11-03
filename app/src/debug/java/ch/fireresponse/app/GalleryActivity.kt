@@ -53,6 +53,7 @@ import ch.fireresponse.app.ui.theme.FireResponseTheme
 /** Beispiel eines Bild-Abzeichens vom Server (SVG wie die Miliz-Ränge): Die Galerie liefert es ohne Netz. */
 private const val RANK_URL = "/api/v1/raenge/7c9e6679-7425-40de-944b-e07fc1f90ae7/abzeichen"
 private const val RANK_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="-230.37 102.85 1166.57 1516.54"><g><path d="M0,1516.537h705.827V205.7H0V1516.537z"/><path fill="#EDD010" d="M93.543,1363.464h518.74v-34.017H93.543V1363.464z"/></g></svg>"""
+private const val LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#1B2A5C"/><path d="M50 18c10 16 22 24 22 40a22 22 0 0 1-44 0c0-16 12-24 22-40z" fill="#E8B22E"/></svg>"""
 
 /**
  * Nur im Debug-Build: zeigt einen Bildschirm mit erfundenen Beispieldaten, damit Gestaltung und Querformat ohne Server zu sehen
@@ -63,7 +64,14 @@ class GalleryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val name = intent.getStringExtra("screen") ?: "login"
-        val rankImages = RankImages { ApiResult.Ok(RANK_SVG.toByteArray()) }
+        // Abzeichen: das Beispiel-SVG. Logos: die erste Einheit hat eines, die zweite keins (dann steht «KF» da).
+        val rankImages = RankImages { path ->
+            when {
+                path.endsWith("/s2/logo") -> ApiResult.Failure(ApiError.NOT_FOUND)
+                path.endsWith("/logo") -> ApiResult.Ok(LOGO_SVG.toByteArray())
+                else -> ApiResult.Ok(RANK_SVG.toByteArray())
+            }
+        }
         setContent {
             CompositionLocalProvider(LocalRankImages provides rankImages) {
                 FireResponseTheme { Surface(Modifier.fillMaxSize()) { screens[name]?.invoke() } }
@@ -73,6 +81,7 @@ class GalleryActivity : ComponentActivity() {
 }
 
 private val squad = AppointmentSquad("s1", "Jugendfeuerwehr Musterdorf")
+private val kfSquad = AppointmentSquad("s2", "Kinderfeuerwehr Musterdorf", "kf")
 
 private val contact = Contact("c1", "Petra Beispiel", "kommandant", phone = "079 000 00 00", badge = Badge("Gfr", imageUrl = RANK_URL))
 
@@ -111,7 +120,7 @@ private val appointments = listOf(
     ),
     Appointment(
         id = "a6", title = "Vorstandssitzung", status = "aktiv", allDay = false, kind = "Sitzung", registrable = false,
-        start = "2027-01-20T18:00:00.000Z", end = "2027-01-20T19:30:00.000Z", squad = squad,
+        start = "2027-01-20T18:00:00.000Z", end = "2027-01-20T19:30:00.000Z", squad = kfSquad,
     ),
 )
 
