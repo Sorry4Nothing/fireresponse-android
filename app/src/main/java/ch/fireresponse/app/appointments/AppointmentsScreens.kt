@@ -268,6 +268,9 @@ fun AppointmentDetailScreen(
     onRegistrations: () -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    /** Name und Profilbild des angemeldeten Kontos für die eigene Antwortzeile. */
+    ownName: String = "",
+    ownImageUrl: String? = null,
 ) {
     val back = HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_appointments), onBack)
     Column(Modifier.fillMaxSize()) {
@@ -280,7 +283,7 @@ fun AppointmentDetailScreen(
                 Header(title = null, back = back)
                 ErrorState(state.error, onRetry, onToAppointments = onBack)
             }
-            is ApiResult.Ok -> AppointmentContent(state.value, rsvp, canSeeRegistrations, back, onParticipant, onLeader, onRegistrations)
+            is ApiResult.Ok -> AppointmentContent(state.value, rsvp, canSeeRegistrations, back, onParticipant, onLeader, onRegistrations, ownName, ownImageUrl)
         }
     }
 }
@@ -294,6 +297,8 @@ private fun AppointmentContent(
     onParticipant: (participantId: String, attending: Boolean) -> Unit,
     onLeader: (attending: Boolean) -> Unit,
     onRegistrations: () -> Unit,
+    ownName: String,
+    ownImageUrl: String?,
 ) {
     val date = appointment.startDay()?.let { "${weekdayShort(it)} ${dayAndMonth(it)}" }
     val context = LocalContext.current
@@ -319,7 +324,7 @@ private fun AppointmentContent(
             AppointmentStatus(appointment)
             Facts(appointment)
             ContactSection(appointment)
-            RegistrationSection(appointment, rsvp, onParticipant, onLeader)
+            RegistrationSection(appointment, rsvp, onParticipant, onLeader, ownName, ownImageUrl)
             LeaderSection(canSeeRegistrations, onRegistrations)
             Box(Modifier.height(Spacing.s4))
         }

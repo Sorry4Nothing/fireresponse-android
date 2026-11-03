@@ -342,6 +342,8 @@ private fun MainContent(
                 detail,
                 appointments.rsvp.collectAsState().value,
                 canSeeRegistrations = assignedAppointment?.let { RegistrationsRules.maySee(it, appointmentProfile) } == true,
+                ownName = account.name,
+                ownImageUrl = account.imageUrl,
                 onParticipant = { participantId, attending -> appointments.rsvpParticipant(id, participantId, attending) },
                 onLeader = { attending -> appointments.rsvpLeader(id, attending) },
                 onRegistrations = { viewingRegistrations = true },

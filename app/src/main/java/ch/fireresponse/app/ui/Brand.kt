@@ -146,17 +146,17 @@ private fun RankText(badge: Badge, modifier: Modifier) {
     )
 }
 
-/** Initialen in einem runden Feld, wie bei den Teilnehmenden: `surface-container` mit `accent`, 12 sp fett (Entwurf: 36 dp). */
+/** Initialen in einem runden Feld, wie bei den Teilnehmenden: Token `avatar` mit `onAvatar`, 12 sp fett (Entwurf: 36 dp). */
 @Composable
 fun InitialsBadge(name: String, modifier: Modifier = Modifier, size: Dp = 36.dp) {
     Box(
-        modifier.size(size).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape).clearAndSetSemantics {},
+        modifier.size(size).background(MaterialTheme.fire.avatar, CircleShape).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         Text(
             initials(name),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.fire.accent,
+            color = MaterialTheme.fire.onAvatar,
         )
     }
 }

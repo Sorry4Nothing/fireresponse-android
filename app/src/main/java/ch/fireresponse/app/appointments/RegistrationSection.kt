@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.InitialsBadge
 import ch.fireresponse.app.ui.RankMark
 import ch.fireresponse.app.profile.Badge
@@ -60,6 +61,9 @@ fun RegistrationSection(
     rsvp: RsvpState,
     onParticipant: (participantId: String, attending: Boolean) -> Unit,
     onLeader: (attending: Boolean) -> Unit,
+    /** Name und Profilbild des angemeldeten Kontos für die eigene Zeile; ohne Namen steht der Anfangsbuchstabe von «Du». */
+    ownName: String = "",
+    ownImageUrl: String? = null,
 ) {
     val leader = appointment.ownRegistration
     if (appointment.participants.isEmpty() && leader == null) return
@@ -96,6 +100,8 @@ fun RegistrationSection(
                 pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == LEADER_KEY },
                 sentAt = rsvp.sentAt[LEADER_KEY],
                 onRsvp = onLeader,
+                avatarName = ownName.takeIf { it.isNotBlank() },
+                avatarImageUrl = ownImageUrl,
             )
         }
 
@@ -115,6 +121,9 @@ private fun RsvpRow(
     sentAt: String?,
     onRsvp: (Boolean) -> Unit,
     rank: Badge? = null,
+    /** Name und Bild des Kontos für die eigene Zeile (Avatar); ohne Namen stehen die Initialen von `name` (Kinder haben kein Bild). */
+    avatarName: String? = null,
+    avatarImageUrl: String? = null,
 ) {
     val colors = MaterialTheme.fire
     val scheme = MaterialTheme.colorScheme
@@ -126,7 +135,7 @@ private fun RsvpRow(
         else -> stringResource(R.string.rsvp_pending) to scheme.onSurfaceVariant
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-        InitialsBadge(name)
+        if (avatarName != null) Avatar(avatarName, size = 36.dp, imageUrl = avatarImageUrl, initialSize = 12.sp) else InitialsBadge(name)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
