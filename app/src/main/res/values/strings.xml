@@ -211,6 +211,7 @@
     <string name="widget_signed_out">Bitte melde dich in der App an.</string>
     <string name="widget_empty">Keine Übungen in Sicht.</string>
     <string name="widget_offline">Keine Verbindung. Tippe, um die App zu öffnen.</string>
+    <string name="widget_power_save">Energiesparmodus: Tippe hier, dann lädt die App die Übungen.</string>
     <string name="widget_answered">Beantwortet</string>
     <string name="widget_answer_open">Antwort offen</string>
     <string name="widget_status_open">Offen</string>

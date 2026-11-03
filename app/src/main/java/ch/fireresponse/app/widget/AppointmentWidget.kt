@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.StringRes
@@ -94,8 +95,19 @@ object AppointmentWidget {
     /** Ohne Verbindung bleibt, was schon da ist; nur ein Widget, das noch nichts zeigte, sagt es. */
     fun showOfflineIfNothingShown(context: Context) {
         if (!context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(SHOWN, false)) {
-            message(context, R.string.widget_offline, shown = false)
+            // Im Energiesparmodus sperrt das System dem Widget im Hintergrund das Netz: Das ist keine fehlende Verbindung.
+            val powerSave = context.getSystemService(PowerManager::class.java)?.isPowerSaveMode == true
+            message(context, if (powerSave) R.string.widget_power_save else R.string.widget_offline, shown = false)
         }
+    }
+
+    /**
+     * Beim Start der App (Vordergrund: das Netz ist erlaubt, auch im Energiesparmodus) holt das Widget seine Übungen, wenn eines liegt.
+     * Das gilt auch vor dem Entsperren: Es zeigt nicht mehr, als der Startbildschirm ohnehin zeigt.
+     */
+    suspend fun refreshIfPlaced(context: Context) {
+        val manager = AppWidgetManager.getInstance(context)
+        if (manager.getAppWidgetIds(ComponentName(context, AppointmentWidgetProvider::class.java)).isNotEmpty()) refresh(context)
     }
 
     private fun message(context: Context, @StringRes text: Int, shown: Boolean) {

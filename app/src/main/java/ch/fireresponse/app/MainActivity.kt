@@ -105,8 +105,10 @@ import ch.fireresponse.app.ui.BusyOverlay
 import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.theme.FireResponseTheme
 import ch.fireresponse.app.widget.AppointmentWidget
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** So oft liest der offene Termin Stand und Kontakte still neu. */
@@ -121,6 +123,12 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         targetOf(intent)?.let { pushTarget = it }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Im Vordergrund ist das Netz erlaubt, auch im Energiesparmodus: So füllt sich ein Widget, dessen Aktualisierung im Hintergrund gesperrt war.
+        CoroutineScope(Dispatchers.IO).launch { runCatching { AppointmentWidget.refreshIfPlaced(applicationContext) } }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
