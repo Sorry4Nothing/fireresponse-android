@@ -26,6 +26,9 @@ data class FireResponseColors(
     /** Rot als Text oder Symbol (z. B. «Abmelden»); `primary` ist nur als Fläche gedacht. */
     val primaryText: Color,
     val onSecondaryMuted: Color,
+    /** Kreis mit den Initialen einer Person ohne Bild (Kinder): Fläche und Schrift, wie im Entwurf der Detail-Ansicht. */
+    val avatar: Color,
+    val onAvatar: Color,
     val successContainer: Color,
     val onSuccessContainer: Color,
     val warningContainer: Color,
@@ -99,6 +102,8 @@ internal val FireResponseNight: Palette = run {
             onAccentFill = Color(0xFF1A1B1E),
             primaryText = Color(0xFFFF8A82),
             onSecondaryMuted = Color(0xFFDADEE5),
+            avatar = Color(0xFF2B3039),
+            onAvatar = Color(0xFFDADEE5),
             successContainer = Color(0xFF10301F),
             onSuccessContainer = Color(0xFF34D17A),
             warningContainer = Color(0xFF3A3000),
@@ -159,6 +164,8 @@ internal val FireResponseDay: Palette = run {
             onAccentFill = Color(0xFF1A1B1E),
             primaryText = Color(0xFFB30F15),
             onSecondaryMuted = Color(0xFFDADEE5),
+            avatar = Color(0xFFECE8E3),
+            onAvatar = Color(0xFFB30F15),
             successContainer = Color(0xFFE3F4EA),
             onSuccessContainer = Color(0xFF136B3A),
             warningContainer = Color(0xFFFFF1BF),

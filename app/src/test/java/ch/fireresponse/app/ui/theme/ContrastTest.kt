@@ -52,6 +52,7 @@ class ContrastTest {
         assertContrast("on-primary auf primary", p.scheme.onPrimary, p.scheme.primary, 4.5, t)
         assertContrast("on-secondary auf secondary", p.scheme.onSecondary, p.scheme.secondary, 4.5, t)
         assertContrast("on-secondary-muted auf secondary", p.extra.onSecondaryMuted, p.scheme.secondary, 4.5, t)
+        assertContrast("on-avatar auf avatar", p.extra.onAvatar, p.extra.avatar, 4.5, t)
         assertContrast("on-secondary-container auf secondary-container", p.scheme.onSecondaryContainer, p.scheme.secondaryContainer, 4.5, t)
         assertContrast("on-success-container auf success-container", p.extra.onSuccessContainer, p.extra.successContainer, 4.5, t)
         assertContrast("on-error-container auf error-container", p.scheme.onErrorContainer, p.scheme.errorContainer, 4.5, t)
