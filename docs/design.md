@@ -54,7 +54,7 @@ Geprüft:
 
 ## Platzhalter aus der Übernahme
 
-- **Logo:** eine neutrale Flamme (`ic_logo`, `ic_splash_logo`, `ic_stage_fallback`, `ic_stat_logo`, `ic_launcher_foreground`). Das echte Zeichen und das Wappen des Kantons Zürich ersetzen sie; das Design liefert beide als Platzhalter.
+- **Logo:** eine neutrale Flamme (`ic_logo`, `ic_splash_logo`, `ic_stage_fallback`, `ic_stat_logo`). Das App-Symbol (`mipmap-*/ic_launcher*`, Adaptive Icon mit Themed Icon) ist das vom Design gelieferte; Splash und Mitteilungs-Symbol folgen. Das echte Zeichen und das Wappen des Kantons Zürich ersetzen sie; das Design liefert beide als Platzhalter.
 - **Begriffe:** Einheit (mit Bezirk), Kommando, Teilnehmende und Termin; in der Oberfläche heisst ein Termin «Übung» und das Kommando «Leitung». Die Namen in der Schnittstelle (`@SerialName`) sind die des Vertrags (`api-vertrag/openapi.yaml`): Einheit = `einheit`, Teilnehmende = `teilnehmende`, Termin = `programm`.
 
 ## Noch nicht umgesetzt
