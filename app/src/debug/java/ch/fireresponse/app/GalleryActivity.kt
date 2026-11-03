@@ -185,7 +185,8 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Ok(AppointmentList(emptyList())), {}, {}) }
     },
     "start" to { StartScreen() },
-    "widget" to { WidgetPreview() },
+    "widget" to { WidgetPreview(2) },
+    "widget1" to { WidgetPreview(1) },
     "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
     "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
     "notfound" to {
@@ -238,13 +239,13 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     },
 )
 
-/** Das Widget «Nächste Übungen» in seiner Grösse (4 × 2 Felder, 250 × 110 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
+/** Das Widget «Nächste Übungen» in der Grösse, die ein Samsung-Launcher gibt (4 × 2 Felder, rund 356 × 165 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
 @Composable
-private fun WidgetPreview() {
+private fun WidgetPreview(count: Int) {
     Box(Modifier.fillMaxSize().background(Color(0xFF59606E)), contentAlignment = Alignment.Center) {
         AndroidView(
-            modifier = Modifier.size(250.dp, 110.dp),
-            factory = { context -> AppointmentWidget.rowsView(context, appointments.take(2)).apply(context, FrameLayout(context)) },
+            modifier = Modifier.size(356.dp, 165.dp),
+            factory = { context -> AppointmentWidget.rowsView(context, appointments.take(count)).apply(context, FrameLayout(context)) },
         )
     }
 }

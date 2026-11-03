@@ -102,6 +102,7 @@ object AppointmentWidget {
         val views = RemoteViews(context.packageName, R.layout.widget_appointments)
         ROWS.forEach { views.setViewVisibility(it.row, View.GONE) }
         views.setViewVisibility(R.id.divider, View.GONE)
+        views.setViewVisibility(R.id.hint, View.GONE)
         views.setViewVisibility(R.id.message, View.VISIBLE)
         views.setTextViewText(R.id.message, context.getString(text))
         val open = openIntent(context, null)
@@ -122,7 +123,10 @@ object AppointmentWidget {
     internal fun rowsView(context: Context, appointments: List<Appointment>): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_appointments)
         views.setViewVisibility(R.id.message, View.GONE)
-        views.setViewVisibility(R.id.divider, if (appointments.size > 1) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.divider, View.VISIBLE)
+        // Mit nur einer Übung sagt ein ruhiger Satz darunter, dass nichts mehr folgt: So wirkt die Fläche nicht leer.
+        views.setViewVisibility(R.id.hint, if (appointments.size == 1) View.VISIBLE else View.GONE)
+        views.setOnClickPendingIntent(R.id.hint, openIntent(context, null))
         views.setOnClickPendingIntent(R.id.widget_root, openIntent(context, null))
         ROWS.forEachIndexed { index, row ->
             val appointment = appointments.getOrNull(index)
@@ -141,7 +145,9 @@ object AppointmentWidget {
         val status = status(context, appointment)
         views.setViewVisibility(row.row, View.VISIBLE)
         views.setTextViewText(row.title, appointment.title)
-        views.setTextViewText(row.whenText, "${weekdayShort(day)} ${day.dayOfMonth}.${day.monthValue}. · ${startText(context, appointment)}")
+        views.setTextViewText(row.weekday, weekdayShort(day))
+        views.setTextViewText(row.date, "${day.dayOfMonth}.${day.monthValue}.")
+        views.setTextViewText(row.time, startText(context, appointment))
         val statusVisibility = if (status == null) View.GONE else View.VISIBLE
         views.setViewVisibility(row.statusIcon, statusVisibility)
         views.setViewVisibility(row.statusText, statusVisibility)
@@ -208,10 +214,10 @@ object AppointmentWidget {
         )
     }
 
-    private class Row(val row: Int, val title: Int, val whenText: Int, val statusIcon: Int, val statusText: Int)
+    private class Row(val row: Int, val weekday: Int, val date: Int, val title: Int, val time: Int, val statusIcon: Int, val statusText: Int)
 
     private val ROWS = listOf(
-        Row(R.id.row1, R.id.row1_title, R.id.row1_when, R.id.row1_status_icon, R.id.row1_status),
-        Row(R.id.row2, R.id.row2_title, R.id.row2_when, R.id.row2_status_icon, R.id.row2_status),
+        Row(R.id.row1, R.id.row1_weekday, R.id.row1_date, R.id.row1_title, R.id.row1_time, R.id.row1_status_icon, R.id.row1_status),
+        Row(R.id.row2, R.id.row2_weekday, R.id.row2_date, R.id.row2_title, R.id.row2_time, R.id.row2_status_icon, R.id.row2_status),
     )
 }

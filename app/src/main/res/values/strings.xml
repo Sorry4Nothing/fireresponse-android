@@ -207,6 +207,7 @@
     <string name="widget_name">Nächste Übungen</string>
     <string name="widget_description">Die nächsten zwei Übungen mit dem Stand deiner Antwort. Antworten kannst du in der App.</string>
     <string name="widget_loading">Wird geladen …</string>
+    <string name="widget_no_more">Danach ist keine weitere Übung in Sicht.</string>
     <string name="widget_signed_out">Bitte melde dich in der App an.</string>
     <string name="widget_empty">Keine Übungen in Sicht.</string>
     <string name="widget_offline">Keine Verbindung. Tippe, um die App zu öffnen.</string>
