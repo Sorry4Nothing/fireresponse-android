@@ -12,9 +12,7 @@ import ch.fireresponse.app.security.shouldRelock
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.runtime.mutableLongStateOf
 import android.os.SystemClock
-import androidx.compose.runtime.SideEffect
 import android.view.WindowManager
-import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import android.Manifest
 import android.app.LocaleManager
@@ -135,6 +133,8 @@ class MainActivity : FragmentActivity() {
         // Der Start lief mit dem Theme des Splash (Manifest); ab jetzt gilt das Theme der App.
         setTheme(R.style.Theme_FireResponse)
         super.onCreate(savedInstanceState)
+        // Die App zeigt Daten von Kindern: Weder Bildschirmfotos noch «Zuletzt benutzt» zeigen etwas davon, mit und ohne Sperre.
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         enableEdgeToEdge()
         // Auch auf einem englisch gestellten Gerät liest der Screenreader die App mit deutscher Aussprache vor (ab Android 13).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -177,11 +177,6 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
         } else {
             auth.turnLockOff()
         }
-    }
-    // Ist das Entsperren an, zeigen weder Bildschirmfotos noch «Zuletzt benutzt» etwas von der App.
-    SideEffect {
-        val window = (context as? Activity)?.window
-        if (lockEnabled) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
     // Die Datenschutzerklärung vor der Einwilligung (Willkommen) zeigt die App selbst; der Text kommt vom Server.
     val privacy = viewModel { PrivacyViewModel(authApi) }
