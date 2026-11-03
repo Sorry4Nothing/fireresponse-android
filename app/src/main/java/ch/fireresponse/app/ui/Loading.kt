@@ -1,5 +1,10 @@
 package ch.fireresponse.app.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LocalContentColor
@@ -11,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -27,6 +33,19 @@ import kotlinx.coroutines.delay
 @Composable
 fun Spinner(modifier: Modifier = Modifier, size: Dp = 18.dp, color: Color = LocalContentColor.current) {
     CircularProgressIndicator(modifier.size(size), color = color, strokeWidth = 2.5.dp)
+}
+
+/** Ruhiges Pulsieren für Platzhalter-Flächen (Skelett). Ohne Animationen im System steht die Fläche still (Checkliste 5.9). */
+@Composable
+fun Modifier.pulse(): Modifier {
+    val motion = rememberMotionEnabled()
+    val alpha by rememberInfiniteTransition(label = "pulse").animateFloat(
+        initialValue = 1f,
+        targetValue = 0.45f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 900), RepeatMode.Reverse),
+        label = "pulse-alpha",
+    )
+    return if (motion) graphicsLayer { this.alpha = alpha } else this
 }
 
 /** So lange läuft eine Aktion, bevor die App sagt, dass es länger dauert (die Anfrage gibt nach 10 Sekunden auf). */

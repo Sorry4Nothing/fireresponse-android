@@ -26,7 +26,7 @@ Stil «Feuerwache»: ruhiges, warmes Graphit als Grund. Akzent in der Nacht Warn
 | Dialog | `ui/Dialog.kt`; «Abmelden?» mit Fokus auf «Abbrechen» |
 | Hinweis | `ui/Notice.kt` |
 | Textfeld | `ui/TextField.kt`: Label immer sichtbar, Rand `outline`, Fokus 2 dp `focus` |
-| Zustände | `ui/States.kt`: Laden (Skelett), Leer, Offline, Fehler, Nicht gefunden, Kein Zugriff, Sitzung abgelaufen |
+| Zustände | `ui/States.kt`: Laden (Skelett), Leer, Offline, Fehler, Nicht gefunden, Kein Zugriff, Sitzung abgelaufen. Das Skelett pulsiert ruhig (Deckkraft 1 auf 0.45, 900 ms, `Modifier.pulse()` in `ui/Loading.kt`); das Design legt nur die Fläche fest, die Bewegung ist eine Ergänzung. Sind die Animationen im System aus (auch durch den Energiesparmodus), steht alles still, auch der Ladekreis (Checkliste 5.9) |
 | Hochformat | `AndroidManifest.xml`: `screenOrientation="portrait"`, die App dreht sich nicht. Ab Android 16 ignoriert das System die Sperre auf Bildschirmen ab 600 dp (Tablets, aufgeklappte Foldables); dort gelten `ui/TwoPane.kt` (Liste und Detail nebeneinander, Dock links) und `ui/ContentWidth.kt` (Text höchstens 640 dp) |
 | Profil | `auth/ProfileScreen.kt`: Profilbild, Benachrichtigungen, Datenschutz, Biometrie, Teilnehmende, Einheiten als Info-Zeile, Abmelden |
 

@@ -166,7 +166,7 @@ fun EmptyState(@DrawableRes icon: Int, title: String, text: String, onRefresh: (
     }
 }
 
-/** Ein Balken des Skeletts: grau, ohne Animation (das Design legt keinen Schimmer fest). */
+/** Ein Balken des Skeletts: Fläche `surface-container-high`; das Pulsieren liegt auf dem ganzen Skelett. */
 @Composable
 private fun Bar(barWidth: Int, barHeight: Int, modifier: Modifier = Modifier) {
     Box(modifier.width(barWidth.dp).height(barHeight.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(8.dp)))
@@ -184,7 +184,7 @@ fun LoadingSkeleton(description: String, modifier: Modifier = Modifier) {
         announced = true
     }
     Column(
-        modifier.fillMaxWidth().padding(start = Spacing.s3, end = Spacing.s5).then(
+        modifier.fillMaxWidth().padding(start = Spacing.s3, end = Spacing.s5).pulse().then(
             if (announced) {
                 Modifier.semantics {
                     contentDescription = description
