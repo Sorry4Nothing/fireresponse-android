@@ -2,4 +2,11 @@
 <resources>
     <!-- surface (Tag) aus dem Design -->
     <color name="window_background">#F5F3F0</color>
+    <!-- Widget (Tag): surface-container-low, outline-variant, on-surface, on-surface-variant, accent, on-success-container -->
+    <color name="widget_background">#FFFFFF</color>
+    <color name="widget_stroke">#D9D3CC</color>
+    <color name="widget_text">#1A1B1E</color>
+    <color name="widget_text_muted">#5E6066</color>
+    <color name="widget_accent">#B30F15</color>
+    <color name="widget_success">#136B3A</color>
 </resources>

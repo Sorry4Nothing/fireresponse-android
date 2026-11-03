@@ -1,6 +1,9 @@
 package ch.fireresponse.app.appointments
 
+import android.content.Context
+import ch.fireresponse.app.R
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -43,3 +46,19 @@ fun dayAndMonth(date: LocalDate): String =
 /** «Samstag, 14. November»: Für den Screenreader ausgeschrieben statt «SA 14». */
 fun spokenDay(date: LocalDate): String =
     "${date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.GERMAN)}, ${dayAndMonth(date)}"
+
+private val LIST_TIME = DateTimeFormatter.ofPattern("HH:mm")
+private val LIST_DAY = DateTimeFormatter.ofPattern("d.M.")
+
+/** «14:00–17:00», bei mehreren Tagen der Beginn, bei ganztägigen «Ganztägig»; für die Karte der Liste und das Widget. */
+fun listTimeText(appointment: Appointment, context: Context): String = when (val time = appointment.time()) {
+    null -> context.getString(R.string.time_pending)
+    is Timing.AllDay ->
+        if (time.from == time.until) {
+            context.getString(R.string.time_list_all_day)
+        } else {
+            context.getString(R.string.time_list_until, LIST_DAY.format(time.until))
+        }
+    is Timing.Timed ->
+        if (time.start.toLocalDate() == time.end.toLocalDate()) "${LIST_TIME.format(time.start)}–${LIST_TIME.format(time.end)}" else LIST_TIME.format(time.start)
+}

@@ -6,7 +6,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import android.widget.FrameLayout
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import ch.fireresponse.app.widget.AppointmentWidget
 import androidx.compose.runtime.CompositionLocalProvider
 import ch.fireresponse.app.images.LocalRankImages
 import ch.fireresponse.app.images.RankImages
@@ -175,6 +185,7 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Ok(AppointmentList(emptyList())), {}, {}) }
     },
     "start" to { StartScreen() },
+    "widget" to { WidgetPreview() },
     "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
     "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
     "notfound" to {
@@ -226,3 +237,14 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         NotificationsScreen(PushViewModel.Switches(appointments = true, registrations = false), FormState(), {}, {}, {})
     },
 )
+
+/** Das Widget «Nächste Übungen» in seiner Grösse (4 × 2 Felder, 250 × 110 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
+@Composable
+private fun WidgetPreview() {
+    Box(Modifier.fillMaxSize().background(Color(0xFF59606E)), contentAlignment = Alignment.Center) {
+        AndroidView(
+            modifier = Modifier.size(250.dp, 110.dp),
+            factory = { context -> AppointmentWidget.rowsView(context, appointments.take(2)).apply(context, FrameLayout(context)) },
+        )
+    }
+}

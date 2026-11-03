@@ -203,4 +203,17 @@
     <string name="registrations_empty_participants">In den Einheiten dieser Übung gibt es keine Teilnehmenden.</string>
     <string name="registrations_empty_leaders">In den Einheiten dieser Übung gibt es keine Leitenden.</string>
     <string name="registrations_chip_open">Offen</string>
+
+    <string name="widget_name">Nächste Übungen</string>
+    <string name="widget_description">Die nächsten zwei Übungen mit dem Stand deiner Antwort. Antworten kannst du in der App.</string>
+    <string name="widget_loading">Wird geladen …</string>
+    <string name="widget_signed_out">Bitte melde dich in der App an.</string>
+    <string name="widget_empty">Keine Übungen in Sicht.</string>
+    <string name="widget_offline">Keine Verbindung. Tippe, um die App zu öffnen.</string>
+    <string name="widget_answered">Beantwortet</string>
+    <string name="widget_answer_open">Antwort offen</string>
+    <string name="widget_status_open">Offen</string>
+    <string name="widget_status_partly">%1$d von %2$d</string>
+    <string name="widget_answered_partly">%1$d von %2$d beantwortet</string>
+    <string name="widget_open_appointment">Öffnet die Übung</string>
 </resources>
