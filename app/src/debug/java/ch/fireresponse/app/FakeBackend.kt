@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 /**
- * Nur im Debug-Build, nur wenn keine echte Adresse eingestellt ist (`fireresponseApiBaseUrl`): Die App läuft dann gegen diesen
+ * Nur im Debug-Build und nur auf ausdrücklichen Wunsch (`-PfireresponseFakeBackend=true`): Die App läuft dann gegen diesen
  * Fake-Server und lässt sich ohne Backend durchspielen. Er antwortet im Format des Vertrags (`api-vertrag/openapi.yaml`), hält
  * seinen Stand im Arbeitsspeicher und kennt zwei erfundene Konten, beide mit Startpasswort `startpasswort123`:
  * - `demo`: Elternteil von Lena und Noah, muss das Passwort ändern.
@@ -20,7 +20,7 @@ import java.time.ZoneOffset
 class DebugApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.API_BASE_URL == "https://api.example.org") NetworkDebug.interceptor = FakeBackend()
+        if (BuildConfig.FAKE_BACKEND) NetworkDebug.interceptor = FakeBackend()
     }
 }
 

@@ -52,7 +52,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
@@ -82,6 +81,7 @@ import ch.fireresponse.app.ui.Crest
 import ch.fireresponse.app.ui.Header
 import ch.fireresponse.app.ui.HeaderButton
 import ch.fireresponse.app.ui.LabeledTextField
+import ch.fireresponse.app.ui.NoAutofill
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.PrimaryButton
@@ -203,6 +203,7 @@ fun StartScreen() {
  */
 @Composable
 fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
+    NoAutofill()
     var username by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visible by remember { mutableStateOf(false) }
@@ -233,7 +234,6 @@ fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
                     onValueChange = { username = it },
                     maxChars = USERNAME_MAX_LENGTH,
                     keyboardType = KeyboardType.Ascii,
-                    autofill = ContentType.Username,
                     imeAction = ImeAction.Next,
                     enabled = !form.running,
                 )
@@ -244,7 +244,6 @@ fun LoginScreen(form: FormState, onSignIn: (String, String) -> Unit) {
                     maxChars = PasswordRules.MAX_LENGTH,
                     keyboardType = KeyboardType.Password,
                     masked = !visible,
-                    autofill = ContentType.Password,
                     imeAction = ImeAction.Done,
                     onImeAction = submit,
                     enabled = !form.running,
@@ -344,7 +343,6 @@ fun PasswordScreen(
                         maxChars = PasswordRules.MAX_LENGTH,
                         keyboardType = KeyboardType.Password,
                         masked = !currentVisible,
-                        autofill = ContentType.Password,
                         imeAction = ImeAction.Next,
                         enabled = !form.running,
                         trailing = { ShowPasswordSwitch(currentVisible) { currentVisible = it } },
@@ -359,7 +357,6 @@ fun PasswordScreen(
                     maxChars = PasswordRules.MAX_LENGTH,
                     keyboardType = KeyboardType.Password,
                     masked = !newVisible,
-                    autofill = ContentType.NewPassword,
                     imeAction = ImeAction.Next,
                         onImeAction = { repeatFocus.requestFocus() },
                     enabled = !form.running,
@@ -384,7 +381,6 @@ fun PasswordScreen(
                     maxChars = PasswordRules.MAX_LENGTH,
                     keyboardType = KeyboardType.Password,
                     masked = !repeatVisible,
-                    autofill = ContentType.NewPassword,
                     imeAction = ImeAction.Done,
                     onImeAction = save,
                     enabled = !form.running,

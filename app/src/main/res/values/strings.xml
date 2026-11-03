@@ -98,6 +98,7 @@
     <string name="login_forgot_link">Passwort vergessen?</string>
     <string name="login_forgot">Dann hilft dir die Leitung deiner Einheit weiter.</string>
     <string name="login_failed">Anmeldung nicht möglich. Prüfe Benutzername und Passwort. Hast du dein Passwort schon geändert, gilt das Startpasswort nicht mehr. Nach mehreren Fehlversuchen musst du kurz warten. Sonst hilft die Leitung.</string>
+    <string name="login_failed_repeated">Anmeldung nicht möglich. Nach fünf Fehlversuchen in Folge sperrt der Server dein Konto bis zu 15 Minuten, auch für das richtige Passwort. Warte kurz und versuche es dann einmal in Ruhe. Sonst hilft die Leitung.</string>
     <string name="login_admin_only">Admins melden sich im Admin-Bereich an. In der App geht das nicht.</string>
     <string name="password_show">Passwort anzeigen</string>
     <string name="password_eyebrow_first">Erster Login</string>

@@ -25,6 +25,9 @@ android {
         // Echte Adresse nur lokal (~/.gradle/gradle.properties oder -PfireresponseApiBaseUrl), nie im Repo.
         val apiBaseUrl = providers.gradleProperty("fireresponseApiBaseUrl").getOrElse("https://api.example.org")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        // Der Fake-Server (nur Debug) läuft nur auf ausdrücklichen Wunsch: -PfireresponseFakeBackend=true. Eine fehlende Adresse schaltet ihn nicht mehr ein.
+        val fakeBackend = providers.gradleProperty("fireresponseFakeBackend").map { it == "true" }.getOrElse(false)
+        buildConfigField("boolean", "FAKE_BACKEND", "$fakeBackend")
     }
 
     buildFeatures {

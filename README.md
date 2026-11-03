@@ -16,7 +16,7 @@ Das ist auch der Check `build` der CI. Die Adresse des Servers kommt aus `firere
 
 ## Ohne Backend ausprobieren
 
-Ein Debug-Build ohne `fireresponseApiBaseUrl` läuft gegen einen Fake-Server (`app/src/debug/…/FakeBackend.kt`): Er hält seinen Stand im Arbeitsspeicher und kennt zwei erfundene Konten mit Startpasswort `startpasswort123`: `demo` (Elternteil von Lena und Noah, muss das Passwort ändern) und `kommando` (Kommandantin der Einheit). Damit lässt sich der ganze Ablauf bis zur Zusage durchspielen. Die Galerie zeigt einzelne Bildschirme: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list` (Namen in `GalleryActivity.kt`). Beides gibt es nur im Debug-Build.
+Der Fake-Server (`app/src/debug/…/FakeBackend.kt`) läuft nur, wenn man ihn ausdrücklich will: `-PfireresponseFakeBackend=true`. Er hält seinen Stand im Arbeitsspeicher und kennt zwei erfundene Konten mit Startpasswort `startpasswort123`: `demo` (Elternteil von Lena und Noah, muss das Passwort ändern) und `kommando` (Kommandantin der Einheit). Damit lässt sich der ganze Ablauf bis zur Zusage durchspielen. Ohne `fireresponseApiBaseUrl` und ohne diese Angabe läuft die App ohne Server und meldet «keine Verbindung»; früher schaltete eine fehlende Adresse den Fake-Server ein, und eine solche App lehnte jedes echte Konto ab, ohne dass der Server etwas sah. Nach dem Installieren die Adresse im fertigen APK prüfen (nicht in `BuildConfig.java`, sie kann dort abweichen): `unzip -p app-debug.apk classes*.dex | grep -a -c <adresse>`. Die Galerie zeigt einzelne Bildschirme: `adb shell am start -S -n ch.fireresponse.app/.GalleryActivity --es screen list` (Namen in `GalleryActivity.kt`). Beides gibt es nur im Debug-Build.
 
 ## Arbeitsweise
 

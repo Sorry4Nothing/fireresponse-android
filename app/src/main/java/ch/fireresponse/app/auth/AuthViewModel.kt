@@ -57,6 +57,9 @@ internal fun failureForm(failure: ApiResult.Failure, @StringRes text: Int) =
         FormState(error = text)
     }
 
+/** Ab so vielen Fehlversuchen in Folge sagt die Meldung, dass der Server das Konto sperren kann. */
+private const val REPEATED_FAILURES = 3
+
 /**
  * Wer ist angemeldet, und was muss die Person noch tun. Passwörter liegen nie hier: Die Eingabe bleibt im Bildschirm und
  * geht direkt an den Server.
@@ -104,6 +107,9 @@ class AuthViewModel(
     /** Gilt ab dem Entsperren, bis der Prozess endet: Danach fragt der Start wieder. */
     private var unlocked = false
 
+    /** Fehlversuche beim Login in Folge: Der Server sperrt nach dem fünften für Minuten und verrät es nicht (immer dasselbe 401). */
+    private var failedSignIns = 0
+
     private var scope: SessionScope? = null
 
     init {
@@ -115,12 +121,25 @@ class AuthViewModel(
     }
 
     fun start() {
+        _state.value = AuthState.Loading
         if (lock.enabled && !unlocked && hasSession()) {
-            _state.value = AuthState.Locked
+            viewModelScope.launch { lockIfSessionLives() }
             return
         }
-        _state.value = AuthState.Loading
         viewModelScope.launch { resolve() }
+    }
+
+    /**
+     * Mit eingeschaltetem Entsperren fragt die App erst den Server, ob die Sitzung noch gilt (zeigt dabei nichts an), und dann nach
+     * dem Fingerabdruck. Ist die Sitzung beendet, zum Beispiel durch ein neues Startpasswort in der Verwaltung, wäre der Fingerabdruck
+     * umsonst: Dann kommt der Login gleich, mit dem Hinweis. Ist der Server nicht erreichbar, bleibt die App gesperrt.
+     */
+    private suspend fun lockIfSessionLives() {
+        val ended = when (val result = api.session()) {
+            is ApiResult.Failure -> result.error == ApiError.NOT_SIGNED_IN
+            is ApiResult.Ok -> result.value == null
+        }
+        if (ended) leave(expired = true) else _state.value = AuthState.Locked
     }
 
     /**
@@ -173,12 +192,17 @@ class AuthViewModel(
         _form.value = FormState(running = true)
         viewModelScope.launch {
             when (val result = api.signIn(username.trim(), password)) {
-                is ApiResult.Failure -> _form.value = failureForm(result, signInErrorText(result))
+                is ApiResult.Failure -> {
+                    val text = signInErrorText(result)
+                    if (text == R.string.login_failed) failedSignIns++
+                    _form.value = failureForm(result, if (text == R.string.login_failed && failedSignIns >= REPEATED_FAILURES) R.string.login_failed_repeated else text)
+                }
                 is ApiResult.Ok -> if (result.value.twoFactorRedirect) {
                     // Der zweite Faktor gilt nur im Admin-Bereich: In der App gibt es keinen Code-Schritt, also auch kein Sitzungscookie, auch kein halbes (`two_factor`).
                     forgetSession()
                     _form.value = FormState(error = R.string.login_admin_only)
                 } else {
+                    failedSignIns = 0
                     // Das Passwort ist ein Ausweis wie die Biometrie: Wer sich damit anmeldet, wird nicht gleich noch einmal gefragt.
                     unlocked = true
                     rememberStartPassword(password)

@@ -17,6 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import android.view.View
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,9 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -56,7 +57,6 @@ fun LabeledTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true,
     masked: Boolean = false,
-    autofill: ContentType? = null,
     imeAction: ImeAction = ImeAction.Default,
     onImeAction: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
@@ -76,7 +76,6 @@ fun LabeledTextField(
             onValueChange = { if (it.length <= maxChars) onValueChange(it) },
             modifier = Modifier.fillMaxWidth().then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier).semantics {
                 contentDescription = label
-                autofill?.let { this.contentType = it }
             },
             enabled = enabled,
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
@@ -115,5 +114,20 @@ fun LabeledTextField(
             },
         )
         hint?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant) }
+    }
+}
+
+/**
+ * Schaltet Autofill für den Bildschirm aus, solange er steht. Ein Passwort-Manager würde sonst ein altes Passwort einsetzen (das
+ * Startpasswort, das nach dem Wechsel nicht mehr gilt) oder eines vorschlagen, das nur im Manager steht. Jeder Fehlversuch zählt
+ * beim Server, nach dem fünften sperrt er das Konto für Minuten.
+ */
+@Composable
+fun NoAutofill() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val before = view.importantForAutofill
+        view.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        onDispose { view.importantForAutofill = before }
     }
 }
