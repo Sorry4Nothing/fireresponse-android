@@ -37,6 +37,8 @@ class AuthViewModelTest {
     @Volatile private var mustChange = true
     @Volatile private var consented = false
     @Volatile private var loginAccepted = true
+    @Volatile private var lockEnabled = false
+    @Volatile private var serverDown = false
 
     private fun json(body: String, code: Int = 200, vararg cookies: String) =
         MockResponse.Builder().code(code).body(body).apply { cookies.forEach { addHeader("Set-Cookie", it) } }.build()
@@ -53,6 +55,7 @@ class AuthViewModelTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 val path = request.url.encodedPath
+                if (serverDown && path == "/api/auth/get-session") return json("{}", 500)
                 return when {
                     path == "/api/auth/get-session" ->
                         json(if (signedIn) """{"session":{"id":"s"},"user":{"name":"Sandra Muster","mussPasswortAendern":$mustChange}}""" else "null")
@@ -81,11 +84,16 @@ class AuthViewModelTest {
             override fun write(value: String?) { cookie = value }
         }
         client = ApiClient(server.url("/").toString(), ApiClient.httpClient(storage, "1.0.0"), storage = storage)
+        viewModel = newViewModel()
+    }
+
+    /** Eine frische App: wie nach einem Neustart des Prozesses, mit dem Cookie, das auf dem Gerät liegt. */
+    private fun newViewModel(): AuthViewModel {
         val lock = object : LockState {
-            override val enabled = false
-            override fun disable() = Unit
+            override val enabled get() = lockEnabled
+            override fun disable() { lockEnabled = false }
         }
-        viewModel = AuthViewModel(AuthApi(client), client.unauthorized, client.forbidden, client::forgetSession, lock) { client.hasSession() }
+        return AuthViewModel(AuthApi(client), client.unauthorized, client.forbidden, client::forgetSession, lock) { client.hasSession() }
     }
 
     @After
@@ -186,5 +194,66 @@ class AuthViewModelTest {
         viewModel.state.await { it is AuthState.SignedOut }
         assertFalse(client.hasSession())
         assertNull(cookie)
+    }
+
+    @Test
+    fun withTheLockAndALiveSessionTheFingerprintComesFirstAndLeadsIntoTheApp() {
+        signInCompletely()
+        lockEnabled = true
+        val restarted = newViewModel()
+        restarted.state.await { it is AuthState.Locked || it is AuthState.SignedOut }
+        assertEquals(AuthState.Locked, restarted.state.value)
+        restarted.unlock()
+        restarted.state.await { it is AuthState.SignedIn }
+    }
+
+    @Test
+    fun withTheLockAndAnEndedSessionTheLoginComesAtOnceWithoutTheFingerprint() {
+        signInCompletely()
+        lockEnabled = true
+        // Die Sitzung ist beim Server beendet (zum Beispiel neues Startpasswort in der Verwaltung); das Cookie liegt noch auf dem Gerät.
+        signedIn = false
+        assertTrue(client.hasSession())
+        val restarted = newViewModel()
+        val first = restarted.state.await { it is AuthState.Locked || it is AuthState.SignedOut }
+        assertEquals("kein Fingerabdruck für eine beendete Sitzung", AuthState.SignedOut(expired = true), first)
+        assertFalse(client.hasSession())
+    }
+
+    @Test
+    fun withTheLockAndNoReachableServerTheAppStaysLocked() {
+        signInCompletely()
+        lockEnabled = true
+        serverDown = true
+        val restarted = newViewModel()
+        restarted.state.await { it is AuthState.Locked || it is AuthState.SignedOut }
+        assertEquals("ohne Antwort lässt sich die Sitzung nicht beurteilen", AuthState.Locked, restarted.state.value)
+        assertTrue("das Cookie bleibt", client.hasSession())
+    }
+
+    @Test
+    fun repeatedWrongPasswordsAddTheHintAboutTheWaitingTime() {
+        loginAccepted = false
+        viewModel.state.await { it is AuthState.SignedOut }
+        repeat(2) {
+            viewModel.signIn("demo", "falsch")
+            idle()
+            assertEquals(R.string.login_failed, viewModel.form.value.error)
+        }
+        viewModel.signIn("demo", "falsch")
+        idle()
+        assertEquals(R.string.login_failed_repeated, viewModel.form.value.error)
+        // Ein Erfolg setzt den Zähler zurück.
+        loginAccepted = true
+        viewModel.signIn("demo", "startpasswort123")
+        viewModel.state.await { it is AuthState.MustChangePassword }
+        idle()
+        loginAccepted = false
+        viewModel.signOut()
+        viewModel.state.await { it is AuthState.SignedOut }
+        idle()
+        viewModel.signIn("demo", "falsch")
+        idle()
+        assertEquals(R.string.login_failed, viewModel.form.value.error)
     }
 }
