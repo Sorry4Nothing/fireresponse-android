@@ -21,4 +21,14 @@ class RankImagesTest {
         assertFalse(isRankImagePath("/api/v1/raenge/$id/abzeichen/x"))
         assertFalse(isRankImagePath("/api/v1/raenge/$id/abzeichen?v=3&<script>"))
     }
+
+    @Test
+    fun acceptsOnlyTheLogoRouteOfTheContractAndBuildsItFromTheId() {
+        assertTrue(isSquadLogoPath(squadLogoPath(id)))
+        assertTrue(isSquadLogoPath("/api/v1/einheiten/$id/logo?v=2"))
+        assertFalse(isSquadLogoPath("https://fremd.example/api/v1/einheiten/$id/logo"))
+        assertFalse(isSquadLogoPath("/api/v1/einheiten/$id/abzeichen"))
+        assertFalse(isSquadLogoPath("/api/v1/einheiten/../ich/logo"))
+        assertFalse(isSquadLogoPath(squadLogoPath("../../ich")))
+    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
 import ch.fireresponse.app.images.LocalRankImages
 import ch.fireresponse.app.images.RankImages
+import ch.fireresponse.app.images.squadLogoPath
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -144,6 +145,37 @@ private fun RankText(badge: Badge, modifier: Modifier) {
             .padding(horizontal = 10.dp, vertical = 3.dp)
             .semantics { contentDescription = description },
     )
+}
+
+/**
+ * Das Logo der Einheit einer Übung, oben rechts auf der Karte: So sieht man, zu welcher Einheit sie gehört. Es kommt vom Server
+ * (`RankImages`, SVG oder PNG); ohne Logo oder ohne Bildspeicher steht «JF» oder «KF» im Kreis, beim Laden bleibt der Platz frei.
+ * Dekoration: Der Name der Einheit steht im Satz der Karte, das Bild trägt nie allein die Information.
+ */
+@Composable
+fun SquadMark(squadId: String, type: String, modifier: Modifier = Modifier, size: Dp = 40.dp) {
+    val images = LocalRankImages.current
+    val url = squadLogoPath(squadId)
+    var failed by remember(url) { mutableStateOf(images == null) }
+    val bitmap by produceState<Bitmap?>(null, url, images) {
+        value = images?.get(url)
+        failed = value == null
+    }
+    val frame = modifier.size(scaledWithFont(size)).clearAndSetSemantics {}
+    val shown = bitmap
+    if (shown != null) {
+        Image(shown.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, modifier = frame)
+    } else if (failed) {
+        Box(frame.background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape), contentAlignment = Alignment.Center) {
+            Text(
+                if (type == "kf") "KF" else "JF",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        Spacer(frame)
+    }
 }
 
 /** Initialen in einem runden Feld, wie bei den Teilnehmenden: `surface-container` mit `accent`, 12 sp fett (Entwurf: 36 dp). */
