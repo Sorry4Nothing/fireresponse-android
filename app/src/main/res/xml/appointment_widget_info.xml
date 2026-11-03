@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4 Felder breit, 2 hoch (minWidth = 70 dp · 4 − 30, minHeight = 70 dp · 2 − 30); feste Grösse, alle 30 Minuten neu (Systemminimum). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/widget_appointments"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:resizeMode="none"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen"
+    tools:ignore="UnusedAttribute" />

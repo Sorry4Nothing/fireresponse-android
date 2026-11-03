@@ -2,4 +2,11 @@
 <resources>
     <!-- surface (Nacht) aus dem Design -->
     <color name="window_background">#0F1114</color>
+    <!-- Widget (Nacht): surface-container-low, outline-variant, on-surface, on-surface-variant, accent, on-success-container -->
+    <color name="widget_background">#181B20</color>
+    <color name="widget_stroke">#323741</color>
+    <color name="widget_text">#F2F3F5</color>
+    <color name="widget_text_muted">#9BA0AA</color>
+    <color name="widget_accent">#FFD21F</color>
+    <color name="widget_success">#34D17A</color>
 </resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rückmeldung beim Tippen auf eine Zeile des Widgets. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/widget_stroke">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>

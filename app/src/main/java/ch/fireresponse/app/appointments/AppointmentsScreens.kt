@@ -252,21 +252,7 @@ private fun AppointmentStatus(appointment: Appointment, modifier: Modifier = Mod
 
 /** «14:00–17:00», bei mehreren Tagen der Beginn, bei ganztägigen «Ganztägig». */
 @Composable
-private fun listTime(appointment: Appointment): String = when (val time = appointment.time()) {
-    null -> stringResource(R.string.time_pending)
-    is Timing.AllDay ->
-        if (time.from == time.until) {
-            stringResource(R.string.time_list_all_day)
-        } else {
-            stringResource(R.string.time_list_until, DateTimeFormatter.ofPattern("d.M.").format(time.until))
-        }
-    is Timing.Timed ->
-        if (time.start.toLocalDate() == time.end.toLocalDate()) {
-            "${TIME_FORMAT.format(time.start)}–${TIME_FORMAT.format(time.end)}"
-        } else {
-            TIME_FORMAT.format(time.start)
-        }
-}
+private fun listTime(appointment: Appointment): String = listTimeText(appointment, LocalContext.current)
 
 @Composable
 fun AppointmentDetailScreen(

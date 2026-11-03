@@ -36,6 +36,18 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_stat_logo" />
+        <!-- Widget «Nächste Übungen»: Das System ruft es per Broadcast auf, darum nicht exportiert. -->
+        <receiver
+            android:name=".widget.AppointmentWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appointment_widget_info" />
+        </receiver>
         <service
             android:name=".push.PushService"
             android:exported="false">

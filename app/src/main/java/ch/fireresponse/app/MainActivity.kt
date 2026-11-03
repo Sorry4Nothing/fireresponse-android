@@ -104,6 +104,7 @@ import ch.fireresponse.app.ui.Destination
 import ch.fireresponse.app.ui.BusyOverlay
 import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.theme.FireResponseTheme
+import ch.fireresponse.app.widget.AppointmentWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -152,6 +153,8 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
     val imageForm by auth.imageForm.collectAsState()
     val pending by client.pending.collectAsState()
     val context = LocalContext.current
+    // Das Widget zeigt nach dem Abmelden gleich die Meldung statt der Übungen der vorigen Person.
+    LaunchedEffect(state is AuthState.SignedOut) { if (state is AuthState.SignedOut) AppointmentWidget.showSignedOut(context) }
     val lockEnabled by auth.lockEnabled.collectAsState()
     var stoppedAt by remember { mutableLongStateOf(0L) }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { stoppedAt = SystemClock.elapsedRealtime() }
@@ -290,6 +293,9 @@ private fun MainContent(
     val context = LocalContext.current
     val resolver = context.contentResolver
     val appointments = viewModel { AppointmentsViewModel(appointmentsApi) }
+    // Lädt die Liste (Start, nach einer Antwort), zeigt das Widget den neuen Stand gleich, ohne eigene Anfrage.
+    val appointmentList by appointments.list.collectAsState()
+    LaunchedEffect(appointmentList) { (appointmentList as? ApiResult.Ok)?.let { AppointmentWidget.show(context, it.value.appointments) } }
     val push = viewModel { PushViewModel(pushApi, account) }
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
