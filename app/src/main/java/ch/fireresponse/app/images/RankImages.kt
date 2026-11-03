@@ -38,11 +38,19 @@ private val BADGE_PATH = Regex("^/api/v1/raenge/[0-9a-fA-F-]{36}/abzeichen(\\?[A
 
 fun isRankImagePath(path: String): Boolean = BADGE_PATH.matches(path)
 
-/** Der Zugang zu den Abzeichen-Bildern des Backends. */
+/** Das Logo einer Einheit: `/api/v1/einheiten/{id}/logo` (PNG oder SVG, wie die Abzeichen höchstens 500 KB; 404 ohne Logo). */
+private val LOGO_PATH = Regex("^/api/v1/einheiten/[0-9a-fA-F-]{36}/logo(\\?[A-Za-z0-9=&._-]{0,64})?$")
+
+fun isSquadLogoPath(path: String): Boolean = LOGO_PATH.matches(path)
+
+/** Die Adresse des Logos einer Einheit aus ihrer Kennung; die App kennt sie aus dem Termin, auch ohne Rolle in der Einheit (Eltern). */
+fun squadLogoPath(squadId: String) = "/api/v1/einheiten/$squadId/logo"
+
+/** Der Zugang zu den Bildern des Backends, die die App zeichnet: Abzeichen der Ränge und Logos der Einheiten. */
 class RankImageApi(private val api: ApiClient) {
-    /** Lädt ein Bild mit der Sitzung. Eine Adresse, die kein Abzeichen nennt, gilt als nicht gefunden. */
+    /** Lädt ein Bild mit der Sitzung. Eine Adresse, die weder Abzeichen noch Logo nennt, gilt als nicht gefunden. */
     suspend fun load(path: String): ApiResult<ByteArray> =
-        if (isRankImagePath(path)) api.getBytes(path, MAX_BADGE_BYTES) else ApiResult.Failure(ApiError.NOT_FOUND)
+        if (isRankImagePath(path) || isSquadLogoPath(path)) api.getBytes(path, MAX_BADGE_BYTES) else ApiResult.Failure(ApiError.NOT_FOUND)
 }
 
 /**
