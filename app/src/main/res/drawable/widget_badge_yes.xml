@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kleines Zeichen am Kreis: Stand «yes», mit Ring in der Farbe der Karte (Entwurf: 14 dp, Ring 2 dp). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/widget_yes_fg" />
+    <stroke android:width="2dp" android:color="@color/widget_background" />
+</shape>

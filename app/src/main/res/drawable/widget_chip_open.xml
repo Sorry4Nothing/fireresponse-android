@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chip mit dem Namen einer Person: Stand «open» (Entwurf: Höhe 24 dp, Radius 12 dp). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_open_bg" />
+    <corners android:radius="12dp" />
+</shape>

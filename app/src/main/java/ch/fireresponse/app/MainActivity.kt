@@ -303,7 +303,9 @@ private fun MainContent(
     val appointments = viewModel { AppointmentsViewModel(appointmentsApi) }
     // Lädt die Liste (Start, nach einer Antwort), zeigt das Widget den neuen Stand gleich, ohne eigene Anfrage.
     val appointmentList by appointments.list.collectAsState()
-    LaunchedEffect(appointmentList) { (appointmentList as? ApiResult.Ok)?.let { AppointmentWidget.show(context, it.value.appointments) } }
+    LaunchedEffect(appointmentList) {
+        (appointmentList as? ApiResult.Ok)?.let { withContext(Dispatchers.IO) { AppointmentWidget.show(context, it.value.appointments) } }
+    }
     val push = viewModel { PushViewModel(pushApi, account) }
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }

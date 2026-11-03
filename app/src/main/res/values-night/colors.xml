@@ -2,11 +2,22 @@
 <resources>
     <!-- surface (Nacht) aus dem Design -->
     <color name="window_background">#0F1114</color>
-    <!-- Widget (Nacht): surface-container-low, outline-variant, on-surface, on-surface-variant, accent, on-success-container -->
+    <!--
+        Widget (Nacht): Der Entwurf zeigt nur den Tag; die Nacht folgt den Tokens: surface-container-low, outline-variant, on-surface,
+        on-surface-variant, accent, success-container, error-container, surface-container und -high.
+    -->
     <color name="widget_background">#181B20</color>
     <color name="widget_stroke">#323741</color>
+    <color name="widget_divider">#2B3039</color>
     <color name="widget_text">#F2F3F5</color>
     <color name="widget_text_muted">#9BA0AA</color>
     <color name="widget_accent">#FFD21F</color>
-    <color name="widget_success">#34D17A</color>
+    <color name="widget_badge_bg">#22262D</color>
+    <color name="widget_badge_fg">#9BA0AA</color>
+    <color name="widget_yes_bg">#10301F</color>
+    <color name="widget_yes_fg">#34D17A</color>
+    <color name="widget_no_bg">#3A1214</color>
+    <color name="widget_no_fg">#FF8A86</color>
+    <color name="widget_open_bg">#2B3039</color>
+    <color name="widget_open_fg">#9BA0AA</color>
 </resources>

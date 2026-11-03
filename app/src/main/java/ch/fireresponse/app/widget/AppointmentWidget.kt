@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.PowerManager
 import android.view.View
 import android.widget.RemoteViews
@@ -24,6 +25,9 @@ import ch.fireresponse.app.appointments.spokenDay
 import ch.fireresponse.app.appointments.startDay
 import ch.fireresponse.app.appointments.time
 import ch.fireresponse.app.appointments.weekdayShort
+import ch.fireresponse.app.images.RankImageApi
+import ch.fireresponse.app.images.decodeBadge
+import ch.fireresponse.app.images.squadLogoPath
 import ch.fireresponse.app.net.ApiClient
 import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
@@ -31,15 +35,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ConcurrentHashMap
 
 /** Ein Broadcast darf nur kurz laufen: Antwortet der Server in dieser Zeit nicht, bleibt das Widget, wie es ist. */
 private const val FETCH_TIMEOUT_MS = 8_000L
 
 /** Das Fenster der Liste in der App (Monate ab heute). */
 private const val WINDOW_MONTHS = 6L
+
+/** Die Logos haben nur kurz Zeit; danach steht das Kürzel da und die Übungen sind trotzdem aktuell. */
+private const val LOGO_TIMEOUT_MS = 3_000L
+
+/** Bis zu zwei Personen zeigt das Widget als Chip mit Namen, ab drei als Kreise (höchstens so viele; die Zahl «x von y» zählt alle). */
+private const val NAME_CHIPS = 2
+private const val MAX_DOTS = 5
 
 /**
  * Widget «Nächste Übungen» (4 × 2 Felder): die nächsten zwei Übungen mit dem Stand der Antwort, nur zum Ansehen. Es aktualisiert
@@ -70,7 +83,7 @@ private const val SHOWN = "shown"
 
 private val START = DateTimeFormatter.ofPattern("HH:mm")
 
-/** Bei den Meldungen und Zeilen des Widgets bleiben Namen weg: Es steht auf dem Startbildschirm. */
+/** Die Zeilen zeigen die Vornamen der eigenen Kinder, wie im Entwurf; die Meldungen (Abmeldung, Verbindung) nennen nichts. */
 object AppointmentWidget {
     /** Holt die Liste selbst (eigene Sitzung aus dem Keystore) und zeigt sie. */
     suspend fun refresh(context: Context) {
@@ -85,9 +98,37 @@ object AppointmentWidget {
     }
 
     /** Zeigt die nächsten zwei Übungen aus der Liste der API; ohne eine steht «Keine Übungen in Sicht». */
-    fun show(context: Context, appointments: List<Appointment>) {
+    suspend fun show(context: Context, appointments: List<Appointment>) {
         val rows = upcoming(appointments, ZonedDateTime.now(SWISS_ZONE))
-        if (rows.isEmpty()) message(context, R.string.widget_empty, shown = true) else push(context, rowsView(context, rows), shown = true)
+        if (rows.isEmpty()) {
+            message(context, R.string.widget_empty, shown = true)
+        } else {
+            push(context, rowsView(context, rows, logos(context, rows.map { it.squad.id }.distinct())), shown = true)
+        }
+    }
+
+    /** Gezeichnete Logos und die Einheiten, die keines haben: nur im Arbeitsspeicher, solange der Prozess lebt. */
+    private val logoFound = ConcurrentHashMap<String, Bitmap>()
+    private val logoNone = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Die Logos der Einheiten, soweit es sie gibt: Sie ersetzen das Kürzel. Lädt ein Logo nicht (Netz, Zeit), bleibt das Kürzel und
+     * die Übungen erscheinen trotzdem; ein 404 merkt sich der Prozess, damit nicht jede Aktualisierung neu fragt.
+     */
+    private suspend fun logos(context: Context, squadIds: List<String>): Map<String, Bitmap> {
+        val missing = squadIds.filter { !logoFound.containsKey(it) && it !in logoNone }
+        if (missing.isNotEmpty()) {
+            withTimeoutOrNull(LOGO_TIMEOUT_MS) {
+                val api = RankImageApi(ApiClient.create(context))
+                missing.forEach { id ->
+                    when (val result = api.load(squadLogoPath(id))) {
+                        is ApiResult.Ok -> decodeBadge(result.value)?.let { logoFound[id] = it } ?: logoNone.add(id)
+                        is ApiResult.Failure -> if (result.error == ApiError.NOT_FOUND) logoNone.add(id)
+                    }
+                }
+            }
+        }
+        return squadIds.mapNotNull { id -> logoFound[id]?.let { id to it } }.toMap()
     }
 
     fun showSignedOut(context: Context) = message(context, R.string.widget_signed_out, shown = false)
@@ -114,6 +155,7 @@ object AppointmentWidget {
         val views = RemoteViews(context.packageName, R.layout.widget_appointments)
         ROWS.forEach { views.setViewVisibility(it.row, View.GONE) }
         views.setViewVisibility(R.id.divider, View.GONE)
+        views.setViewVisibility(R.id.hint, View.GONE)
         views.setViewVisibility(R.id.message, View.VISIBLE)
         views.setTextViewText(R.id.message, context.getString(text))
         val open = openIntent(context, null)
@@ -131,68 +173,97 @@ object AppointmentWidget {
     }
 
     /** Die Zeilen des Widgets; auch für die Vorschau in der Debug-Galerie. */
-    internal fun rowsView(context: Context, appointments: List<Appointment>): RemoteViews {
+    internal fun rowsView(context: Context, appointments: List<Appointment>, logos: Map<String, Bitmap> = emptyMap()): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_appointments)
         views.setViewVisibility(R.id.message, View.GONE)
-        views.setViewVisibility(R.id.divider, if (appointments.size > 1) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.divider, View.VISIBLE)
+        // Mit nur einer Übung sagt ein ruhiger Satz darunter, dass nichts mehr folgt: So wirkt die Fläche nicht leer.
+        views.setViewVisibility(R.id.hint, if (appointments.size == 1) View.VISIBLE else View.GONE)
+        views.setOnClickPendingIntent(R.id.hint, openIntent(context, null))
         views.setOnClickPendingIntent(R.id.widget_root, openIntent(context, null))
         ROWS.forEachIndexed { index, row ->
             val appointment = appointments.getOrNull(index)
             if (appointment == null) {
                 views.setViewVisibility(row.row, View.GONE)
             } else {
-                fill(context, views, row, appointment)
+                fill(context, views, row, appointment, logos[appointment.squad.id])
             }
         }
         return views
     }
 
-    private fun fill(context: Context, views: RemoteViews, row: Row, appointment: Appointment) {
-        val day = appointment.startDay() ?: LocalDate.now(SWISS_ZONE)
-        val time = listTimeText(appointment, context)
-        val status = status(context, appointment)
+    private fun fill(context: Context, views: RemoteViews, row: Row, appointment: Appointment, logo: Bitmap?) {
+        val today = LocalDate.now(SWISS_ZONE)
+        val day = appointment.startDay() ?: today
+        val squad = appointment.squad
         views.setViewVisibility(row.row, View.VISIBLE)
         views.setTextViewText(row.title, appointment.title)
-        views.setTextViewText(row.whenText, "${weekdayShort(day)} ${day.dayOfMonth}.${day.monthValue}. · ${startText(context, appointment)}")
-        val statusVisibility = if (status == null) View.GONE else View.VISIBLE
-        views.setViewVisibility(row.statusIcon, statusVisibility)
-        views.setViewVisibility(row.statusText, statusVisibility)
-        if (status != null) {
-            views.setTextViewText(row.statusText, status.text)
-            views.setTextColor(row.statusText, status.color)
-            views.setImageViewResource(row.statusIcon, status.icon)
-            views.setInt(row.statusIcon, "setColorFilter", status.color)
+        // Das Logo ersetzt das Kürzel der Einheit, wenn es eines gibt.
+        views.setViewVisibility(row.badge, if (logo == null) View.VISIBLE else View.GONE)
+        views.setViewVisibility(row.logo, if (logo == null) View.GONE else View.VISIBLE)
+        views.setTextViewText(row.badge, squad.type.uppercase())
+        if (logo != null) views.setImageViewBitmap(row.logo, logo)
+        views.setTextViewText(row.`when`, "${weekdayShort(day)} ${day.dayOfMonth}.${day.monthValue}. · ${startText(context, appointment)}")
+
+        val opensOn = appointment.registrationOpensOn(today)
+        val people = if (opensOn == null) appointment.people(context.getString(R.string.message_you)) else emptyList()
+        val answers = appointment.answers()
+        val count = when {
+            opensOn != null -> "ab ${opensOn.dayOfMonth}.${opensOn.monthValue}."
+            answers.total > 0 -> context.getString(R.string.widget_count, answers.given, answers.total)
+            else -> null
         }
+        views.setViewVisibility(row.count, if (count == null) View.GONE else View.VISIBLE)
+        count?.let { views.setTextViewText(row.count, it) }
+        chips(context, views, row, people)
+
         // Die Zeile ist ein Element mit einem ganzen Satz; die Teile darin sind für den Screenreader ausgeblendet.
-        val spoken = listOfNotNull(spokenDay(day), time, appointment.title, status?.spoken).joinToString(", ")
+        val spoken = listOfNotNull(
+            spokenDay(day),
+            listTimeText(appointment, context),
+            appointment.title,
+            context.getString(R.string.widget_unit, squad.name),
+            opensOn?.let { context.getString(R.string.registration_from, "${it.dayOfMonth}.${it.monthValue}.") },
+            people.takeIf { it.isNotEmpty() }?.joinToString(", ") { "${it.name}: ${context.getString(look(it.stand).spoken)}" },
+        ).joinToString(", ")
         views.setContentDescription(row.row, "$spoken. ${context.getString(R.string.widget_open_appointment)}")
         views.setOnClickPendingIntent(row.row, openIntent(context, appointment.id))
     }
 
-    private class Status(val text: String, val spoken: String, val icon: Int, val color: Int)
+    /** Je Person ein Chip mit Namen (bis zwei) oder ein Kreis mit Initiale und Zeichen für den Stand (ab drei). */
+    private fun chips(context: Context, views: RemoteViews, row: Row, people: List<Person>) {
+        views.removeAllViews(row.chips)
+        views.setViewVisibility(row.chips, if (people.isEmpty()) View.GONE else View.VISIBLE)
+        val names = people.size <= NAME_CHIPS
+        people.take(MAX_DOTS).forEach { person ->
+            val look = look(person.stand)
+            val fg = context.getColor(look.fg)
+            val chip = RemoteViews(context.packageName, if (names) R.layout.widget_chip_name else R.layout.widget_chip_dot)
+            if (names) {
+                chip.setInt(R.id.chip_root, "setBackgroundResource", look.chip)
+                chip.setImageViewResource(R.id.chip_icon, look.icon)
+                chip.setInt(R.id.chip_icon, "setColorFilter", fg)
+                chip.setTextViewText(R.id.chip_text, person.name)
+                chip.setTextColor(R.id.chip_text, fg)
+            } else {
+                chip.setInt(R.id.dot_initial, "setBackgroundResource", look.dot)
+                chip.setTextViewText(R.id.dot_initial, person.name.take(1).uppercase())
+                chip.setTextColor(R.id.dot_initial, fg)
+                chip.setInt(R.id.dot_badge, "setBackgroundResource", look.badge)
+                chip.setImageViewResource(R.id.dot_badge, look.icon)
+                chip.setInt(R.id.dot_badge, "setColorFilter", context.getColor(R.color.widget_background))
+            }
+            views.addView(row.chips, chip)
+        }
+    }
 
-    /**
-     * Der Stand mit Icon und kurzem Wort, ohne Namen: «Beantwortet», «Offen», «1 von 2» oder «ab 5.12.». Der Screenreader hört die
-     * ganzen Wörter («Antwort offen», «1 von 2 beantwortet», «Anmeldung ab 5.12.»).
-     */
-    private fun status(context: Context, appointment: Appointment): Status? {
-        val muted = context.getColor(R.color.widget_text_muted)
-        appointment.registrationOpensOn(LocalDate.now(SWISS_ZONE))?.let {
-            val from = "${it.dayOfMonth}.${it.monthValue}."
-            return Status("ab $from", context.getString(R.string.registration_from, from), R.drawable.ic_clock, muted)
-        }
-        val answers = appointment.answers()
-        return when {
-            answers.total == 0 -> null
-            answers.done -> context.getString(R.string.widget_answered).let { Status(it, it, R.drawable.ic_check, context.getColor(R.color.widget_success)) }
-            answers.open -> Status(context.getString(R.string.widget_status_open), context.getString(R.string.widget_answer_open), R.drawable.ic_question, muted)
-            else -> Status(
-                context.getString(R.string.widget_status_partly, answers.given, answers.total),
-                context.getString(R.string.widget_answered_partly, answers.given, answers.total),
-                R.drawable.ic_question,
-                muted,
-            )
-        }
+    /** Alles, was zu einem Stand gehört: Flächen, Farbe, Zeichen und das Wort für den Screenreader. */
+    private class Look(val chip: Int, val dot: Int, val badge: Int, val fg: Int, val icon: Int, val spoken: Int)
+
+    private fun look(stand: Stand) = when (stand) {
+        Stand.YES -> Look(R.drawable.widget_chip_yes, R.drawable.widget_dot_yes, R.drawable.widget_badge_yes, R.color.widget_yes_fg, R.drawable.ic_check, R.string.widget_person_yes)
+        Stand.NO -> Look(R.drawable.widget_chip_no, R.drawable.widget_dot_no, R.drawable.widget_badge_no, R.color.widget_no_fg, R.drawable.ic_cross, R.string.widget_person_no)
+        Stand.OPEN -> Look(R.drawable.widget_chip_open, R.drawable.widget_dot_open, R.drawable.widget_badge_open, R.color.widget_open_fg, R.drawable.ic_question, R.string.widget_person_open)
     }
 
     /** Nur der Beginn («14:00»): So passt die Zeile ins schmale Widget; der Screenreader hört die ganze Zeit. */
@@ -220,10 +291,10 @@ object AppointmentWidget {
         )
     }
 
-    private class Row(val row: Int, val title: Int, val whenText: Int, val statusIcon: Int, val statusText: Int)
+    private class Row(val row: Int, val title: Int, val badge: Int, val logo: Int, val `when`: Int, val count: Int, val chips: Int)
 
     private val ROWS = listOf(
-        Row(R.id.row1, R.id.row1_title, R.id.row1_when, R.id.row1_status_icon, R.id.row1_status),
-        Row(R.id.row2, R.id.row2_title, R.id.row2_when, R.id.row2_status_icon, R.id.row2_status),
+        Row(R.id.row1, R.id.row1_title, R.id.row1_badge, R.id.row1_logo, R.id.row1_when, R.id.row1_count, R.id.row1_chips),
+        Row(R.id.row2, R.id.row2_title, R.id.row2_badge, R.id.row2_logo, R.id.row2_when, R.id.row2_count, R.id.row2_chips),
     )
 }
