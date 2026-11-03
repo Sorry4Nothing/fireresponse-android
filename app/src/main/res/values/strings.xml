@@ -212,10 +212,11 @@
     <string name="widget_empty">Keine Übungen in Sicht.</string>
     <string name="widget_offline">Keine Verbindung. Tippe, um die App zu öffnen.</string>
     <string name="widget_power_save">Energiesparmodus: Tippe hier, dann lädt die App die Übungen.</string>
-    <string name="widget_answered">Beantwortet</string>
-    <string name="widget_answer_open">Antwort offen</string>
-    <string name="widget_status_open">Offen</string>
-    <string name="widget_status_partly">%1$d von %2$d</string>
-    <string name="widget_answered_partly">%1$d von %2$d beantwortet</string>
+    <string name="widget_header">Fire-Response · Nächste Übungen</string>
+    <string name="widget_count">%1$d von %2$d</string>
+    <string name="widget_person_yes">kommt</string>
+    <string name="widget_person_no">kommt nicht</string>
+    <string name="widget_person_open">offen</string>
+    <string name="widget_unit">Einheit %1$s</string>
     <string name="widget_open_appointment">Öffnet die Übung</string>
 </resources>

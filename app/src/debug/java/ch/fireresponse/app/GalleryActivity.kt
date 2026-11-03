@@ -20,6 +20,7 @@ import ch.fireresponse.app.widget.AppointmentWidget
 import androidx.compose.runtime.CompositionLocalProvider
 import ch.fireresponse.app.images.LocalRankImages
 import ch.fireresponse.app.images.RankImages
+import ch.fireresponse.app.images.decodeBadge
 import androidx.compose.ui.Modifier
 import ch.fireresponse.app.appointments.Appointment
 import ch.fireresponse.app.appointments.AppointmentDetailScreen
@@ -187,6 +188,8 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "start" to { StartScreen() },
     "widget" to { WidgetPreview(2) },
     "widget1" to { WidgetPreview(1) },
+    "widget3" to { WidgetPreview(2, threeChildren = true) },
+    "widgetlogo" to { WidgetPreview(2, withLogos = true) },
     "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
     "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
     "notfound" to {
@@ -241,11 +244,23 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
 
 /** Das Widget «Nächste Übungen» in der Grösse, die ein Samsung-Launcher gibt (4 × 2 Felder, rund 356 × 165 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
 @Composable
-private fun WidgetPreview(count: Int) {
+private fun WidgetPreview(count: Int, threeChildren: Boolean = false, withLogos: Boolean = false) {
+    val shown = appointments.take(count).map { appointment ->
+        if (!threeChildren) appointment else appointment.copy(
+            participants = listOf(
+                AppointmentParticipant("k1", "Lena", "ja"),
+                AppointmentParticipant("k2", "Noah", "nein"),
+                AppointmentParticipant("k3", "Mia", null),
+            ),
+        )
+    }
     Box(Modifier.fillMaxSize().background(Color(0xFF59606E)), contentAlignment = Alignment.Center) {
         AndroidView(
             modifier = Modifier.size(356.dp, 165.dp),
-            factory = { context -> AppointmentWidget.rowsView(context, appointments.take(count)).apply(context, FrameLayout(context)) },
+            factory = { context ->
+                val logos = if (withLogos) mapOf(squad.id to decodeBadge(LOGO_SVG.toByteArray())!!) else emptyMap()
+                AppointmentWidget.rowsView(context, shown, logos).apply(context, FrameLayout(context))
+            },
         )
     }
 }

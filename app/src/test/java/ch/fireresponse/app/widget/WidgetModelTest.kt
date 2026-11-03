@@ -66,6 +66,17 @@ class WidgetModelTest {
     }
 
     @Test
+    fun peopleAreTheChildrenThenTheOwnRegistrationAndSkippedWhenNoAnswerIsAsked() {
+        val base = timed("a", "2026-11-14T13:00:00.000Z", "2026-11-14T15:00:00.000Z")
+        val kids = listOf(AppointmentParticipant("k1", "Lena", "ja"), AppointmentParticipant("k2", "Noah", "nein"), AppointmentParticipant("k3", "Mia", null))
+        assertEquals(
+            listOf(Person("Lena", Stand.YES), Person("Noah", Stand.NO), Person("Mia", Stand.OPEN), Person("Du", Stand.OPEN)),
+            base.copy(participants = kids, ownRegistration = "offen").people("Du"),
+        )
+        assertTrue(base.copy(registrable = false, participants = kids).people("Du").isEmpty())
+    }
+
+    @Test
     fun stateOfTheAnswers() {
         assertTrue(Answers(2, 2).done)
         assertFalse(Answers(1, 2).done)

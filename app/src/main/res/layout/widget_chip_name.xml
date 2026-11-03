@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chip mit Icon und Vornamen (bis zwei Personen); Höhe 24 dp, Fläche und Farben setzt AppointmentWidget je nach Stand. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chip_root"
+    android:layout_width="wrap_content"
+    android:layout_height="24dp"
+    android:layout_marginStart="4dp"
+    android:gravity="center_vertical"
+    android:importantForAccessibility="no"
+    android:orientation="horizontal"
+    android:paddingStart="6dp"
+    android:paddingEnd="8dp">
+
+    <ImageView
+        android:id="@+id/chip_icon"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/chip_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        android:fontFamily="@font/inter"
+        android:fontVariationSettings="'wght' 700"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:textSize="12sp" />
+</LinearLayout>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kreis mit der Initiale (ab drei Personen) und kleinem Zeichen für den Stand unten rechts; 26 dp, Zeichen 14 dp (Entwurf). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:layout_marginStart="6dp"
+    android:importantForAccessibility="no">
+
+    <TextView
+        android:id="@+id/dot_initial"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_gravity="start|top"
+        android:fontFamily="@font/inter"
+        android:fontVariationSettings="'wght' 700"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/dot_badge"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_gravity="end|bottom"
+        android:importantForAccessibility="no"
+        android:padding="3dp" />
+</FrameLayout>

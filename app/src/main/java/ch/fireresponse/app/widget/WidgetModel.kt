@@ -39,6 +39,18 @@ data class Answers(val given: Int, val total: Int) {
     val done get() = total > 0 && given == total
 }
 
+enum class Stand { YES, NO, OPEN }
+
+/** Eine Person mit ihrem Stand; `name` ist der Vorname oder, bei der eigenen Anmeldung, `ownLabel`. */
+data class Person(val name: String, val stand: Stand)
+
+/** Die eigenen teilnehmenden Personen, dann die eigene Anmeldung; leer, wenn die Übung keine Antwort verlangt. */
+fun Appointment.people(ownLabel: String): List<Person> {
+    if (!registrable) return emptyList()
+    val stand = { status: String? -> when (status) { "ja" -> Stand.YES; "nein" -> Stand.NO; else -> Stand.OPEN } }
+    return participants.map { Person(it.firstName, stand(it.status)) } + listOfNotNull(ownRegistration?.let { Person(ownLabel, stand(it)) })
+}
+
 fun Appointment.answers(): Answers {
     if (!registrable) return Answers(0, 0)
     val answered = { status: String? -> status == "ja" || status == "nein" }

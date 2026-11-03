@@ -2,11 +2,22 @@
 <resources>
     <!-- surface (Tag) aus dem Design -->
     <color name="window_background">#F5F3F0</color>
-    <!-- Widget (Tag): surface-container-low, outline-variant, on-surface, on-surface-variant, accent, on-success-container -->
+    <!--
+        Widget (Tag): Werte aus dem Entwurf «Android-Widget 2×4» (Karte, Rand, Trenner, Kürzel der Einheit, Chips Ja, Nein, Offen),
+        sonst Tokens: on-surface, on-surface-variant, accent.
+    -->
     <color name="widget_background">#FFFFFF</color>
     <color name="widget_stroke">#D9D3CC</color>
+    <color name="widget_divider">#E6E1DB</color>
     <color name="widget_text">#1A1B1E</color>
     <color name="widget_text_muted">#5E6066</color>
     <color name="widget_accent">#B30F15</color>
-    <color name="widget_success">#136B3A</color>
+    <color name="widget_badge_bg">#ECE8E3</color>
+    <color name="widget_badge_fg">#3A3C42</color>
+    <color name="widget_yes_bg">#E3F3EA</color>
+    <color name="widget_yes_fg">#136B3A</color>
+    <color name="widget_no_bg">#FBE6E6</color>
+    <color name="widget_no_fg">#A60F14</color>
+    <color name="widget_open_bg">#ECE8E3</color>
+    <color name="widget_open_fg">#4A4C52</color>
 </resources>
