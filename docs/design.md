@@ -76,6 +76,7 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 2. **Push.** Die Vorlage zeigt Benachrichtigungen als «Kommt bald». Push ist Teil von V1; das Profil führt zu den Schaltern.
 3. **Anwesenheit.** Die Vorlage führt «Anwesenheit» in der Verwaltung. Die App erfasst keine Anwesenheit.
 4. **Schreibweise.** Die Vorlage schreibt «Fire-Response». Die App heisst «FireResponse».
+5. **Aktualisieren der Übungsliste.** Die Vorlage hat einen Aktualisieren-Knopf im Kopf der Liste. Auftrag des Auftraggebers (#102): Die Liste lädt durch Ziehen nach unten neu, der Knopf entfällt. Der Screenreader bekommt die Aktion «Aktualisieren» am Feld der Liste; ein Fehler beim Neuladen steht als Hinweis über der Liste, die alten Übungen bleiben. Leere Liste und Fehlerseite behalten «Nochmals versuchen».
 
 ## Weitere Entscheide
 

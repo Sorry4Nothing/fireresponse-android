@@ -455,6 +455,9 @@ private fun MainContent(
                                     appointments.list.collectAsState().value,
                                     onOpen = { openedAppointment = it },
                                     onRetry = appointments::loadList,
+                                    refreshing = appointments.refreshing.collectAsState().value,
+                                    refreshError = appointments.refreshError.collectAsState().value,
+                                    onRefresh = appointments::pullRefresh,
                                 )
                             }
                             if (wide) {

@@ -187,6 +187,14 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "empty" to {
         MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Ok(AppointmentList(emptyList())), {}, {}) }
     },
+    "refreshing" to {
+        MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Ok(AppointmentList(appointments)), {}, {}, refreshing = true) }
+    },
+    "refresherror" to {
+        MainScaffold(Destination.APPOINTMENTS, {}) {
+            AppointmentListScreen(ApiResult.Ok(AppointmentList(appointments)), {}, {}, refreshError = ApiError.NETWORK)
+        }
+    },
     "start" to { StartScreen() },
     "widget" to { WidgetPreview(2) },
     "widget1" to { WidgetPreview(1) },

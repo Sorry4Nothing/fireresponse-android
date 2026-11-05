@@ -34,7 +34,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.contacts.ContactCard
 
+import ch.fireresponse.app.net.ApiError
 import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.ui.ChipKind
 import ch.fireresponse.app.ui.ErrorState
@@ -74,13 +80,12 @@ fun AppointmentListScreen(
     state: ApiResult<AppointmentList>?,
     onOpen: (String) -> Unit,
     onRetry: () -> Unit,
+    refreshing: Boolean = false,
+    refreshError: ApiError? = null,
+    onRefresh: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
-        Header(
-            title = stringResource(R.string.appointments_title),
-            action = HeaderButton(R.drawable.ic_refresh, stringResource(R.string.refresh), onRetry),
-            focusOnTitle = true,
-        )
+        Header(title = stringResource(R.string.appointments_title), focusOnTitle = true)
         when (state) {
             null -> LoadingSkeleton(stringResource(R.string.appointments_loading))
             is ApiResult.Failure -> ErrorState(state.error, onRetry)
@@ -93,7 +98,24 @@ fun AppointmentListScreen(
                         onRetry,
                     )
                 } else {
-                    Timeline(groupByDay(state.value.appointments), onOpen)
+                    // Das Ziehen kennt kein Screenreader: Er bekommt dieselbe Aktion am Feld, in dem die Liste steht.
+                    val refreshLabel = stringResource(R.string.refresh)
+                    PullToRefreshBox(
+                        isRefreshing = refreshing,
+                        onRefresh = onRefresh,
+                        modifier = Modifier.semantics { customActions = listOf(CustomAccessibilityAction(refreshLabel) { onRefresh(); true }) },
+                    ) {
+                        Column {
+                            refreshError?.let {
+                                NoticeBanner(
+                                    NoticeKind.ERROR,
+                                    stringResource(it.text),
+                                    Modifier.padding(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s2).semantics { liveRegion = LiveRegionMode.Polite },
+                                )
+                            }
+                            Timeline(groupByDay(state.value.appointments), onOpen)
+                        }
+                    }
                 }
         }
     }
