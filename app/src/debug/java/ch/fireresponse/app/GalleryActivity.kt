@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +45,7 @@ import ch.fireresponse.app.auth.PrivacyScreen
 import ch.fireresponse.app.auth.PrivacySection
 import ch.fireresponse.app.auth.PasswordScreen
 import ch.fireresponse.app.auth.StartScreen
+import ch.fireresponse.app.auth.CropImageScreen
 import ch.fireresponse.app.auth.ProfileScreen
 import ch.fireresponse.app.auth.WelcomeScreen
 import ch.fireresponse.app.contacts.Contact
@@ -190,6 +192,7 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "widget1" to { WidgetPreview(1) },
     "widget3" to { WidgetPreview(2, threeChildren = true) },
     "widgetlogo" to { WidgetPreview(2, withLogos = true) },
+    "crop" to { CropPreview() },
     "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
     "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
     "notfound" to {
@@ -241,6 +244,26 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         NotificationsScreen(PushViewModel.Switches(appointments = true, registrations = false), FormState(), {}, {}, {})
     },
 )
+
+/** Der Zuschnitt des Profilbilds mit einem Hochformat-Testfoto (eine Figur im oberen Drittel), das die Galerie selbst zeichnet. */
+@Composable
+private fun CropPreview() {
+    val context = LocalContext.current
+    val uri = remember {
+        val bitmap = android.graphics.Bitmap.createBitmap(1200, 1800, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        canvas.drawColor(0xFF8EB8E8.toInt())
+        paint.color = 0xFF2E5E3A.toInt(); canvas.drawRect(0f, 1300f, 1200f, 1800f, paint)
+        paint.color = 0xFF1B2A5C.toInt(); canvas.drawRoundRect(300f, 760f, 900f, 1500f, 80f, 80f, paint)
+        paint.color = 0xFFF0C8A0.toInt(); canvas.drawCircle(600f, 520f, 220f, paint)
+        paint.color = 0xFF222222.toInt(); canvas.drawCircle(530f, 490f, 22f, paint); canvas.drawCircle(670f, 490f, 22f, paint)
+        val file = java.io.File(context.cacheDir, "crop-test.jpg")
+        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
+        android.net.Uri.fromFile(file)
+    }
+    CropImageScreen(uri, onCancel = {}, onConfirm = {})
+}
 
 /** Das Widget «Nächste Übungen» in der Grösse, die ein Samsung-Launcher gibt (4 × 2 Felder, rund 356 × 165 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
 @Composable

@@ -18,6 +18,7 @@ import android.Manifest
 import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
@@ -62,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ch.fireresponse.app.auth.AuthApi
 import ch.fireresponse.app.auth.AuthState
 import ch.fireresponse.app.auth.AuthViewModel
+import ch.fireresponse.app.auth.CropImageScreen
 import ch.fireresponse.app.auth.FormState
 import ch.fireresponse.app.auth.LoginScreen
 import ch.fireresponse.app.auth.PrivacyScreen
@@ -273,6 +275,7 @@ private sealed interface Screen {
     data object Home : Screen { override val depth = 0 }
     data object Notifications : Screen { override val depth = 1 }
     data object Privacy : Screen { override val depth = 1 }
+    data class CropImage(val uri: Uri) : Screen { override val depth = 1 }
     data class Appointment(val appointmentId: String) : Screen { override val depth = 1 }
     data class Registrations(val appointmentId: String) : Screen { override val depth = 2 }
 }
@@ -307,6 +310,8 @@ private fun MainContent(
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
     var privacyOpen by rememberSaveable { mutableStateOf(false) }
+    // Das gewählte Profilfoto, solange die Person den Ausschnitt wählt.
+    var croppingImage by rememberSaveable { mutableStateOf<Uri?>(null) }
     LaunchedEffect(privacyOpen) { if (privacyOpen) privacy.load() }
 
     // Pushes brauchen das Token dieses Geräts beim Server und, ab Android 13, die Erlaubnis (einmal fragen, danach im Profil).
@@ -362,9 +367,11 @@ private fun MainContent(
                 onRetry = { appointments.loadDetail(id) },
             )
         }
+        val cropping = croppingImage
         val target = when {
             appointmentId != null && viewingRegistrations -> Screen.Registrations(appointmentId)
             appointmentId != null && !wide -> Screen.Appointment(appointmentId)
+            cropping != null -> Screen.CropImage(cropping)
             privacyOpen -> Screen.Privacy
             notificationsOpen -> Screen.Notifications
             else -> Screen.Home
@@ -396,6 +403,19 @@ private fun MainContent(
                     BackHandler { openedAppointment = null }
                     MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
                         detailPane(appointmentId)
+                    }
+                }
+                is Screen.CropImage -> {
+                    BackHandler { croppingImage = null }
+                    ContentWidth {
+                        CropImageScreen(
+                            screen.uri,
+                            onCancel = { croppingImage = null },
+                            onConfirm = { crop ->
+                                croppingImage = null
+                                auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, screen.uri, crop) } }
+                            },
+                        )
                     }
                 }
                 Screen.Privacy -> {
@@ -445,7 +465,7 @@ private fun MainContent(
                         } else if (tab == Destination.PROFILE) ContentWidth {
                             ProfileScreen(
                                 account, passwordSaved, form, imageForm,
-                                onPickImage = { uri -> auth.uploadImage { withContext(Dispatchers.Default) { ProfileImageEncoder.encode(resolver, uri) } } },
+                                onPickImage = { uri -> croppingImage = uri },
                                 onRemoveImage = auth::removeImage,
                                 onOpenNotifications = { notificationsOpen = true },
                                 onOpenPrivacy = { privacyOpen = true },
