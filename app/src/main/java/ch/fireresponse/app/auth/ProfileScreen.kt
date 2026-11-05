@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.profile.Profile
+import ch.fireresponse.app.profile.ProfileSquad
+import ch.fireresponse.app.ui.SquadMark
 import ch.fireresponse.app.push.SwitchRow
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.theme.BarlowCondensed
@@ -160,7 +162,7 @@ fun ProfileScreen(
             SectionTitle(R.string.profile_section_account)
             SettingsCard {
                 if (profile.squads.isNotEmpty()) {
-                    InfoRow(pluralStringResource(R.plurals.profile_squad, profile.squads.size), profile.squads.joinToString("\n") { it.name })
+                    SquadsRow(pluralStringResource(R.plurals.profile_squad, profile.squads.size), profile.squads)
                     SettingsDivider()
                 }
                 if (profile.imageUrl != null) {
@@ -323,14 +325,19 @@ private fun ParticipantRow(firstName: String, badge: Badge?) {
     }
 }
 
-/** Eine Zeile nur zum Lesen: Beschriftung klein darüber, Wert darunter (Einheit). */
+/** Die Einheiten des Kontos nur zum Lesen: Beschriftung klein darüber, je Einheit das Logo (sonst «JF» oder «KF») und der Name. */
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun SquadsRow(label: String, squads: List<ProfileSquad>) {
     Column(
         Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = 6.dp).semantics(mergeDescendants = true) {},
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyLarge)
+        squads.forEach { squad ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SquadMark(squad.id, squad.type, size = 32.dp)
+                Text(squad.name, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
     }
 }

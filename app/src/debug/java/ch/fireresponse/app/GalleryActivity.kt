@@ -139,7 +139,10 @@ private val appointments = listOf(
 
 private val profile = Profile(
     id = "u1", name = "Sandra Muster", username = "smuster", consented = true,
-    squads = listOf(ProfileSquad("s1", "Jugendfeuerwehr Musterdorf", "jf", "Bezirk Beispiel", "leitung")),
+    squads = listOf(
+        ProfileSquad("s1", "Jugendfeuerwehr Musterdorf", "jf", "Bezirk Beispiel", "leitung"),
+        ProfileSquad("s2", "Kinderfeuerwehr Musterdorf", "kf", "Bezirk Beispiel", "leitung"),
+    ),
     participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1", badge = Badge("R1", stars = 1)), ProfileParticipant("k2", "Noah", "Beispiel", "s1", badge = Badge("R4", stars = 4))),
 )
 
