@@ -193,10 +193,10 @@
     <string name="crop_title">Ausschnitt wählen</string>
     <string name="crop_loading">Foto wird geladen</string>
     <string name="crop_failed">Das Foto lässt sich nicht öffnen. Wähle ein anderes.</string>
-    <string name="crop_area">Ausschnitt des Fotos. Verschiebe ihn mit einem Finger und zoome mit zwei Fingern, oder nimm die Tasten darunter.</string>
-    <string name="crop_hint">Der Kreis zeigt, wie das Profilbild später aussieht.</string>
-    <string name="crop_zoom_in">Hineinzoomen</string>
-    <string name="crop_zoom_out">Herauszoomen</string>
+    <string name="crop_area">Ausschnitt des Fotos. Mit den Aktionen verschiebst du ihn, mit dem Regler darunter zoomst du.</string>
+    <string name="crop_hint">Ziehe das Foto an die richtige Stelle. Der Kreis zeigt, wie das Profilbild später aussieht.</string>
+    <string name="crop_zoom">Zoom</string>
+    <string name="crop_zoom_state">%1$s-fach</string>
     <string name="crop_left">Ausschnitt nach links</string>
     <string name="crop_right">Ausschnitt nach rechts</string>
     <string name="crop_up">Ausschnitt nach oben</string>

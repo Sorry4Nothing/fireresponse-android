@@ -2,20 +2,20 @@ package ch.fireresponse.app.auth
 
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,8 +38,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -56,10 +59,10 @@ import ch.fireresponse.app.ui.Spinner
 import ch.fireresponse.app.ui.theme.Spacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
-/** Ein Schritt der Tasten: Anteil des sichtbaren Ausschnitts bzw. Faktor der Vergrösserung. */
+/** Ein Schritt der Aktionen für den Screenreader: Anteil des sichtbaren Ausschnitts. */
 private const val MOVE_STEP = 0.1f
-private const val ZOOM_STEP = 1.25f
 
 private sealed interface Preview {
     data object Loading : Preview
@@ -68,9 +71,9 @@ private sealed interface Preview {
 }
 
 /**
- * Der Ausschnitt des gewählten Fotos: ein Quadrat, mit einem Finger verschieben und mit zwei Fingern zoomen. Das Profilbild wird
- * rund gezeigt, deshalb liegt ein Kreis als Hilfslinie darüber. Dieselben Schritte gehen mit Tasten, denn nicht jede Person kann
- * oder will mit zwei Fingern arbeiten (und ein Screenreader kennt keine Geste).
+ * Der Ausschnitt des gewählten Fotos: ein Quadrat, mit einem Finger verschieben, mit dem Regler zoomen. Das Profilbild wird
+ * rund gezeigt, deshalb liegt ein Kreis als Hilfslinie darüber. Der Regler ersetzt die Zwei-Finger-Geste (sie geht auch, wenn man
+ * es kann); für den Screenreader hat das Foto Aktionen zum Verschieben, denn eine Geste kennt er nicht.
  */
 @Composable
 fun CropImageScreen(uri: Uri, onCancel: () -> Unit, onConfirm: (Crop) -> Unit) {
@@ -78,7 +81,7 @@ fun CropImageScreen(uri: Uri, onCancel: () -> Unit, onConfirm: (Crop) -> Unit) {
     val preview by produceState<Preview>(Preview.Loading, uri) {
         value = withContext(Dispatchers.Default) { ProfileImageEncoder.preview(resolver, uri) }?.let { Preview.Ready(it) } ?: Preview.Failed
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())) {
         Header(
             title = stringResource(R.string.crop_title),
             back = HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_profile), onCancel),
@@ -108,13 +111,26 @@ private fun CropEditor(bitmap: Bitmap, onConfirm: (Crop) -> Unit) {
     val square = ProfileImageEncoder.squareCrop(width, height, crop)
     val step = square.side * MOVE_STEP
     val area = stringResource(R.string.crop_area)
-    Column(Modifier.padding(horizontal = Spacing.s4), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+    val zoomLabel = stringResource(R.string.crop_zoom)
+    val zoomState = stringResource(R.string.crop_zoom_state, String.format(Locale.GERMAN, "%.1f", crop.zoom))
+    val moves = listOf(
+        stringResource(R.string.crop_left) to (-step to 0f),
+        stringResource(R.string.crop_right) to (step to 0f),
+        stringResource(R.string.crop_up) to (0f to -step),
+        stringResource(R.string.crop_down) to (0f to step),
+    )
+    Column(Modifier.padding(horizontal = Spacing.s4), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
         Canvas(
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .onSizeChanged { viewport = it.width.toFloat() }
-                .semantics { contentDescription = area }
+                .semantics {
+                    contentDescription = area
+                    customActions = moves.map { (label, move) ->
+                        CustomAccessibilityAction(label) { crop = crop.moved(move.first, move.second, width, height); true }
+                    }
+                }
                 .pointerInput(bitmap) {
                     detectTransformGestures { _, pan, zoomChange, _ ->
                         val zoomed = crop.zoomed(zoomChange, width, height)
@@ -141,31 +157,18 @@ private fun CropEditor(bitmap: Bitmap, onConfirm: (Crop) -> Unit) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        // Eine Taste gibt es nur, wenn sich der Ausschnitt in diese Richtung noch ändert.
-        fun change(next: Crop): (() -> Unit)? = if (next != crop) ({ crop = next }) else null
-        CropButtons(
-            change(crop.zoomed(ZOOM_STEP, width, height)),
-            change(crop.zoomed(1f / ZOOM_STEP, width, height)),
-            change(crop.moved(-step, 0f, width, height)),
-            change(crop.moved(step, 0f, width, height)),
-            change(crop.moved(0f, -step, width, height)),
-            change(crop.moved(0f, step, width, height)),
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
+            Text(zoomLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+            Slider(
+                value = crop.zoom,
+                onValueChange = { crop = crop.copy(zoom = it).normalized(width, height) },
+                valueRange = 1f..ProfileImageEncoder.MAX_ZOOM,
+                modifier = Modifier.semantics {
+                    contentDescription = zoomLabel
+                    stateDescription = zoomState
+                },
+            )
+        }
         PrimaryButton(stringResource(R.string.crop_confirm), { onConfirm(crop) }, Modifier.fillMaxWidth())
     }
-}
-
-/** Sechs Tasten, je zwei in einer Zeile; eine Taste ist aus, wenn der Ausschnitt in dieser Richtung nicht weiter geht (`null`). */
-@Composable
-private fun CropButtons(zoomIn: (() -> Unit)?, zoomOut: (() -> Unit)?, left: (() -> Unit)?, right: (() -> Unit)?, up: (() -> Unit)?, down: (() -> Unit)?) {
-    @Composable
-    fun ButtonRow(@StringRes firstLabel: Int, first: (() -> Unit)?, @StringRes secondLabel: Int, second: (() -> Unit)?) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-            OutlinedPillButton(stringResource(firstLabel), first ?: {}, Modifier.weight(1f), enabled = first != null)
-            OutlinedPillButton(stringResource(secondLabel), second ?: {}, Modifier.weight(1f), enabled = second != null)
-        }
-    }
-    ButtonRow(R.string.crop_zoom_in, zoomIn, R.string.crop_zoom_out, zoomOut)
-    ButtonRow(R.string.crop_left, left, R.string.crop_right, right)
-    ButtonRow(R.string.crop_up, up, R.string.crop_down, down)
 }
