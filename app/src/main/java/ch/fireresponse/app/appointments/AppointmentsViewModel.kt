@@ -37,6 +37,14 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
     private val _list = MutableStateFlow<ApiResult<AppointmentList>?>(null)
     val list: StateFlow<ApiResult<AppointmentList>?> = _list.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    /** Wahr, solange die Liste auf Zug der Person neu lädt; die Karten bleiben dabei stehen. */
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
+    private val _refreshError = MutableStateFlow<ApiError?>(null)
+    /** Warum das Neuladen auf Zug nicht ging; die alte Liste bleibt. `null` nach einem Erfolg oder beim nächsten Versuch. */
+    val refreshError: StateFlow<ApiError?> = _refreshError.asStateFlow()
+
     private val _detail = MutableStateFlow<ApiResult<Appointment>?>(null)
     val detail: StateFlow<ApiResult<Appointment>?> = _detail.asStateFlow()
 
@@ -60,7 +68,23 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
 
     fun loadList() {
         _list.value = null
+        _refreshError.value = null
         fetchList()
+    }
+
+    /** Neuladen durch Ziehen: im Gegensatz zu [loadList] ohne Ladezustand, und ein Fehler lässt die Liste stehen und wird gemeldet. */
+    fun pullRefresh() {
+        if (_refreshing.value) return
+        _refreshing.value = true
+        _refreshError.value = null
+        viewModelScope.launch {
+            val today = LocalDate.now(SWISS_ZONE)
+            when (val result = api.list(today, today.plusMonths(WINDOW_MONTHS))) {
+                is ApiResult.Ok -> _list.value = result
+                is ApiResult.Failure -> _refreshError.value = result.error
+            }
+            _refreshing.value = false
+        }
     }
 
     private fun fetchList() {

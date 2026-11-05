@@ -106,6 +106,28 @@ class AppointmentsViewModelTest {
     }
 
     @Test
+    fun pullingReloadsWithoutLoadingStateAndAFailureKeepsTheListAndSaysSo() {
+        viewModel.list.await { it != null }
+        lenaStatus = "ja"
+        viewModel.pullRefresh()
+        viewModel.list.await { lenaInList() == "ja" }
+        assertEquals(false, viewModel.refreshing.await { !it })
+        assertEquals(null, viewModel.refreshError.value)
+
+        listFails = true
+        lenaStatus = "nein"
+        viewModel.pullRefresh()
+        viewModel.refreshError.await { it != null }
+        assertEquals("die Liste bleibt, wie sie war", "ja", lenaInList())
+        assertEquals(false, viewModel.refreshing.await { !it })
+
+        listFails = false
+        viewModel.pullRefresh()
+        viewModel.refreshError.await { it == null }
+        viewModel.list.await { lenaInList() == "nein" }
+    }
+
+    @Test
     fun aFailingRefreshKeepsTheOldListInsteadOfShowingAnError() {
         viewModel.list.await { it != null }
         viewModel.loadDetail("p1")
