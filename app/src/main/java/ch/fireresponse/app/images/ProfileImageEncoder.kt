@@ -27,12 +27,37 @@ object ProfileImageEncoder {
     const val SIZE = 512
     private const val QUALITY = 88
 
-    /** Seitenlänge und linke obere Ecke des grössten Quadrats in der Mitte. */
+    /** Seitenlänge und linke obere Ecke eines Quadrats im Foto. */
     data class Square(val x: Int, val y: Int, val side: Int)
 
-    fun squareCrop(width: Int, height: Int): Square {
-        val side = minOf(width, height)
-        return Square((width - side) / 2, (height - side) / 2, side)
+    const val MAX_ZOOM = 4f
+
+    /** Die Höhe, auf die vergrössert wird, wenn die Person den Ausschnitt wählt (Platz für den Bildschirm, nicht für den Upload). */
+    private const val PREVIEW_SIZE = 1024
+
+    /**
+     * Der Ausschnitt, den die Person wählt: Mitte als Anteil der Breite und Höhe (0 bis 1) und Vergrösserung ab 1 (1 = das grösste
+     * Quadrat). Ohne Angabe gilt die Mitte, wie bevor es einen Zuschnitt gab.
+     */
+    data class Crop(val centerX: Float = 0.5f, val centerY: Float = 0.5f, val zoom: Float = 1f) {
+        /** Mitte und Zoom so, dass der Ausschnitt im Foto liegt: Wer über den Rand schiebt, bleibt am Rand. */
+        fun normalized(width: Int, height: Int): Crop {
+            val square = squareCrop(width, height, this)
+            return Crop((square.x + square.side / 2f) / width, (square.y + square.side / 2f) / height, zoom.coerceIn(1f, MAX_ZOOM))
+        }
+
+        /** Verschiebt den Ausschnitt um Pixel des Fotos. */
+        fun moved(dx: Float, dy: Float, width: Int, height: Int): Crop =
+            Crop(centerX + dx / width, centerY + dy / height, zoom).normalized(width, height)
+
+        fun zoomed(factor: Float, width: Int, height: Int): Crop = copy(zoom = zoom * factor).normalized(width, height)
+    }
+
+    fun squareCrop(width: Int, height: Int, crop: Crop = Crop()): Square {
+        val side = (minOf(width, height) / crop.zoom.coerceIn(1f, MAX_ZOOM)).toInt().coerceAtLeast(1)
+        val x = (crop.centerX * width - side / 2f).toInt().coerceIn(0, width - side)
+        val y = (crop.centerY * height - side / 2f).toInt().coerceIn(0, height - side)
+        return Square(x, y, side)
     }
 
     /** Grösster Teiler (Potenz von 2), bei dem die kürzere Seite noch mindestens `target` Pixel hat. */
@@ -43,17 +68,27 @@ object ProfileImageEncoder {
         return sample
     }
 
-    /** `null`, wenn die Datei sich nicht lesen oder nicht als Bild öffnen lässt. */
-    fun encode(resolver: ContentResolver, uri: Uri): ByteArray? = try {
+    /** `null`, wenn die Datei sich nicht lesen oder nicht als Bild öffnen lässt. Der Ausschnitt gilt für das aufrecht gedrehte Foto. */
+    fun encode(resolver: ContentResolver, uri: Uri, crop: Crop = Crop()): ByteArray? {
+        // Vergrössert die Person, muss das Foto feiner gelesen werden, damit der Ausschnitt noch 512 Pixel hat.
+        val target = Math.ceil((SIZE * crop.zoom.coerceIn(1f, MAX_ZOOM)).toDouble()).toInt()
+        return decodeUpright(resolver, uri, target)?.let { toJpeg(it, crop) }
+    }
+
+    /** Das Foto für den Zuschneide-Bildschirm: aufrecht gedreht, nicht grösser als nötig. */
+    fun preview(resolver: ContentResolver, uri: Uri): Bitmap? = decodeUpright(resolver, uri, PREVIEW_SIZE)
+
+    /** Das Foto nach EXIF gedreht, mit einer kürzeren Seite von mindestens `target` Pixeln (oder weniger, wenn es kleiner ist). */
+    private fun decodeUpright(resolver: ContentResolver, uri: Uri, target: Int): Bitmap? = try {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
             null
         } else {
-            val options = BitmapFactory.Options().apply { inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, SIZE) }
+            val options = BitmapFactory.Options().apply { inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, target) }
             val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }
             val orientation = readOrientation(resolver, uri)
-            decoded?.let { toJpeg(it, orientation) }
+            decoded?.let { Bitmap.createBitmap(it, 0, 0, it.width, it.height, matrixFor(orientation), true) }
         }
     } catch (e: IOException) {
         null
@@ -72,15 +107,14 @@ object ProfileImageEncoder {
         null
     } ?: ExifInterface.ORIENTATION_NORMAL
 
-    private fun toJpeg(source: Bitmap, orientation: Int): ByteArray {
-        val rotated = Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrixFor(orientation), true)
-        val crop = squareCrop(rotated.width, rotated.height)
+    private fun toJpeg(upright: Bitmap, chosen: Crop): ByteArray {
+        val crop = squareCrop(upright.width, upright.height, chosen)
         val side = minOf(crop.side, SIZE)
         val canvasBitmap = createBitmap(side, side)
         val canvas = Canvas(canvasBitmap)
         canvas.drawColor(Color.WHITE)
         val src = Rect(crop.x, crop.y, crop.x + crop.side, crop.y + crop.side)
-        canvas.drawBitmap(rotated, src, Rect(0, 0, side, side), Paint(Paint.FILTER_BITMAP_FLAG))
+        canvas.drawBitmap(upright, src, Rect(0, 0, side, side), Paint(Paint.FILTER_BITMAP_FLAG))
         val out = ByteArrayOutputStream()
         canvasBitmap.compress(Bitmap.CompressFormat.JPEG, QUALITY, out)
         return out.toByteArray()
