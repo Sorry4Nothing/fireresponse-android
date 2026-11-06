@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -83,6 +85,8 @@ fun AppointmentListScreen(
     refreshing: Boolean = false,
     refreshError: ApiError? = null,
     onRefresh: () -> Unit = {},
+    /** Gehört dem Aufrufer, damit die Stelle in der Liste den Gang in eine Übung und zurück überlebt. */
+    listState: LazyListState = rememberLazyListState(),
 ) {
     Column(Modifier.fillMaxSize()) {
         Header(title = stringResource(R.string.appointments_title), focusOnTitle = true)
@@ -113,7 +117,7 @@ fun AppointmentListScreen(
                                     Modifier.padding(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s2).semantics { liveRegion = LiveRegionMode.Polite },
                                 )
                             }
-                            Timeline(groupByDay(state.value.appointments), onOpen)
+                            Timeline(groupByDay(state.value.appointments), onOpen, listState)
                         }
                     }
                 }
@@ -123,8 +127,8 @@ fun AppointmentListScreen(
 
 /** Die Liste als Zeitleiste: links das Datum an einer Linie, rechts die Termine dieses Tages als Karten. */
 @Composable
-private fun Timeline(days: List<Day>, onOpen: (String) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
+private fun Timeline(days: List<Day>, onOpen: (String) -> Unit, state: LazyListState) {
+    LazyColumn(state = state, contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
         itemsIndexed(days, key = { _, day -> day.appointments.first().id }) { index, day ->
             val isLast = index == days.lastIndex
             Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
