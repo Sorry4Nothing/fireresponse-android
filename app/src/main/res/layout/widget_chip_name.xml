@@ -24,7 +24,9 @@
         android:layout_marginStart="3dp"
         android:fontFamily="@font/inter"
         android:fontVariationSettings="'wght' 700"
+        android:ellipsize="end"
         android:importantForAccessibility="no"
         android:maxLines="1"
+        android:maxWidth="96dp"
         android:textSize="12sp" />
 </LinearLayout>
