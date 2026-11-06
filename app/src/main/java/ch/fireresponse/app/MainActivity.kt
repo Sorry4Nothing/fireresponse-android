@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -308,6 +309,8 @@ private fun MainContent(
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
+    // Hier, nicht in der Liste: Sie verlässt die Komposition, sobald eine Übung offen ist, und käme sonst wieder oben an.
+    val listState = rememberLazyListState()
     var viewingRegistrations by rememberSaveable { mutableStateOf(false) }
     var privacyOpen by rememberSaveable { mutableStateOf(false) }
     // Das gewählte Profilfoto, solange die Person den Ausschnitt wählt.
@@ -458,6 +461,7 @@ private fun MainContent(
                                     refreshing = appointments.refreshing.collectAsState().value,
                                     refreshError = appointments.refreshError.collectAsState().value,
                                     onRefresh = appointments::pullRefresh,
+                                    listState = listState,
                                 )
                             }
                             if (wide) {
