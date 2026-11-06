@@ -1,5 +1,8 @@
 package ch.fireresponse.app.ui
 
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
@@ -12,18 +15,36 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import ch.fireresponse.app.auth.AuthState
 
 /**
- * Ob Bewegung erlaubt ist. Sind die Animationen im System ausgeschaltet («Bewegung entfernen» oder Entwickleroptionen),
- * bleibt alles an seinem Platz und blendet höchstens über (Checkliste 5.9).
+ * Ob Bewegung erlaubt ist. Sind die Animationen im System ausgeschaltet («Animationen entfernen» oder Entwickleroptionen),
+ * bleibt alles an seinem Platz (Checkliste 5.9). Die Einstellung wird beobachtet: Wer sie bei laufender App ändert, braucht
+ * keinen Neustart der App.
  */
 @Composable
 fun rememberMotionEnabled(): Boolean {
     val resolver = LocalContext.current.contentResolver
-    return remember { Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f }
+    val read = { Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f }
+    var enabled by remember { mutableStateOf(read()) }
+    DisposableEffect(resolver) {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                enabled = read()
+            }
+        }
+        resolver.registerContentObserver(Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false, observer)
+        // Zwischen dem ersten Lesen und dem Anmelden des Beobachters kann sich der Wert geändert haben.
+        enabled = read()
+        onDispose { resolver.unregisterContentObserver(observer) }
+    }
+    return enabled
 }
 
 /** Dauer eines Übergangs: kurz genug, dass nichts aufhält. */
