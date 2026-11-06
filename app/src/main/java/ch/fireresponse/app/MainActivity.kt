@@ -3,7 +3,6 @@ package ch.fireresponse.app
 import ch.fireresponse.app.ui.screenTransition
 import ch.fireresponse.app.ui.rememberMotionEnabled
 import ch.fireresponse.app.ui.loginTransition
-import ch.fireresponse.app.ui.fadeTransition
 import ch.fireresponse.app.security.LockOutcome
 import ch.fireresponse.app.security.BiometricPrompter
 import ch.fireresponse.app.security.AppLock
@@ -449,7 +448,8 @@ private fun MainContent(
                     AnimatedContent(
                         destination,
                         modifier = Modifier.fillMaxSize(),
-                        transitionSpec = { fadeTransition(motion) },
+                        // Die Reihenfolge der Reiter bestimmt die Richtung: Profil schiebt von rechts herein, Übungen von links.
+                        transitionSpec = { screenTransition(initialState.ordinal, targetState.ordinal, motion) },
                         label = "bereich",
                     ) { tab ->
                         if (tab == Destination.APPOINTMENTS) {
