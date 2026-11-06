@@ -203,6 +203,7 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "widget1" to { WidgetPreview(1) },
     "widget3" to { WidgetPreview(2, threeChildren = true) },
     "widgetlogo" to { WidgetPreview(2, withLogos = true) },
+    "widgetlong" to { WidgetPreview(2, longNames = true) },
     "crop" to { CropPreview() },
     "loading" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(null, {}, {}) } },
     "error" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.UNKNOWN), {}, {}) } },
@@ -278,8 +279,14 @@ private fun CropPreview() {
 
 /** Das Widget «Nächste Übungen» in der Grösse, die ein Samsung-Launcher gibt (4 × 2 Felder, rund 356 × 165 dp) auf einem Hintergrund, wie ihn ein Startbildschirm hat. */
 @Composable
-private fun WidgetPreview(count: Int, threeChildren: Boolean = false, withLogos: Boolean = false) {
+private fun WidgetPreview(count: Int, threeChildren: Boolean = false, withLogos: Boolean = false, longNames: Boolean = false) {
     val shown = appointments.take(count).map { appointment ->
+        if (longNames) return@map appointment.copy(
+            participants = listOf(
+                AppointmentParticipant("k1", "Maximilian-Alexander", "ja"),
+                AppointmentParticipant("k2", "Bartholomäus", null),
+            ),
+        )
         if (!threeChildren) appointment else appointment.copy(
             participants = listOf(
                 AppointmentParticipant("k1", "Lena", "ja"),

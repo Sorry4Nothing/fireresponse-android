@@ -77,6 +77,17 @@ class WidgetModelTest {
     }
 
     @Test
+    fun longNamesGiveWayToCirclesSoTheTimeStaysInTheRow() {
+        val person = { name: String -> Person(name, Stand.OPEN) }
+        assertTrue(showNames(listOf(person("Lena"), person("Noah"))))
+        assertTrue(showNames(listOf(person("Maximilian"))))
+        assertFalse(showNames(listOf(person("Maximilian-Alexander"))))
+        assertFalse(showNames(listOf(person("Maximilian-Alexander"), person("Bartholomäus"))))
+        assertFalse("ab drei Personen immer Kreise", showNames(listOf(person("A"), person("B"), person("C"))))
+        assertFalse(showNames(emptyList()))
+    }
+
+    @Test
     fun stateOfTheAnswers() {
         assertTrue(Answers(2, 2).done)
         assertFalse(Answers(1, 2).done)

@@ -39,6 +39,17 @@ data class Answers(val given: Int, val total: Int) {
     val done get() = total > 0 && given == total
 }
 
+/**
+ * Chips mit Namen oder Kreise mit Initiale? Die Zeile hat neben Kürzel, Zeit und «x von y» Platz für gut zehn Buchstaben in den
+ * Chips (zwei Personen) oder vierzehn (eine Person). Sind die Namen länger, würden sie die Zeit aus der Zeile drängen: Dann
+ * stehen wie ab drei Personen die Kreise da. Der Screenreader hört immer die ganzen Namen.
+ */
+fun showNames(people: List<Person>): Boolean = when (people.size) {
+    1 -> people.single().name.length <= 14
+    2 -> people.sumOf { it.name.length } <= 10
+    else -> false
+}
+
 enum class Stand { YES, NO, OPEN }
 
 /** Eine Person mit ihrem Stand; `name` ist der Vorname oder, bei der eigenen Anmeldung, `ownLabel`. */

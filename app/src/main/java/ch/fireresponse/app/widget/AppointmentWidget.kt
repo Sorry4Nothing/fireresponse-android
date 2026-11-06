@@ -50,8 +50,7 @@ private const val WINDOW_MONTHS = 6L
 /** Die Logos haben nur kurz Zeit; danach steht das Kürzel da und die Übungen sind trotzdem aktuell. */
 private const val LOGO_TIMEOUT_MS = 3_000L
 
-/** Bis zu zwei Personen zeigt das Widget als Chip mit Namen, ab drei als Kreise (höchstens so viele; die Zahl «x von y» zählt alle). */
-private const val NAME_CHIPS = 2
+/** Höchstens so viele Kreise (die Zahl «x von y» zählt alle Personen). Ob Chips mit Namen oder Kreise: siehe [showNames]. */
 private const val MAX_DOTS = 5
 
 /**
@@ -234,7 +233,7 @@ object AppointmentWidget {
     private fun chips(context: Context, views: RemoteViews, row: Row, people: List<Person>) {
         views.removeAllViews(row.chips)
         views.setViewVisibility(row.chips, if (people.isEmpty()) View.GONE else View.VISIBLE)
-        val names = people.size <= NAME_CHIPS
+        val names = showNames(people)
         people.take(MAX_DOTS).forEach { person ->
             val look = look(person.stand)
             val fg = context.getColor(look.fg)
