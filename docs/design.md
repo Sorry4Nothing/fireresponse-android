@@ -77,6 +77,7 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 3. **Anwesenheit.** Die Vorlage führt «Anwesenheit» in der Verwaltung. Die App erfasst keine Anwesenheit.
 4. **Schreibweise.** Die Vorlage schreibt «Fire-Response». Die App heisst «FireResponse».
 5. **Aktualisieren der Übungsliste.** Die Vorlage hat einen Aktualisieren-Knopf im Kopf der Liste. Auftrag des Auftraggebers (#102): Die Liste lädt durch Ziehen nach unten neu, der Knopf entfällt. Der Screenreader bekommt die Aktion «Aktualisieren» am Feld der Liste; ein Fehler beim Neuladen steht als Hinweis über der Liste, die alten Übungen bleiben. Leere Liste und Fehlerseite behalten «Nochmals versuchen».
+6. **Kopf ohne Knöpfe.** Die Vorlage reserviert über dem Titel immer eine Zeile für Zurück und Aktion. Auftrag des Auftraggebers (#106): Ohne Knopf entfällt die Zeile, der Titel von Übungen und Profil steht direkt unter der Statusleiste. Bildschirme mit Zurück oder Aktion behalten sie.
 
 ## Weitere Entscheide
 

@@ -38,8 +38,8 @@ import ch.fireresponse.app.ui.theme.fire
 class HeaderButton(@DrawableRes val icon: Int, val description: String, val onClick: () -> Unit)
 
 /**
- * Derselbe Kopf auf jedem Screen: oben eine Zeile (48 dp) mit Zurück links und höchstens einer Aktion rechts, darunter
- * Überzeile und Titel.
+ * Derselbe Kopf auf jedem Screen: oben, wenn es einen Knopf gibt, eine Zeile (48 dp) mit Zurück links und höchstens einer Aktion
+ * rechts, darunter Überzeile und Titel. Ohne Knopf entfällt die Zeile, und der Titel rückt nach oben.
  * Der Titel ist eine Überschrift; nach dem Öffnen springt der Fokus auf ihn (`focusOnTitle`).
  */
 @Composable
@@ -56,8 +56,9 @@ fun Header(
         modifier.fillMaxWidth().padding(start = Spacing.s3, top = Spacing.s3, end = Spacing.s3, bottom = Spacing.s4),
         verticalArrangement = Arrangement.spacedBy(Spacing.s2),
     ) {
-        // Die Zeile bleibt auch ohne Knöpfe, damit der Titel zwischen den Screens nicht springt; ohne Titel und Knopf fällt sie weg.
-        if (title != null || back != null || action != null) {
+        // Ohne Knopf gibt es keine Zeile: Die Hauptbildschirme (Übungen, Profil) haben keinen, ihr Titel steht oben und springt nicht
+        // zwischen den beiden; Bildschirme mit Zurück behalten die Zeile.
+        if (back != null || action != null) {
             Row(Modifier.fillMaxWidth().height(Sizes.touchTarget), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                 back?.let { RoundButton(it) }
                 Spacer(Modifier.weight(1f))
