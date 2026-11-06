@@ -78,6 +78,7 @@ Wo die Vorlage dem Auftrag oder dem Plan widerspricht, gilt der Auftrag:
 4. **Schreibweise.** Die Vorlage schreibt «Fire-Response». Die App heisst «FireResponse».
 5. **Aktualisieren der Übungsliste.** Die Vorlage hat einen Aktualisieren-Knopf im Kopf der Liste. Auftrag des Auftraggebers (#102): Die Liste lädt durch Ziehen nach unten neu, der Knopf entfällt. Der Screenreader bekommt die Aktion «Aktualisieren» am Feld der Liste; ein Fehler beim Neuladen steht als Hinweis über der Liste, die alten Übungen bleiben. Leere Liste und Fehlerseite behalten «Nochmals versuchen».
 6. **Kopf ohne Knöpfe.** Die Vorlage reserviert über dem Titel immer eine Zeile für Zurück und Aktion. Auftrag des Auftraggebers (#106): Ohne Knopf entfällt die Zeile, der Titel von Übungen und Profil steht direkt unter der Statusleiste. Bildschirme mit Zurück oder Aktion behalten sie.
+7. **Übung teilen.** Die Vorlage hat nur «Zum Kalender». Auftrag des Auftraggebers (#111): Auf der Übung gibt es zusätzlich «Übung teilen» (Teilen-Auswahl des Geräts) mit Titel, Tag und Zeit, Name der Einheit und Aufgebot. Nie Namen von Kindern, Antworten oder die Kontaktperson. Der Knopf steht vor «Für Leitende», nicht im Kopf (dort ist höchstens eine Aktion vorgesehen).
 
 ## Weitere Entscheide
 

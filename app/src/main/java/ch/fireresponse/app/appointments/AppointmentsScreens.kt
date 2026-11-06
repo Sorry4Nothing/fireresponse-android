@@ -343,6 +343,7 @@ private fun AppointmentContent(
             Facts(appointment)
             ContactSection(appointment)
             RegistrationSection(appointment, rsvp, onParticipant, onLeader, ownName, ownImageUrl)
+            ShareSection(appointment)
             LeaderSection(canSeeRegistrations, onRegistrations)
             Box(Modifier.height(Spacing.s4))
         }
