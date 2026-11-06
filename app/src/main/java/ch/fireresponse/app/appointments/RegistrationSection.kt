@@ -18,6 +18,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import ch.fireresponse.app.ui.Avatar
 import ch.fireresponse.app.ui.InitialsBadge
 import ch.fireresponse.app.ui.RankMark
@@ -65,6 +72,17 @@ fun RegistrationSection(
     ownName: String = "",
     ownImageUrl: String? = null,
 ) {
+    // Das Gerät meldet kurz, wenn das Speichern fertig ist: Bestätigung oder Ablehnung. Nur beim Wechsel von «läuft» zu «fertig»,
+    // nicht beim Öffnen der Übung.
+    val haptic = LocalHapticFeedback.current
+    var wasRunning by remember { mutableStateOf(false) }
+    LaunchedEffect(rsvp.running) {
+        if (wasRunning && !rsvp.running) {
+            haptic.performHapticFeedback(if (rsvp.error == null) HapticFeedbackType.Confirm else HapticFeedbackType.Reject)
+        }
+        wasRunning = rsvp.running
+    }
+
     val leader = appointment.ownRegistration
     if (appointment.participants.isEmpty() && leader == null) return
 
