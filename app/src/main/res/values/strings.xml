@@ -31,6 +31,8 @@
     <string name="contact_call_name">Anrufen, %1$s</string>
     <string name="detail_placeholder">Wähle links eine Übung.</string>
     <string name="add_to_calendar">In Kalender übernehmen</string>
+    <string name="share_action">Übung teilen</string>
+    <string name="share_chooser">Übung teilen mit</string>
     <string name="refresh">Aktualisieren</string>
     <string name="cancel">Abbrechen</string>
 
