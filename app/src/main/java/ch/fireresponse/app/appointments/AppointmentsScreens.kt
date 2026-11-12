@@ -411,8 +411,9 @@ private fun LeaderSection(canSeeRegistrations: Boolean, onRegistrations: () -> U
 }
 
 /**
- * Die Zeit gross unter dem Titel: oben die Uhrzeit in `accent` (wie auf den Karten der Liste), darunter das Datum ausgeschrieben.
- * Ein Element für den Screenreader mit einem ganzen Satz; ohne lesbare Zeit steht nichts da.
+ * Die Zeit gross unter dem Titel: oben die Uhrzeit, darunter das Datum ausgeschrieben. Die Schrift ist neutral, nicht rot: Rot
+ * steht hier für «Abgesagt» und Warnungen; nur das Symbol trägt `accent` wie bei Thema, Aufgebot und Info. Ein Element für den
+ * Screenreader mit einem ganzen Satz; ohne lesbare Zeit steht nichts da.
  */
 @Composable
 private fun TimeBlock(appointment: Appointment) {
@@ -427,7 +428,7 @@ private fun TimeBlock(appointment: Appointment) {
             Text(
                 display.primary,
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = "tnum"),
-                color = MaterialTheme.fire.accent,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(display.secondary, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp), color = MaterialTheme.colorScheme.onSurface)
         }
