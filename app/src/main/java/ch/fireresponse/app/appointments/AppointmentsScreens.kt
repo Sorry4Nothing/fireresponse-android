@@ -72,6 +72,7 @@ import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 private val TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm")
@@ -130,8 +131,13 @@ fun AppointmentListScreen(
 private fun Timeline(days: List<Day>, onOpen: (String) -> Unit, state: LazyListState) {
     val months = groupByMonth(days)
     LazyColumn(state = state, contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
+        var previousMonth: YearMonth? = null
         months.forEach { group ->
-            group.month?.let { month -> item(key = "monat-$month") { MonthHeader(monthLabel(month)) } }
+            group.month?.let { month ->
+                val label = monthLabel(month, previousMonth)
+                previousMonth = month
+                item(key = "monat-$month") { MonthHeader(label) }
+            }
             // Die Linie der Zeitleiste endet beim letzten Tag des Monats; die Überschrift beginnt den nächsten.
             itemsIndexed(group.days, key = { _, day -> day.appointments.first().id }) { index, day ->
                 val isLast = index == group.days.lastIndex

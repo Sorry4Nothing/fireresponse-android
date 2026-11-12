@@ -22,5 +22,11 @@ fun groupByMonth(days: List<Day>): List<MonthGroup> {
     return groups
 }
 
-/** «November 2026»: mit Jahr, damit der Wechsel über den Jahreswechsel («Januar 2027») klar ist. */
-fun monthLabel(month: YearMonth): String = "${month.month.getDisplayName(TextStyle.FULL, Locale.GERMAN)} ${month.year}"
+/**
+ * «November»; das Jahr steht nur beim Jahreswechsel («Januar 2027»), das heisst, wenn der Monat davor in der Liste in einem anderen
+ * Jahr liegt. `previous` ist der Monat der vorigen Überschrift, `null` für die erste.
+ */
+fun monthLabel(month: YearMonth, previous: YearMonth? = null): String {
+    val name = month.month.getDisplayName(TextStyle.FULL, Locale.GERMAN)
+    return if (previous != null && previous.year != month.year) "$name ${month.year}" else name
+}

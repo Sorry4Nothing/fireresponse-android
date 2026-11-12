@@ -43,9 +43,11 @@ class MonthsTest {
     }
 
     @Test
-    fun theLabelHasMonthAndYear() {
-        assertEquals("November 2026", monthLabel(YearMonth.of(2026, 11)))
-        assertEquals("Januar 2027", monthLabel(YearMonth.of(2027, 1)))
-        assertEquals("März 2027", monthLabel(YearMonth.of(2027, 3)))
+    fun theYearShowsOnlyAtAYearChange() {
+        assertEquals("November", monthLabel(YearMonth.of(2026, 11)))
+        assertEquals("Dezember", monthLabel(YearMonth.of(2026, 12), previous = YearMonth.of(2026, 11)))
+        assertEquals("Januar 2027", monthLabel(YearMonth.of(2027, 1), previous = YearMonth.of(2026, 12)))
+        assertEquals("März", monthLabel(YearMonth.of(2027, 3), previous = YearMonth.of(2027, 2)))
+        assertEquals("Januar 2027", monthLabel(YearMonth.of(2027, 1), previous = YearMonth.of(2026, 11)))
     }
 }
