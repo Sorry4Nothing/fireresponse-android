@@ -344,14 +344,12 @@ private fun AppointmentContent(
     ownName: String,
     ownImageUrl: String?,
 ) {
-    val date = appointment.startDay()?.let { "${weekdayShort(it)} ${dayAndMonth(it)}" }
     val context = LocalContext.current
     val calendar = calendarIntent(appointment)
     val toCalendar = stringResource(R.string.add_to_calendar)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Header(
             title = appointment.title,
-            eyebrow = date,
             back = back,
             action = calendar?.let { intent ->
                 HeaderButton(R.drawable.ic_calendar_plus, toCalendar) {
@@ -365,6 +363,7 @@ private fun AppointmentContent(
             focusOnTitle = true,
         )
         Column(Modifier.padding(horizontal = Spacing.s5), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+            TimeBlock(appointment)
             AppointmentStatus(appointment)
             Facts(appointment)
             ContactSection(appointment)
@@ -411,11 +410,35 @@ private fun LeaderSection(canSeeRegistrations: Boolean, onRegistrations: () -> U
     }
 }
 
-/** Zeit, Thema, Aufgebot und Info, wie der Server sie liefert, je mit Icon. Felder ohne Inhalt fallen weg. */
+/**
+ * Die Zeit gross unter dem Titel: oben die Uhrzeit, darunter das Datum ausgeschrieben. Die Schrift ist neutral, nicht rot: Rot
+ * steht hier für «Abgesagt» und Warnungen; nur das Symbol trägt `accent` wie bei Thema, Aufgebot und Info. Ein Element für den
+ * Screenreader mit einem ganzen Satz; ohne lesbare Zeit steht nichts da.
+ */
+@Composable
+private fun TimeBlock(appointment: Appointment) {
+    val display = appointment.timeDisplay() ?: return
+    val spoken = "${stringResource(R.string.fact_time)}: ${display.spoken}"
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = Spacing.s1).clearAndSetSemantics { contentDescription = spoken },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+    ) {
+        Icon(painterResource(R.drawable.ic_clock), contentDescription = null, tint = MaterialTheme.fire.accent, modifier = Modifier.padding(top = 3.dp).size(28.dp))
+        Column {
+            Text(
+                display.primary,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(display.secondary, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp), color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
+/** Thema, Aufgebot und Info, wie der Server sie liefert, je mit Icon. Felder ohne Inhalt fallen weg. */
 @Composable
 private fun Facts(appointment: Appointment) {
     val rows = listOf(
-        Triple(R.drawable.ic_clock, R.string.fact_time, appointment.timeText()),
         Triple(R.drawable.ic_calendar, R.string.fact_topic, appointment.topic?.takeIf { it.isNotBlank() }),
         Triple(R.drawable.ic_bring_along, R.string.fact_call_up, appointment.callUp?.takeIf { it.isNotBlank() }),
         Triple(R.drawable.ic_info, R.string.fact_info, appointment.info?.takeIf { it.isNotBlank() }),

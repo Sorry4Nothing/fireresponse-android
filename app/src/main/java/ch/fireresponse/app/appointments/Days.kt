@@ -51,14 +51,9 @@ fun spokenDay(date: LocalDate): String =
 /** Uhrzeit in 24 Stunden; die Zeiten kommen schon in Schweizer Zeit aus [time]. Eine Fassung für Liste und Detail. */
 private val CLOCK = DateTimeFormatter.ofPattern("HH:mm")
 private val LIST_DAY = DateTimeFormatter.ofPattern("d.M.")
-private val FULL_DAY = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 /** «14:00–17:00»: Beginn und Ende am selben Tag. */
 private fun clockRange(start: ZonedDateTime, end: ZonedDateTime) = "${CLOCK.format(start)}–${CLOCK.format(end)}"
-
-/** «Sa., 14.11.2026»: das deutsche Kürzel ohne Rücksicht darauf, ob die Laufzeit den Punkt mitliefert. */
-private fun weekdayAndDate(date: LocalDate) =
-    "${date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2)}., ${FULL_DAY.format(date)}"
 
 /** «14:00–17:00», bei mehreren Tagen der Beginn, bei ganztägigen «Ganztägig»; für die Karte der Liste und das Widget. */
 fun listTimeText(appointment: Appointment, context: Context): String = when (val time = appointment.time()) {
@@ -74,23 +69,45 @@ fun listTimeText(appointment: Appointment, context: Context): String = when (val
 }
 
 /**
- * Die Zeit mit Tag, für die Detailansicht: «Sa., 14.11.2026, 19:00–21:00». Endet der Termin an einem anderen Tag, stehen beide
- * Daten («Sa., 14.11.2026, 22:00 – So., 15.11.2026, 02:00»). Ganztägig steht nur das Datum, bei mehreren Tagen von bis
- * («14.11.2026 – 16.11.2026»; `until` ist inklusive).
+ * Die Zeit einer Übung für die Detailansicht in zwei Zeilen: oben die Uhrzeit, darunter das Datum ausgeschrieben. `spoken` ist der
+ * Satz für den Screenreader («14:00 bis 17:00 Uhr» statt Zahlen mit Strich).
  */
-fun appointmentTimeText(timing: Timing): String = when (timing) {
+data class TimeDisplay(val primary: String, val secondary: String, val spoken: String)
+
+/** «Samstag, 14. November»; mit Jahr («… 2027»), wenn es nicht das laufende ist. */
+private fun dayText(date: LocalDate, withYear: Boolean) = spokenDay(date) + if (withYear) " ${date.year}" else ""
+
+private const val ALL_DAY = "Ganztägig"
+
+/**
+ * Normal: «14:00–17:00» und «Samstag, 14. November». Endet die Übung an einem anderen Tag: «22:00 – 02:00» und «Samstag, 14. November
+ * bis Sonntag, 15. November». Ganztägig: «Ganztägig» und das Datum, bei mehreren Tagen von bis (`until` ist inklusive). Das Jahr steht
+ * nur, wenn es nicht das von `today` ist; geht die Übung über einen Jahreswechsel, steht es bei beiden Daten.
+ */
+fun appointmentTimeDisplay(timing: Timing, today: LocalDate): TimeDisplay = when (timing) {
     is Timing.Timed -> {
         val startDay = timing.start.toLocalDate()
         val endDay = timing.end.toLocalDate()
+        val withYear = startDay.year != today.year || endDay.year != today.year
         if (startDay == endDay) {
-            "${weekdayAndDate(startDay)}, ${clockRange(timing.start, timing.end)}"
+            val day = dayText(startDay, withYear)
+            TimeDisplay(clockRange(timing.start, timing.end), day, "$day, ${CLOCK.format(timing.start)} bis ${CLOCK.format(timing.end)} Uhr")
         } else {
-            "${weekdayAndDate(startDay)}, ${CLOCK.format(timing.start)} – ${weekdayAndDate(endDay)}, ${CLOCK.format(timing.end)}"
+            val start = dayText(startDay, withYear)
+            val end = dayText(endDay, withYear)
+            TimeDisplay(
+                "${CLOCK.format(timing.start)} – ${CLOCK.format(timing.end)}",
+                "$start bis $end",
+                "$start, ${CLOCK.format(timing.start)} Uhr bis $end, ${CLOCK.format(timing.end)} Uhr",
+            )
         }
     }
-    is Timing.AllDay ->
-        if (timing.from == timing.until) FULL_DAY.format(timing.from) else "${FULL_DAY.format(timing.from)} – ${FULL_DAY.format(timing.until)}"
+    is Timing.AllDay -> {
+        val withYear = timing.from.year != today.year || timing.until.year != today.year
+        val days = if (timing.from == timing.until) dayText(timing.from, withYear) else "${dayText(timing.from, withYear)} bis ${dayText(timing.until, withYear)}"
+        TimeDisplay(ALL_DAY, days, "$ALL_DAY, $days")
+    }
 }
 
 /** Die Zeit für die Detailansicht; `null`, wenn sie fehlt oder nicht lesbar ist (dann steht nichts da, der Titel bleibt reiner Text). */
-fun Appointment.timeText(): String? = time()?.let(::appointmentTimeText)
+fun Appointment.timeDisplay(today: LocalDate = LocalDate.now(SWISS_ZONE)): TimeDisplay? = time()?.let { appointmentTimeDisplay(it, today) }
