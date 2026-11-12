@@ -65,6 +65,7 @@
     <string name="status_cancelled">Abgesagt</string>
     <string name="status_review">Wird noch geprüft</string>
     <string name="time_pending">Zeit noch offen</string>
+    <string name="fact_time">Zeit</string>
     <string name="fact_topic">Thema</string>
     <string name="fact_call_up">Aufgebot</string>
     <string name="fact_info">Info</string>
