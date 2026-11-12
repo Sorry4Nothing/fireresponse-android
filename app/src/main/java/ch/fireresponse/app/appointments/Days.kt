@@ -3,6 +3,7 @@ package ch.fireresponse.app.appointments
 import android.content.Context
 import ch.fireresponse.app.R
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -47,8 +48,17 @@ fun dayAndMonth(date: LocalDate): String =
 fun spokenDay(date: LocalDate): String =
     "${date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.GERMAN)}, ${dayAndMonth(date)}"
 
-private val LIST_TIME = DateTimeFormatter.ofPattern("HH:mm")
+/** Uhrzeit in 24 Stunden; die Zeiten kommen schon in Schweizer Zeit aus [time]. Eine Fassung für Liste und Detail. */
+private val CLOCK = DateTimeFormatter.ofPattern("HH:mm")
 private val LIST_DAY = DateTimeFormatter.ofPattern("d.M.")
+private val FULL_DAY = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+
+/** «14:00–17:00»: Beginn und Ende am selben Tag. */
+private fun clockRange(start: ZonedDateTime, end: ZonedDateTime) = "${CLOCK.format(start)}–${CLOCK.format(end)}"
+
+/** «Sa., 14.11.2026»: das deutsche Kürzel ohne Rücksicht darauf, ob die Laufzeit den Punkt mitliefert. */
+private fun weekdayAndDate(date: LocalDate) =
+    "${date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.GERMAN).take(2)}., ${FULL_DAY.format(date)}"
 
 /** «14:00–17:00», bei mehreren Tagen der Beginn, bei ganztägigen «Ganztägig»; für die Karte der Liste und das Widget. */
 fun listTimeText(appointment: Appointment, context: Context): String = when (val time = appointment.time()) {
@@ -60,5 +70,27 @@ fun listTimeText(appointment: Appointment, context: Context): String = when (val
             context.getString(R.string.time_list_until, LIST_DAY.format(time.until))
         }
     is Timing.Timed ->
-        if (time.start.toLocalDate() == time.end.toLocalDate()) "${LIST_TIME.format(time.start)}–${LIST_TIME.format(time.end)}" else LIST_TIME.format(time.start)
+        if (time.start.toLocalDate() == time.end.toLocalDate()) clockRange(time.start, time.end) else CLOCK.format(time.start)
 }
+
+/**
+ * Die Zeit mit Tag, für die Detailansicht: «Sa., 14.11.2026, 19:00–21:00». Endet der Termin an einem anderen Tag, stehen beide
+ * Daten («Sa., 14.11.2026, 22:00 – So., 15.11.2026, 02:00»). Ganztägig steht nur das Datum, bei mehreren Tagen von bis
+ * («14.11.2026 – 16.11.2026»; `until` ist inklusive).
+ */
+fun appointmentTimeText(timing: Timing): String = when (timing) {
+    is Timing.Timed -> {
+        val startDay = timing.start.toLocalDate()
+        val endDay = timing.end.toLocalDate()
+        if (startDay == endDay) {
+            "${weekdayAndDate(startDay)}, ${clockRange(timing.start, timing.end)}"
+        } else {
+            "${weekdayAndDate(startDay)}, ${CLOCK.format(timing.start)} – ${weekdayAndDate(endDay)}, ${CLOCK.format(timing.end)}"
+        }
+    }
+    is Timing.AllDay ->
+        if (timing.from == timing.until) FULL_DAY.format(timing.from) else "${FULL_DAY.format(timing.from)} – ${FULL_DAY.format(timing.until)}"
+}
+
+/** Die Zeit für die Detailansicht; `null`, wenn sie fehlt oder nicht lesbar ist (dann steht nichts da, der Titel bleibt reiner Text). */
+fun Appointment.timeText(): String? = time()?.let(::appointmentTimeText)

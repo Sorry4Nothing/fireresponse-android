@@ -390,10 +390,11 @@ private fun LeaderSection(canSeeRegistrations: Boolean, onRegistrations: () -> U
     }
 }
 
-/** Thema, Aufgebot und Info, wie der Server sie liefert, je mit Icon. Felder ohne Inhalt fallen weg. */
+/** Zeit, Thema, Aufgebot und Info, wie der Server sie liefert, je mit Icon. Felder ohne Inhalt fallen weg. */
 @Composable
 private fun Facts(appointment: Appointment) {
     val rows = listOf(
+        Triple(R.drawable.ic_clock, R.string.fact_time, appointment.timeText()),
         Triple(R.drawable.ic_calendar, R.string.fact_topic, appointment.topic?.takeIf { it.isNotBlank() }),
         Triple(R.drawable.ic_bring_along, R.string.fact_call_up, appointment.callUp?.takeIf { it.isNotBlank() }),
         Triple(R.drawable.ic_info, R.string.fact_info, appointment.info?.takeIf { it.isNotBlank() }),
