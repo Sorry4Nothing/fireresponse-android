@@ -128,20 +128,36 @@ fun AppointmentListScreen(
 /** Die Liste als Zeitleiste: links das Datum an einer Linie, rechts die Termine dieses Tages als Karten. */
 @Composable
 private fun Timeline(days: List<Day>, onOpen: (String) -> Unit, state: LazyListState) {
+    val months = groupByMonth(days)
     LazyColumn(state = state, contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
-        itemsIndexed(days, key = { _, day -> day.appointments.first().id }) { index, day ->
-            val isLast = index == days.lastIndex
-            Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-                DateColumn(day, withLine = !isLast)
-                Column(
-                    Modifier.weight(1f).padding(bottom = if (isLast) 0.dp else 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.s2),
-                ) {
-                    day.appointments.forEach { AppointmentCard(it, onOpen) }
+        months.forEach { group ->
+            group.month?.let { month -> item(key = "monat-$month") { MonthHeader(monthLabel(month)) } }
+            // Die Linie der Zeitleiste endet beim letzten Tag des Monats; die Überschrift beginnt den nächsten.
+            itemsIndexed(group.days, key = { _, day -> day.appointments.first().id }) { index, day ->
+                val isLast = index == group.days.lastIndex
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
+                    DateColumn(day, withLine = !isLast)
+                    Column(
+                        Modifier.weight(1f).padding(bottom = if (isLast) 0.dp else 18.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+                    ) {
+                        day.appointments.forEach { AppointmentCard(it, onOpen) }
+                    }
                 }
             }
         }
     }
+}
+
+/** «November 2026» über den Übungen des Monats; eine Überschrift für den Screenreader (die Karten nennen den Monat ohnehin im Satz). */
+@Composable
+private fun MonthHeader(label: String) {
+    Text(
+        label,
+        style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(start = 6.dp, top = Spacing.s3, bottom = Spacing.s2).semantics { heading() },
+    )
 }
 
 // Das Datum steht im Satz der Karte (TalkBack); ein eigener Halt wäre doppelt.
