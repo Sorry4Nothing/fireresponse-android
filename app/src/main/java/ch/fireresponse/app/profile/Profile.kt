@@ -22,6 +22,9 @@ data class ProfileParticipant(
     @SerialName("vorname") val firstName: String = "",
     @SerialName("nachname") val lastName: String = "",
     @SerialName("einheitId") val squadId: String,
+    /** Name und Typ («jf» oder «kf») der Einheit; leer bei einem Server, der sie noch nicht liefert (dann zeigt die App keine Einheit). */
+    @SerialName("einheitName") val squadName: String = "",
+    @SerialName("einheitTyp") val squadType: String = "",
     @SerialName("art") val kind: String = "eltern",
     @SerialName("abzeichen") val badge: Badge? = null,
 )

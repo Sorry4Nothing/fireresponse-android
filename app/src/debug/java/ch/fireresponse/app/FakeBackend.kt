@@ -116,8 +116,8 @@ class FakeBackend : Interceptor {
         """{"id":"u1","name":"Sandra Muster","benutzername":"demo","kantonsadmin":false,"zweiterFaktor":false,"einwilligung":$consented,""" +
             """"mussPasswortAendern":$mustChange,"telefon":null,"bildUrl":null,"pushProgramme":true,""" +
             """"einheiten":[],"teilnehmende":[""" +
-            """{"id":"k1","vorname":"Lena","nachname":"Muster","einheitId":"s1","art":"eltern","abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},""" +
-            """{"id":"k2","vorname":"Noah","nachname":"Beispiel","einheitId":"s1","art":"eltern","abzeichen":{"kuerzel":"R4","sterne":4,"bildUrl":null}}]}"""
+            """{"id":"k1","vorname":"Lena","nachname":"Muster","einheitId":"s1","einheitName":"Jugendfeuerwehr Musterdorf","einheitTyp":"jf","art":"eltern","abzeichen":{"kuerzel":"R1","sterne":1,"bildUrl":null}},""" +
+            """{"id":"k2","vorname":"Noah","nachname":"Beispiel","einheitId":"s2","einheitName":"Kinderfeuerwehr Musterdorf","einheitTyp":"kf","art":"eltern","abzeichen":{"kuerzel":"R4","sterne":4,"bildUrl":null}}]}"""
     }
 
     private fun appointment(id: String, inDays: Long, hour: Int = 13, cancelled: Boolean = false, detail: Boolean = false): String {

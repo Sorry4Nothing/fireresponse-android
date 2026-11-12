@@ -143,7 +143,7 @@ private val profile = Profile(
         ProfileSquad("s1", "Jugendfeuerwehr Musterdorf", "jf", "Bezirk Beispiel", "leitung"),
         ProfileSquad("s2", "Kinderfeuerwehr Musterdorf", "kf", "Bezirk Beispiel", "leitung"),
     ),
-    participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1", badge = Badge("R1", stars = 1)), ProfileParticipant("k2", "Noah", "Beispiel", "s1", badge = Badge("R4", stars = 4))),
+    participants = listOf(ProfileParticipant("k1", "Lena", "Muster", "s1", "Jugendfeuerwehr Musterdorf", "jf", badge = Badge("R1", stars = 1)), ProfileParticipant("k2", "Noah", "Beispiel", "s2", "Kinderfeuerwehr Musterdorf", "kf", badge = Badge("R4", stars = 4))),
 )
 
 private val privacy = Privacy(

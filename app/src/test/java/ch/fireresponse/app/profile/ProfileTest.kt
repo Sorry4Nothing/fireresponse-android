@@ -53,6 +53,21 @@ class ProfileTest {
     }
 
     @Test
+    fun participantsCarryTheirUnitWhenTheServerSendsIt() {
+        val json = Json { ignoreUnknownKeys = true }
+        val profile = json.decodeFromString<Profile>(
+            """{"id":"u1","name":"Sandra","einwilligung":true,"teilnehmende":[
+                {"id":"k1","vorname":"Lena","nachname":"M","einheitId":"e1","einheitName":"JF Musterdorf","einheitTyp":"jf","art":"eltern","abzeichen":null},
+                {"id":"k2","vorname":"Noah","nachname":"M","einheitId":"e2","einheitName":"KF Musterdorf","einheitTyp":"kf","art":"eltern","abzeichen":null}]}""",
+        )
+        assertEquals(listOf("JF Musterdorf" to "jf", "KF Musterdorf" to "kf"), profile.participants.map { it.squadName to it.squadType })
+        // Ältere Server kennen die Felder nicht: leer statt Fehler, die Zeile zeigt dann keine Einheit.
+        val old = json.decodeFromString<ProfileParticipant>("""{"id":"k1","vorname":"Lena","nachname":"M","einheitId":"e1","art":"eltern","abzeichen":null}""")
+        assertEquals("", old.squadName)
+        assertEquals("", old.squadType)
+    }
+
+    @Test
     fun participantsAndUnitsCarryTheirBadge() {
         val profile = Json { ignoreUnknownKeys = true }.decodeFromString<Profile>(
             """{"id":"u1","name":"Petra","einwilligung":true,
