@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.profile.Profile
+import ch.fireresponse.app.profile.ProfileParticipant
 import ch.fireresponse.app.profile.ProfileSquad
 import ch.fireresponse.app.ui.SquadMark
 import ch.fireresponse.app.push.SwitchRow
@@ -155,7 +156,7 @@ fun ProfileScreen(
                 SettingsCard {
                     profile.participants.forEachIndexed { index, participant ->
                         if (index > 0) SettingsDivider()
-                        ParticipantRow(participant.firstName, participant.badge)
+                        ParticipantRow(participant)
                     }
                 }
             }
@@ -311,17 +312,29 @@ private fun SettingsRow(
     }
 }
 
-/** Eine Person aus den Teilnehmenden des Kontos: Initialen und Vorname. Nur zum Lesen. */
+/**
+ * Eine Person aus den Teilnehmenden des Kontos: Initialen und Vorname, darunter die Einheit mit Logo (sonst «JF» oder «KF»),
+ * damit man bei Kindern in mehreren Einheiten sieht, wohin sie gehören. Liefert der Server die Einheit nicht, fehlt die zweite Zeile.
+ * Nur zum Lesen; der Screenreader liest Vorname, Einheit und Rang in einem Halt.
+ */
 @Composable
-private fun ParticipantRow(firstName: String, badge: Badge?) {
+private fun ParticipantRow(participant: ProfileParticipant) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = Spacing.s2).semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InitialsBadge(firstName)
-        Text(firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
-        badge?.let { RankMark(it, height = 28.dp, detailed = true) }
+        InitialsBadge(participant.firstName)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(participant.firstName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+            if (participant.squadName.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SquadMark(participant.squadId, participant.squadType, size = 24.dp)
+                    Text(participant.squadName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        participant.badge?.let { RankMark(it, height = 28.dp, detailed = true) }
     }
 }
 
