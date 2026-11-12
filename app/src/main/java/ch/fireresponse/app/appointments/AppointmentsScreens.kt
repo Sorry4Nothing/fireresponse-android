@@ -132,15 +132,15 @@ private fun Timeline(days: List<Day>, onOpen: (String) -> Unit, state: LazyListS
     val months = groupByMonth(days)
     LazyColumn(state = state, contentPadding = PaddingValues(start = Spacing.s3, end = Spacing.s5, bottom = Spacing.s4)) {
         var previousMonth: YearMonth? = null
-        months.forEach { group ->
+        months.forEachIndexed { groupIndex, group ->
             group.month?.let { month ->
                 val label = monthLabel(month, previousMonth)
                 previousMonth = month
                 item(key = "monat-$month") { MonthHeader(label) }
             }
-            // Die Linie der Zeitleiste endet beim letzten Tag des Monats; die Überschrift beginnt den nächsten.
+            // Die Linie verbindet die Daten und endet nur beim allerletzten; die Monats-Überschrift sitzt zwischen zwei Stücken.
             itemsIndexed(group.days, key = { _, day -> day.appointments.first().id }) { index, day ->
-                val isLast = index == group.days.lastIndex
+                val isLast = groupIndex == months.lastIndex && index == group.days.lastIndex
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                     DateColumn(day, withLine = !isLast)
                     Column(
