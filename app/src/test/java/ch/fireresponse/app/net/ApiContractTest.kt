@@ -63,7 +63,15 @@ class ApiContractTest {
      * in `Claude/FireResponse/API/FR API Vertrag Apps Nr 27-34`. Mit der neuen Vertragskopie hier streichen.
      */
     // shortcut: Liste von Hand, bis der Vertrag der Nr. 27 kopiert ist.
-    private val pendingInBackend = setOf("GET" to "/api/v1/wartung")
+    private val pendingInBackend = setOf(
+        "GET" to "/api/v1/wartung",
+        "GET" to "/api/v1/infokanaele",
+        "GET" to "/api/v1/infokanaele/{}/mitteilungen",
+        "POST" to "/api/v1/infokanaele/{}/mitteilungen",
+        "PUT" to "/api/v1/infokanaele/{}/mitteilungen/{}",
+        "DELETE" to "/api/v1/infokanaele/{}/mitteilungen/{}",
+        "PUT" to "/api/v1/infokanaele/{}/gelesen",
+    )
 
     @Test
     fun aPendingCallIsRemovedOnceTheContractHasIt() {

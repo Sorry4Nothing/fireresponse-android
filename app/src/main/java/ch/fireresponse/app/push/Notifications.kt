@@ -17,6 +17,7 @@ object Notifications {
     /** Die Kanäle, die der Server in jedem Push nennt: Ein Kanal, den das Gerät nicht kennt, zeigt den Push nicht. */
     const val APPOINTMENTS_CHANNEL = "termine"
     const val REGISTRATIONS_CHANNEL = "anmeldungen"
+    const val INFO_CHANNEL = "infokanal"
 
     private const val PREFS = "push"
     private const val ASKED = "permission_asked"
@@ -27,11 +28,12 @@ object Notifications {
             listOf(
                 NotificationChannel(APPOINTMENTS_CHANNEL, context.getString(R.string.channel_appointments), NotificationManager.IMPORTANCE_DEFAULT),
                 NotificationChannel(REGISTRATIONS_CHANNEL, context.getString(R.string.channel_registrations), NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(INFO_CHANNEL, context.getString(R.string.channel_info), NotificationManager.IMPORTANCE_DEFAULT),
             ),
         )
     }
 
-    private val CHANNELS = setOf(APPOINTMENTS_CHANNEL, REGISTRATIONS_CHANNEL)
+    private val CHANNELS = setOf(APPOINTMENTS_CHANNEL, REGISTRATIONS_CHANNEL, INFO_CHANNEL)
 
     /** Der Kanal aus dem Push, wenn die App ihn kennt, sonst «Übungen». Der Inhalt kommt von aussen. */
     fun channelOf(channel: String?): String = channel?.takeIf { it in CHANNELS } ?: APPOINTMENTS_CHANNEL

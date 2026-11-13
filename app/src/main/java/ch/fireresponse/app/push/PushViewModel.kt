@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
 /** Die Push-Schalter der Person und das Hinterlegen des Tokens dieses Geräts. */
 class PushViewModel(private val api: PushApi, profile: Profile) : ViewModel() {
     /** `registrations` ist `null` bei Personen ohne Einheitsrolle: Sie haben den Schalter nicht. */
-    data class Switches(val appointments: Boolean, val registrations: Boolean? = null)
+    data class Switches(val appointments: Boolean, val registrations: Boolean? = null, val infoChannel: Boolean = true)
 
-    private val _switches = MutableStateFlow(Switches(profile.pushAppointments, profile.pushRegistrations))
+    private val _switches = MutableStateFlow(Switches(profile.pushAppointments, profile.pushRegistrations, profile.pushInfoChannel))
     val switches: StateFlow<Switches> = _switches.asStateFlow()
 
     private val _form = MutableStateFlow(FormState())
@@ -27,6 +27,8 @@ class PushViewModel(private val api: PushApi, profile: Profile) : ViewModel() {
     fun setAppointments(on: Boolean) = save(PushSwitchesRequest(appointments = on)) { it.copy(appointments = on) }
 
     fun setRegistrations(on: Boolean) = save(PushSwitchesRequest(registrations = on)) { it.copy(registrations = on) }
+
+    fun setInfoChannel(on: Boolean) = save(PushSwitchesRequest(infoChannel = on)) { it.copy(infoChannel = on) }
 
     /** Der Schalter springt erst um, wenn der Server zugestimmt hat. */
     private fun save(request: PushSwitchesRequest, apply: (Switches) -> Switches) {

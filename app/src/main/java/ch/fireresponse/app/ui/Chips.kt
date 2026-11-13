@@ -4,6 +4,10 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -64,5 +68,20 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
     ) {
         kind.icon.let { Icon(painterResource(it), contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp)) }
         Text(text, style = MaterialTheme.typography.labelMedium, color = contentColor)
+    }
+}
+
+/** Der Zähler für Ungelesenes: Zahl im Kreis in `accent`. Der Name der Zahl steht am Element, auf dem er sitzt. */
+@Composable
+fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(24.dp).background(MaterialTheme.fire.accent, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            if (count > 99) "99+" else count.toString(),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.surface,
+        )
     }
 }
