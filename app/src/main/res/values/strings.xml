@@ -9,6 +9,37 @@
     <string name="error_registration_not_open">Die Anmeldung ist noch nicht offen.</string>
     <string name="error_network">Keine Verbindung. Prüfe dein Internet und versuche es nochmals.</string>
     <string name="error_unknown">Etwas ist schiefgelaufen. Bitte versuche es nochmals.</string>
+    <string name="places_title">Leiter-Plätze</string>
+    <string name="places_taken">%1$d von %2$d belegt</string>
+    <plurals name="places_free">
+        <item quantity="one">Noch %1$d Platz frei</item>
+        <item quantity="other">Noch %1$d Plätze frei</item>
+    </plurals>
+    <string name="places_full">Voll</string>
+    <string name="places_full_spoken">Voll, Warteliste möglich</string>
+    <string name="places_slot_free">Frei</string>
+    <string name="places_slot_free_spoken">Platz frei</string>
+    <string name="places_list">Belegte und freie Plätze</string>
+    <string name="waitlist_title">Warteliste</string>
+    <string name="waitlist_hint">Sagt jemand ab, rückst du automatisch nach.</string>
+    <string name="waitlist_join">Auf die Warteliste setzen</string>
+    <string name="waitlist_on">Du stehst auf der Warteliste</string>
+    <string name="waitlist_position">Warteliste, Platz %1$d</string>
+    <string name="waitlist_leave">Von der Warteliste nehmen</string>
+    <string name="place_yours">Dein Platz ist dabei</string>
+    <string name="place_yours_waiting">Wenn du absagst, rückt die nächste Person von der Warteliste nach.</string>
+    <string name="place_yours_nobody">Wenn du absagst, wird der Platz frei.</string>
+    <string name="moved_up">Du bist nachgerückt und hast jetzt einen Platz.</string>
+    <string name="notice_close">Hinweis schliessen</string>
+    <string name="last_seat_taken">Der letzte Platz ist soeben vergeben worden. Du stehst auf der Warteliste, Platz %1$d.</string>
+    <string name="last_seat_taken_no_position">Der letzte Platz ist soeben vergeben worden. Du stehst auf der Warteliste.</string>
+    <string name="leave_place_title">Platz freigeben?</string>
+    <string name="leave_place_text_waiting">Dein Platz wird frei. Die nächste Person auf der Warteliste rückt nach.</string>
+    <string name="leave_place_text">Dein Platz wird frei.</string>
+    <string name="leave_place_confirm">Absagen</string>
+    <string name="registrations_waitlist">Warteliste %1$d</string>
+    <string name="widget_full">Voll</string>
+    <string name="widget_waitlist">Warteliste</string>
 
     <string name="loading">Wird geladen …</string>
     <string name="retry">Nochmals versuchen</string>

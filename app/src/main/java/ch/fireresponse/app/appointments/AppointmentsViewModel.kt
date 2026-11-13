@@ -26,6 +26,10 @@ data class RsvpState(
     /** Was gerade gespeichert wird: Schlüssel (Teilnehmende oder [LEADER_KEY]) und die gewählte Antwort. */
     val pendingKey: String? = null,
     val pendingAttending: Boolean? = null,
+    /** Die Antwort der Leitung «ja» kam trotz freiem Platz auf die Warteliste: der letzte Platz ging in der Zwischenzeit an eine andere Person. */
+    val lastSeatTaken: Boolean = false,
+    /** Die Nummer auf der Warteliste nach `lastSeatTaken`. */
+    val waitlistPosition: Int? = null,
 )
 
 const val LEADER_KEY = "leitung"
@@ -53,6 +57,15 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
 
     private val _registrations = MutableStateFlow<ApiResult<Registrations>?>(null)
     val registrations: StateFlow<ApiResult<Registrations>?> = _registrations.asStateFlow()
+
+    private val _movedUp = MutableStateFlow(false)
+
+    /** Die Person stand auf der Warteliste und hat jetzt einen Platz (gesehen beim Neulesen); bleibt, bis sie den Hinweis schliesst. */
+    val movedUp: StateFlow<Boolean> = _movedUp.asStateFlow()
+
+    fun dismissMovedUp() {
+        _movedUp.value = false
+    }
 
     /** Für die Rechte bei den Anmeldungen (Kantonsadmin, Kommando, Leitung); `null`, solange es lädt. */
     private val _profile = MutableStateFlow<ApiResult<Profile>?>(null)
@@ -117,7 +130,12 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
         viewModelScope.launch(Background()) {
             val appointment = api.read(id)
             if (openedId != id || _rsvp.value.running) return@launch
-            if (appointment is ApiResult.Ok) _detail.value = appointment
+            if (appointment is ApiResult.Ok) {
+                // Nachgerückt: gestern auf der Warteliste, jetzt mit Platz.
+                if ((_detail.value as? ApiResult.Ok)?.value?.onWaitlist == true && appointment.value.ownRegistration == "ja") _movedUp.value = true
+                _detail.value = appointment
+                refreshPlaces(appointment.value)
+            }
         }
     }
 
@@ -126,21 +144,30 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
         openedId = id
         _detail.value = null
         _rsvp.value = RsvpState()
-        detailJob = viewModelScope.launch { _detail.value = api.read(id) }
+        _movedUp.value = false
+        _registrations.value = null
+        detailJob = viewModelScope.launch {
+            val result = api.read(id)
+            _detail.value = result
+            (result as? ApiResult.Ok)?.let { refreshPlaces(it.value) }
+        }
     }
 
     fun rsvpParticipant(appointmentId: String, participantId: String, attending: Boolean) =
-        save(appointmentId, participantId, attending) { api.setAttendance(appointmentId, participantId, attending) }
+        save(appointmentId, participantId, attending) { api.setAttendance(appointmentId, participantId, attending).withoutAnswer() }
 
-    fun rsvpLeader(appointmentId: String, attending: Boolean) =
-        save(appointmentId, LEADER_KEY, attending) { api.setLeaderRsvp(appointmentId, attending) }
+    /** Die eigene Anmeldung der Leitung; war ein Platz frei und kommt «warteliste» zurück, sagt [RsvpState.lastSeatTaken] es. */
+    fun rsvpLeader(appointmentId: String, attending: Boolean) {
+        val hadFreePlace = (_detail.value as? ApiResult.Ok)?.value?.places?.let { !it.full && it.free > 0 } == true
+        save(appointmentId, LEADER_KEY, attending, hadFreePlace) { api.setLeaderRsvp(appointmentId, attending) }
+    }
 
     /**
      * Speichert und liest den Termin danach neu: Der Server ist die einzige Wahrheit über den Stand, auch über die
      * Kontaktperson (wer mit «nein» absagt, gibt sie an die Stellvertretung ab). Bei einem Fehler bleibt der alte Stand
      * sichtbar, die Pillen springen also zurück.
      */
-    private fun save(appointmentId: String, key: String, attending: Boolean, block: suspend () -> ApiResult<Unit>) {
+    private fun save(appointmentId: String, key: String, attending: Boolean, hadFreePlace: Boolean = false, block: suspend () -> ApiResult<LeaderAnswer?>) {
         if (_rsvp.value.running) return
         val existing = _rsvp.value.sentAt
         _rsvp.value = RsvpState(running = true, sentAt = existing, pendingKey = key, pendingAttending = attending)
@@ -148,13 +175,35 @@ class AppointmentsViewModel(private val api: AppointmentsApi) : ViewModel() {
             when (val result = block()) {
                 is ApiResult.Failure -> _rsvp.value = RsvpState(error = result.error, sentAt = existing)
                 is ApiResult.Ok -> {
-                    _rsvp.value = RsvpState(sentAt = existing + (key to TIME_FORMAT.format(LocalTime.now(SWISS_ZONE))))
+                    val answer = result.value
+                    val raced = hadFreePlace && attending && answer?.status == "warteliste"
+                    _rsvp.value = RsvpState(
+                        sentAt = existing + (key to TIME_FORMAT.format(LocalTime.now(SWISS_ZONE))),
+                        lastSeatTaken = raced,
+                        waitlistPosition = answer?.position.takeIf { raced },
+                    )
                     val fresh = api.read(appointmentId)
-                    if (openedId == appointmentId) _detail.value = fresh
+                    if (openedId == appointmentId) {
+                        _detail.value = fresh
+                        (fresh as? ApiResult.Ok)?.let { refreshPlaces(it.value) }
+                    }
                     refreshList()
                 }
             }
         }
+    }
+
+    /** Wer die Plätze belegt (Namen und Bilder), steht nur in der Übersicht der Anmeldungen: bei Leiter-Plätzen still nachladen. */
+    private fun refreshPlaces(appointment: Appointment) {
+        if (appointment.places == null) return
+        viewModelScope.launch(Background()) {
+            (api.registrations(appointment.id) as? ApiResult.Ok)?.let { if (openedId == appointment.id) _registrations.value = it }
+        }
+    }
+
+    private fun ApiResult<Unit>.withoutAnswer(): ApiResult<LeaderAnswer?> = when (this) {
+        is ApiResult.Ok -> ApiResult.Ok(null)
+        is ApiResult.Failure -> this
     }
 
     private companion object {

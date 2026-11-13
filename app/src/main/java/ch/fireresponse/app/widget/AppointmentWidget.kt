@@ -207,8 +207,15 @@ object AppointmentWidget {
         val opensOn = appointment.registrationOpensOn(today)
         val people = if (opensOn == null) appointment.people(context.getString(R.string.message_you)) else emptyList()
         val answers = appointment.answers()
+        // Leiter-Plätze: «Voll» (auch mit eigener Zusage) und bei eigener Warteliste «Warteliste» ersetzen «x von y».
+        val placesTag = when {
+            appointment.onWaitlist -> R.string.widget_waitlist
+            appointment.places?.full == true -> R.string.widget_full
+            else -> null
+        }
         val count = when {
             opensOn != null -> "ab ${opensOn.dayOfMonth}.${opensOn.monthValue}."
+            placesTag != null -> context.getString(placesTag)
             answers.total > 0 -> context.getString(R.string.widget_count, answers.given, answers.total)
             else -> null
         }
@@ -224,6 +231,11 @@ object AppointmentWidget {
             context.getString(R.string.widget_unit, squad.name),
             opensOn?.let { context.getString(R.string.registration_from, "${it.dayOfMonth}.${it.monthValue}.") },
             people.takeIf { it.isNotEmpty() }?.joinToString(", ") { "${it.name}: ${context.getString(look(it.stand).spoken)}" },
+            when {
+                appointment.onWaitlist -> appointment.places?.ownPosition?.let { context.getString(R.string.waitlist_position, it) } ?: context.getString(R.string.waitlist_title)
+                appointment.places?.full == true -> context.getString(R.string.places_full_spoken)
+                else -> null
+            },
         ).joinToString(", ")
         views.setContentDescription(row.row, "$spoken. ${context.getString(R.string.widget_open_appointment)}")
         views.setOnClickPendingIntent(row.row, openIntent(context, appointment.id))

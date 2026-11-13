@@ -145,10 +145,54 @@ class AppointmentsApiTest {
     @Test
     fun leaderSendsNoToLeaderPath() {
         server.enqueue(MockResponse.Builder().code(204).build())
-        assertEquals(ApiResult.Ok(Unit), runBlocking { appointments.setLeaderRsvp("p1", attending = false) })
+        // Ältere Server antworten mit 204 ohne Inhalt: Dann gilt, was die Person gewählt hat.
+        assertEquals(ApiResult.Ok(LeaderAnswer("nein")), runBlocking { appointments.setLeaderRsvp("p1", attending = false) })
         val request = server.takeRequest()
         assertEquals("PUT /api/v1/programme/p1/leitung HTTP/1.1", request.requestLine)
         assertEquals("""{"status":"nein"}""", request.body?.utf8())
+    }
+
+    @Test
+    fun leaderOnAFullAppointmentLandsOnTheWaitlist() {
+        server.enqueue(json(200, """{"status":"warteliste","position":2}"""))
+        assertEquals(ApiResult.Ok(LeaderAnswer("warteliste", 2)), runBlocking { appointments.setLeaderRsvp("p1", attending = true) })
+        server.enqueue(json(200, """{"status":"ja","position":null}"""))
+        assertEquals(ApiResult.Ok(LeaderAnswer("ja")), runBlocking { appointments.setLeaderRsvp("p1", attending = true) })
+    }
+
+    @Test
+    fun leaderPlacesAreOnlyThereWhenTheServerSendsThem() {
+        server.enqueue(json(200, detail))
+        assertNull((runBlocking { appointments.read("x") } as ApiResult.Ok).value.places)
+        server.enqueue(json(200, detail.dropLast(1) + ""","leitungPlaetze":{"hoechstzahl":4,"belegt":4,"frei":0,"voll":true,"wartende":2,"eigenePosition":2}}"""))
+        val full = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
+        assertEquals(LeaderPlaces(max = 4, taken = 4, free = 0, full = true, waiting = 2, ownPosition = 2), full.places)
+    }
+
+    @Test
+    fun registrationsCarryTheWaitlistAndThePlaces() {
+        server.enqueue(
+            json(
+                200,
+                """{"zahlen":{"teilnehmende":{"ja":1,"nein":0,"offen":0},"leitende":{"ja":4,"nein":0,"offen":0,"warteliste":2}},
+                    "teilnehmende":[],"leitende":[{"id":"l1","name":"Lea Meier","rolle":"leitung","status":"ja","bildUrl":null,"abzeichen":null},
+                    {"id":"l2","name":"Dario Huber","rolle":"leitung","status":"warteliste","position":1,"bildUrl":null,"abzeichen":null}],
+                    "leitungPlaetze":{"hoechstzahl":4,"belegt":4,"frei":0,"voll":true,"wartende":2,"eigenePosition":null}}""",
+            ),
+        )
+        val data = (runBlocking { appointments.registrations("x") } as ApiResult.Ok).value
+        assertEquals(2, data.counts.leaders.warteliste)
+        assertEquals(4, data.counts.leaders.total)
+        assertEquals(1, data.leaders.last().position)
+        assertEquals(ch.fireresponse.app.ui.ChipKind.WAITLIST, registrationChip(data.leaders.last().status))
+        assertEquals(true, data.places?.full)
+    }
+
+    @Test
+    fun namesAreShortenedToFirstNameAndInitial() {
+        assertEquals("Lea M.", shortName("Lea Meier"))
+        assertEquals("Marco K.", shortName("Marco von Keller"))
+        assertEquals("Nina", shortName("Nina"))
     }
 
     @Test
