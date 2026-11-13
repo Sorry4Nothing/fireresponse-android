@@ -98,6 +98,9 @@ class PushApiTest {
     @Test
     fun aMessageFromTheAdminLeadsNowhere() {
         assertNull(PushTarget.from("mitteilung", ""))
+        // Der Push des Backends trägt `typ: "mitteilung"` ohne `id`; ganz ohne Daten öffnet er ebenfalls nur die App.
+        assertNull(PushTarget.from("mitteilung", null))
+        assertNull(PushTarget.from(null, null))
     }
 
     @Test
