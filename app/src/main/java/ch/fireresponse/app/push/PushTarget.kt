@@ -1,10 +1,13 @@
 package ch.fireresponse.app.push
 
-/** Wohin ein Push führt: in ein Termin. */
+/** Wohin ein Push führt: in einen Termin oder in einen Infokanal. */
 sealed interface PushTarget {
     val id: String
 
     data class Appointment(override val id: String) : PushTarget
+
+    /** Der Infokanal einer Einheit; `id` ist die Einheit. */
+    data class InfoChannel(override val id: String) : PushTarget
 
     companion object {
         private val ID = Regex("^[0-9a-fA-F-]{36}$")
@@ -17,6 +20,7 @@ sealed interface PushTarget {
             if (id == null || !ID.matches(id)) return null
             return when (type) {
                 "programm" -> Appointment(id)
+                "infokanal" -> InfoChannel(id)
                 else -> null
             }
         }

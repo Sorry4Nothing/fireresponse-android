@@ -56,6 +56,14 @@ import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.profile.ProfileParticipant
 import ch.fireresponse.app.profile.ProfileSquad
+import ch.fireresponse.app.infochannel.ChannelAction
+import ch.fireresponse.app.infochannel.ChannelUnit
+import ch.fireresponse.app.infochannel.History
+import ch.fireresponse.app.infochannel.InfoChannel
+import ch.fireresponse.app.infochannel.InfoChannelListScreen
+import ch.fireresponse.app.infochannel.InfoChannelScreen
+import ch.fireresponse.app.infochannel.InfoMessage
+import ch.fireresponse.app.infochannel.MessageAuthor
 import ch.fireresponse.app.maintenance.MaintenanceScreen
 import ch.fireresponse.app.maintenance.MaintenanceState
 import ch.fireresponse.app.net.MaintenanceStatus
@@ -200,6 +208,28 @@ private fun PlacesDetail(appointment: Appointment) {
     }
 }
 
+private val infoChannels = listOf(
+    InfoChannel(ChannelUnit("s1", "Jugendfeuerwehr Musterdorf", "jf"), "Infokanal Jugendfeuerwehr Musterdorf", canWrite = true, unread = 3, lastAt = "2026-11-13T14:30:00+01:00"),
+    InfoChannel(ChannelUnit("s2", "Kinderfeuerwehr Musterdorf", "kf"), "Infokanal Kinderfeuerwehr Musterdorf", canWrite = false, unread = 0, lastAt = "2026-11-10T18:00:00+01:00"),
+)
+
+private val infoMessages = listOf(
+    InfoMessage("m4", "Heute Abend fällt das Training aus. Mehr dazu: https://example.org/training", false, false, "2026-11-13T14:30:00+01:00", MessageAuthor("Petra Beispiel", "kommando"), own = false, canDelete = true),
+    InfoMessage("m3", null, true, false, "2026-11-13T09:10:00+01:00", null),
+    InfoMessage("m2", "Bitte Handschuhe mitbringen.", false, true, "2026-11-12T18:00:00+01:00", MessageAuthor("Sarah Meier", "leitung"), own = true, canEdit = true, canDelete = true),
+    InfoMessage("m1", "Willkommen im Infokanal.", false, false, "2026-11-10T17:00:00+01:00", MessageAuthor("Petra Beispiel", "kommando")),
+)
+
+@Composable
+private fun InfoDetail(canWrite: Boolean, messages: List<InfoMessage>) {
+    MainScaffold(Destination.INFO, {}, destinations = Destination.entries, badges = mapOf(Destination.INFO to 3)) {
+        InfoChannelScreen(
+            channel = infoChannels[if (canWrite) 0 else 1], history = History("s1", canWrite, messages, loading = false), action = ChannelAction(),
+            onBack = {}, onSend = { _, _ -> }, onEdit = { _, _, _ -> }, onDelete = {}, onLoadOlder = {}, onRetry = {}, onClearError = {},
+        )
+    }
+}
+
 private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "login" to { LoginScreen(FormState()) { _, _ -> } },
     "loginError" to { LoginScreen(FormState(error = R.string.login_failed)) { _, _ -> } },
@@ -265,6 +295,14 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         }
     },
     "offline" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.NETWORK), {}, {}) } },
+    "infolist" to {
+        MainScaffold(Destination.INFO, {}, destinations = Destination.entries, badges = mapOf(Destination.INFO to 3)) {
+            InfoChannelListScreen(ApiResult.Ok(infoChannels), {}, {})
+        }
+    },
+    "info" to { InfoDetail(true, infoMessages) },
+    "inforeader" to { InfoDetail(false, infoMessages) },
+    "infoempty" to { InfoDetail(true, emptyList()) },
     "placesfree" to { PlacesDetail(appointments.first { it.id == "p1" }) },
     "placesfull" to { PlacesDetail(appointments.first { it.id == "p2" }) },
     "placeswait" to { PlacesDetail(appointments.first { it.id == "p3" }) },

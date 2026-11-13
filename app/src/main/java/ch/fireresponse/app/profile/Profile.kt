@@ -65,6 +65,8 @@ data class Profile(
     @SerialName("pushProgramme") val pushAppointments: Boolean = true,
     /** Der Server liefert ihn nur Personen mit Einheitsrolle; `null`: kein Schalter anzeigen. */
     @SerialName("pushAnmeldungen") val pushRegistrations: Boolean? = null,
+    /** Der Schalter für Mitteilungen im Infokanal (für alle Konten, standardmässig an). */
+    @SerialName("pushInfokanal") val pushInfoChannel: Boolean = true,
 ) {
     /** Das Konto gehört zu keiner Einheit: ohne Rolle und ohne Teilnehmende. Die Leitung muss es zuordnen. */
     val hasNoSquad get() = squads.isEmpty() && participants.isEmpty()

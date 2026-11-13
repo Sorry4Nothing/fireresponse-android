@@ -88,6 +88,11 @@ import ch.fireresponse.app.push.Notifications
 import ch.fireresponse.app.push.NotificationsScreen
 import ch.fireresponse.app.push.PushApi
 import ch.fireresponse.app.push.PushTarget
+import ch.fireresponse.app.infochannel.InfoChannelApi
+import ch.fireresponse.app.infochannel.InfoChannelListScreen
+import ch.fireresponse.app.infochannel.InfoChannelScreen
+import ch.fireresponse.app.infochannel.InfoChannelViewModel
+import ch.fireresponse.app.infochannel.unreadTotal
 import ch.fireresponse.app.maintenance.MaintenanceScreen
 import ch.fireresponse.app.maintenance.MaintenanceViewModel
 import ch.fireresponse.app.net.MaintenanceApi
@@ -116,6 +121,9 @@ import kotlinx.coroutines.withContext
 
 /** So oft liest der offene Termin Stand und Kontakte still neu. */
 private const val DETAIL_POLL_INTERVAL_MS = 15_000L
+
+/** So oft liest der Infokanal still neu (Zähler am Reiter, offener Verlauf). */
+private const val INFO_POLL_INTERVAL_MS = 30_000L
 
 class MainActivity : FragmentActivity() {
     /** Wohin das Tippen auf einen Push führt; bleibt stehen, bis die Person angemeldet ist und der Bildschirm es aufgreift. */
@@ -258,7 +266,7 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                     val rankImages = viewModel { RankImages(RankImageApi(client)::load) }
                     CompositionLocalProvider(LocalProfileImages provides images, LocalRankImages provides rankImages) {
                         MainContent(
-                            AppointmentsApi(client), PushApi(client), current.profile,
+                            AppointmentsApi(client), PushApi(client), InfoChannelApi(client), current.profile,
                             passwordSaved, form, imageForm, auth,
                             pushTarget, onPushTargetHandled,
                             privacy = privacy,
@@ -292,6 +300,7 @@ private sealed interface Screen {
 private fun MainContent(
     appointmentsApi: AppointmentsApi,
     pushApi: PushApi,
+    infoApi: InfoChannelApi,
     account: Profile,
     passwordSaved: Boolean,
     form: FormState,
@@ -313,6 +322,13 @@ private fun MainContent(
         (appointmentList as? ApiResult.Ok)?.let { withContext(Dispatchers.IO) { AppointmentWidget.show(context, it.value.appointments) } }
     }
     val push = viewModel { PushViewModel(pushApi, account) }
+    // Der Infokanal: Der Reiter erscheint nur mit mindestens einem Kanal; die Zahl am Reiter ist die Summe des Ungelesenen.
+    val info = viewModel { InfoChannelViewModel(infoApi) }
+    val infoState by info.channels.collectAsState()
+    val infoChannels = (infoState as? ApiResult.Ok)?.value.orEmpty()
+    var openedChannel by rememberSaveable { mutableStateOf<String?>(null) }
+    val destinations = Destination.entries.filter { it != Destination.INFO || infoChannels.isNotEmpty() }
+    val badges = mapOf(Destination.INFO to unreadTotal(infoChannels))
     var notificationsOpen by rememberSaveable { mutableStateOf(false) }
     var destination by rememberSaveable { mutableStateOf(Destination.APPOINTMENTS) }
     var openedAppointment by rememberSaveable { mutableStateOf<String?>(null) }
@@ -338,6 +354,7 @@ private fun MainContent(
         notificationsOpen = false; viewingRegistrations = false; privacyOpen = false
         when (target) {
             is PushTarget.Appointment -> { destination = Destination.APPOINTMENTS; openedAppointment = target.id }
+            is PushTarget.InfoChannel -> { destination = Destination.INFO; openedChannel = target.id }
         }
         onPushTargetHandled()
     }
@@ -348,6 +365,20 @@ private fun MainContent(
         if (viewingRegistrations && id != null) appointments.loadRegistrations(id)
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // Zähler und offener Verlauf lesen im Takt still neu; ein Fehler lässt den alten Stand stehen.
+    LaunchedEffect(Unit) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                delay(INFO_POLL_INTERVAL_MS)
+                info.refreshChannels()
+                info.refreshHistory()
+            }
+        }
+    }
+    // Ohne Infokanal (mehr) gibt es den Reiter nicht: zurück zu den Übungen.
+    LaunchedEffect(infoState, destination) {
+        if (destination == Destination.INFO && infoState is ApiResult.Ok && infoChannels.isEmpty()) destination = Destination.APPOINTMENTS
+    }
     Surface(Modifier.fillMaxSize()) {
         val appointmentId = openedAppointment
         val detail by appointments.detail.collectAsState()
@@ -452,10 +483,12 @@ private fun MainContent(
                         onAppointments = push::setAppointments,
                         onRegistrations = push::setRegistrations,
                         onBack = leave,
+                        onInfoChannel = push::setInfoChannel,
+                        hasInfoChannel = infoChannels.isNotEmpty(),
                     )
                     }
                 }
-                Screen.Home -> MainScaffold(destination, onDestination = { destination = it }) {
+                Screen.Home -> MainScaffold(destination, onDestination = { destination = it }, destinations = destinations, badges = badges) {
                     AnimatedContent(
                         destination,
                         modifier = Modifier.fillMaxSize(),
@@ -479,6 +512,28 @@ private fun MainContent(
                                 TwoPane(list = list, detail = { if (appointmentId != null) detailPane(appointmentId) else DetailPlaceholder() })
                             } else {
                                 list()
+                            }
+                        } else if (tab == Destination.INFO) ContentWidth {
+                            val single = infoChannels.singleOrNull()
+                            val unitId = single?.unit?.id ?: openedChannel
+                            if (unitId == null) {
+                                InfoChannelListScreen(infoState, onOpen = { openedChannel = it }, onRetry = info::loadChannels)
+                            } else {
+                                LaunchedEffect(unitId) { info.open(unitId) }
+                                DisposableEffect(unitId) { onDispose { info.close() } }
+                                BackHandler(enabled = single == null) { openedChannel = null }
+                                InfoChannelScreen(
+                                    channel = infoChannels.firstOrNull { it.unit.id == unitId },
+                                    history = info.history.collectAsState().value,
+                                    action = info.action.collectAsState().value,
+                                    onBack = if (single == null) ({ openedChannel = null }) else null,
+                                    onSend = info::send,
+                                    onEdit = info::edit,
+                                    onDelete = info::delete,
+                                    onLoadOlder = info::loadOlder,
+                                    onRetry = info::retry,
+                                    onClearError = info::clearActionError,
+                                )
                             }
                         } else if (tab == Destination.PROFILE) ContentWidth {
                             ProfileScreen(

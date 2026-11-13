@@ -68,6 +68,13 @@ class ProfileTest {
     }
 
     @Test
+    fun theInfoChannelSwitchIsOnByDefaultAndReadFromTheProfile() {
+        val json = Json { ignoreUnknownKeys = true }
+        assertEquals(true, json.decodeFromString<Profile>("""{"id":"u1"}""").pushInfoChannel)
+        assertEquals(false, json.decodeFromString<Profile>("""{"id":"u1","pushInfokanal":false}""").pushInfoChannel)
+    }
+
+    @Test
     fun participantsAndUnitsCarryTheirBadge() {
         val profile = Json { ignoreUnknownKeys = true }.decodeFromString<Profile>(
             """{"id":"u1","name":"Petra","einwilligung":true,

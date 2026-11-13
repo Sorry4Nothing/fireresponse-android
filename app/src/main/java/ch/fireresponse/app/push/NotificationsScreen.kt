@@ -63,6 +63,9 @@ fun NotificationsScreen(
     onAppointments: (Boolean) -> Unit,
     onRegistrations: (Boolean) -> Unit,
     onBack: () -> Unit,
+    onInfoChannel: (Boolean) -> Unit = {},
+    /** Nur Konten mit einem Infokanal sehen den Schalter. */
+    hasInfoChannel: Boolean = false,
 ) {
     val context = LocalContext.current
     // Nach den Einstellungen des Systems kommt die Person zurück: dann gilt der neue Stand.
@@ -98,6 +101,14 @@ fun NotificationsScreen(
                         R.drawable.ic_group, stringResource(R.string.notifications_registrations),
                         stringResource(R.string.notifications_registrations_hint),
                         it, enabled = !form.running, onChange = onRegistrations,
+                    )
+                }
+                if (hasInfoChannel) {
+                    SettingsDivider()
+                    SwitchRow(
+                        R.drawable.ic_chat, stringResource(R.string.notifications_info),
+                        stringResource(R.string.notifications_info_hint),
+                        switches.infoChannel, enabled = !form.running, onChange = onInfoChannel,
                     )
                 }
             }

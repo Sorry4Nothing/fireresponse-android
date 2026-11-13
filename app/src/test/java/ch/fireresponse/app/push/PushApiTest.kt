@@ -96,6 +96,13 @@ class PushApiTest {
     }
 
     @Test
+    fun theInfoChannelSwitchIsSentAlone() {
+        server.enqueue(MockResponse.Builder().code(204).build())
+        runBlocking { push.setSwitches(PushSwitchesRequest(infoChannel = false)) }
+        assertEquals("""{"pushInfokanal":false}""", server.takeRequest().body?.utf8())
+    }
+
+    @Test
     fun aMessageFromTheAdminLeadsNowhere() {
         assertNull(PushTarget.from("mitteilung", ""))
         // Der Push des Backends trägt `typ: "mitteilung"` ohne `id`; ganz ohne Daten öffnet er ebenfalls nur die App.
