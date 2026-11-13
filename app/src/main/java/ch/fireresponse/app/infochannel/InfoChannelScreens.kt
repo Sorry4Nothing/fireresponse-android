@@ -251,7 +251,9 @@ private fun MessageRow(message: InfoMessage, onEdit: (InfoMessage) -> Unit, onDe
     }
     val deleted = stringResource(R.string.info_deleted)
     val edited = stringResource(R.string.info_edited)
-    val by = listOfNotNull(message.author?.name, role).joinToString(", ")
+    // Ohne Konto (gelöscht) bleibt der Text, der Absender ist neutral.
+    val authorName = message.author?.name ?: stringResource(R.string.info_author_gone)
+    val by = listOfNotNull(authorName, role).joinToString(", ")
     val spoken = if (message.deleted) "$deleted, $time" else stringResource(R.string.info_message_by, by, time) + ": " + message.text.orEmpty() +
         (if (message.edited) ", $edited" else "")
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s3), verticalAlignment = Alignment.Top) {
@@ -262,7 +264,7 @@ private fun MessageRow(message: InfoMessage, onEdit: (InfoMessage) -> Unit, onDe
             if (message.deleted) {
                 Box(Modifier.size(36.dp))
             } else {
-                Avatar(message.author?.name ?: "", size = 36.dp, imageUrl = message.author?.imageUrl, initialSize = 13.sp)
+                Avatar(authorName, size = 36.dp, imageUrl = message.author?.imageUrl, initialSize = 13.sp)
             }
             Column(Modifier.weight(1f)) {
                 if (message.deleted) {
@@ -270,7 +272,7 @@ private fun MessageRow(message: InfoMessage, onEdit: (InfoMessage) -> Unit, onDe
                     Text(time, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(message.author?.name.orEmpty(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f, fill = false))
+                        Text(authorName, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f, fill = false))
                         role?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant) }
                         Text(time, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
                     }
