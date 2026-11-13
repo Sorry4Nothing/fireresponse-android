@@ -2,6 +2,7 @@ package ch.fireresponse.app.ui
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.getValue
@@ -29,6 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -183,17 +186,26 @@ fun SquadMark(squadId: String, type: String, modifier: Modifier = Modifier, size
  * oder solange es lädt, steht nichts da (kein «JF»/«KF»-Ersatz). Dekoration: Der Name der Einheit steht im Kopf.
  */
 @Composable
-fun SquadWatermark(squadId: String, modifier: Modifier = Modifier, size: Dp = 280.dp, alpha: Float = 0.1f) {
+fun SquadWatermark(
+    squadId: String,
+    modifier: Modifier = Modifier,
+    size: Dp = 280.dp,
+    // Das Logo ist meist dunkel: Auf dem dunklen Grund braucht es mehr Deckkraft, sonst sieht man es nicht.
+    alpha: Float = if (isSystemInDarkTheme()) 0.25f else 0.12f,
+) {
     val images = LocalRankImages.current ?: return
     val url = squadLogoPath(squadId)
     val bitmap by produceState<Bitmap?>(null, url, images) { value = images.get(url) }
     bitmap?.let {
         Image(
             it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, alpha = alpha,
-            modifier = modifier.size(size).clearAndSetSemantics {},
+            // Weich statt scharf: Es ist ein Hintergrund und soll nicht mit dem Text wetteifern (ab Android 12; davor bleibt es scharf).
+            modifier = modifier.size(size).blur(WATERMARK_BLUR, BlurredEdgeTreatment.Unbounded).clearAndSetSemantics {},
         )
     }
 }
+
+private val WATERMARK_BLUR = 18.dp
 
 /** Initialen in einem runden Feld, wie bei den Teilnehmenden: Token `avatar` mit `onAvatar`, 12 sp fett (Entwurf: 36 dp). */
 @Composable
