@@ -185,6 +185,8 @@ class InfoChannelViewModelTest {
         var done = false
         viewModel.send("Neu") { done = true }
         viewModel.history.await { it?.messages?.firstOrNull()?.id == "m2" }
+        // `onDone` läuft nach dem Setzen des Zustands: darauf warten statt auf den Takt hoffen.
+        runBlocking { withTimeout(5_000) { while (!done) kotlinx.coroutines.delay(10) } }
         assertTrue(done)
         assertNull(viewModel.action.value.error)
     }
@@ -208,6 +210,7 @@ class InfoChannelViewModelTest {
         viewModel.history.await { it?.loading == false }
         viewModel.edit("m1", "Geändert") {}
         viewModel.history.await { it?.messages?.single()?.text == "Geändert" && it.messages.single().edited }
+        viewModel.action.await { !it.running } // erst danach nimmt das ViewModel die nächste Aktion an
         viewModel.delete("m1")
         val placeholder = viewModel.history.await { it?.messages?.single()?.deleted == true }!!.messages.single()
         assertNull(placeholder.text)
