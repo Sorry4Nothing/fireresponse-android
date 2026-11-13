@@ -58,26 +58,6 @@ class ApiContractTest {
             .toList()
     }
 
-    /**
-     * Aufrufe, die der Vertrag der App (`api-vertrag/`) noch nicht enthält, weil das Backend die Route noch nicht gebaut hat; sie stehen
-     * in `Claude/FireResponse/API/FR API Vertrag Apps Nr 27-34`. Mit der neuen Vertragskopie hier streichen.
-     */
-    // shortcut: Liste von Hand, bis der Vertrag der Nr. 27 kopiert ist.
-    private val pendingInBackend = setOf(
-        "GET" to "/api/v1/wartung",
-        "GET" to "/api/v1/infokanaele",
-        "GET" to "/api/v1/infokanaele/{}/mitteilungen",
-        "POST" to "/api/v1/infokanaele/{}/mitteilungen",
-        "PUT" to "/api/v1/infokanaele/{}/mitteilungen/{}",
-        "DELETE" to "/api/v1/infokanaele/{}/mitteilungen/{}",
-        "PUT" to "/api/v1/infokanaele/{}/gelesen",
-    )
-
-    @Test
-    fun aPendingCallIsRemovedOnceTheContractHasIt() {
-        assertEquals(emptySet<Pair<String, String>>(), pendingInBackend.intersect(contract()))
-    }
-
     @Test
     fun theTestFindsWhatItChecks() {
         // Ein Test, der nichts findet, besteht immer: Darum wird zuerst geprüft, dass er etwas findet.
@@ -88,7 +68,7 @@ class ApiContractTest {
     @Test
     fun everyCallOfTheAppIsInTheContract() {
         val contract = contract()
-        val missing = calls().filter { (it.method to it.path) !in contract && (it.method to it.path) !in pendingInBackend }
+        val missing = calls().filter { (it.method to it.path) !in contract }
         assertEquals(
             "Nicht im Vertrag: " + missing.joinToString { "${it.method} ${it.path} (${it.source})" },
             emptyList<Call>(),
