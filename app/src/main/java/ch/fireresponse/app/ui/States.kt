@@ -160,10 +160,11 @@ fun ErrorState(
     }
 }
 
+/** Ohne `onRefresh` gibt es keinen Knopf: Wo die Liste durch Ziehen neu lädt, braucht es keinen. */
 @Composable
-fun EmptyState(@DrawableRes icon: Int, title: String, text: String, onRefresh: () -> Unit, modifier: Modifier = Modifier) {
+fun EmptyState(@DrawableRes icon: Int, title: String, text: String, onRefresh: (() -> Unit)?, modifier: Modifier = Modifier) {
     StatePage(icon, title, text, modifier) {
-        PrimaryButton(stringResource(R.string.refresh), onRefresh, icon = R.drawable.ic_refresh)
+        onRefresh?.let { PrimaryButton(stringResource(R.string.refresh), it, icon = R.drawable.ic_refresh) }
     }
 }
 

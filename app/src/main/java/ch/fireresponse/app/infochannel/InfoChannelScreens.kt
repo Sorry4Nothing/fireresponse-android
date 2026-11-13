@@ -56,33 +56,57 @@ import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.FireResponseDialog
 import ch.fireresponse.app.ui.Header
 import ch.fireresponse.app.ui.HeaderButton
-import ch.fireresponse.app.ui.LabeledTextField
 import ch.fireresponse.app.ui.LoadingSkeleton
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
-import ch.fireresponse.app.ui.PrimaryButton
 import ch.fireresponse.app.ui.SquadMark
 import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.UnreadBadge
 import ch.fireresponse.app.ui.focusRing
 import ch.fireresponse.app.ui.theme.Spacing
 import ch.fireresponse.app.ui.theme.fire
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import ch.fireresponse.app.net.ApiError
+import ch.fireresponse.app.ui.Spinner
+import ch.fireresponse.app.ui.theme.Sizes
 import java.time.LocalDate
 
 /** Die Liste der Infokanäle, wenn die Person mehrere hat: eine Zeile je Einheit mit Zähler und Zeit der letzten Mitteilung. */
 @Composable
-fun InfoChannelListScreen(state: ApiResult<List<InfoChannel>>?, onOpen: (String) -> Unit, onRetry: () -> Unit) {
+fun InfoChannelListScreen(
+    state: ApiResult<List<InfoChannel>>?,
+    onOpen: (String) -> Unit,
+    onRetry: () -> Unit,
+    refreshing: Boolean = false,
+    refreshError: ApiError? = null,
+    onRefresh: () -> Unit = {},
+) {
     Column(Modifier.fillMaxSize()) {
         Header(title = stringResource(R.string.tab_info))
         when (state) {
             null -> LoadingSkeleton(stringResource(R.string.info_loading))
             is ApiResult.Failure -> ErrorState(state.error, onRetry)
-            is ApiResult.Ok -> LazyColumn(
-                Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.s4, vertical = Spacing.s2),
-                verticalArrangement = Arrangement.spacedBy(Spacing.s2),
-            ) {
-                items(state.value, key = { it.unit.id }) { ChannelRow(it, onOpen) }
+            is ApiResult.Ok -> PullToRefreshBox(refreshing, onRefresh, pullAction(onRefresh)) {
+                Column {
+                    RefreshError(refreshError)
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.s4, vertical = Spacing.s2),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+                    ) {
+                        items(state.value, key = { it.unit.id }) { ChannelRow(it, onOpen) }
+                    }
+                }
             }
         }
     }
@@ -137,6 +161,9 @@ fun InfoChannelScreen(
     onLoadOlder: () -> Unit,
     onRetry: () -> Unit,
     onClearError: () -> Unit,
+    refreshing: Boolean = false,
+    refreshError: ApiError? = null,
+    onRefresh: () -> Unit = {},
 ) {
     var editing by remember { mutableStateOf<InfoMessage?>(null) }
     var deleting by remember { mutableStateOf<InfoMessage?>(null) }
@@ -156,33 +183,43 @@ fun InfoChannelScreen(
         when {
             history == null || history.loading -> LoadingSkeleton(stringResource(R.string.info_loading))
             history.error != null -> ErrorState(history.error, onRetry)
-            history.messages.isEmpty() -> EmptyState(
-                R.drawable.ic_chat,
-                stringResource(R.string.info_empty_title),
-                stringResource(if (history.canWrite) R.string.info_empty_writer else R.string.info_empty_reader),
-                onRetry,
-                Modifier.weight(1f),
-            )
-            else -> Column(Modifier.weight(1f)) {
-                val rows = remember(history.messages) { historyRows(history.messages) }
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxWidth(),
-                    reverseLayout = true,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.s4, vertical = Spacing.s2),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.s3),
-                ) {
-                    items(rows, key = { if (it is HistoryRow.Message) it.message.id else "tag-${(it as HistoryRow.Day).date}" }) { row ->
-                        when (row) {
-                            is HistoryRow.Day -> DaySeparator(row.date)
-                            is HistoryRow.Message -> MessageRow(row.message, onEdit = { editing = it }, onDelete = { deleting = it })
-                        }
+            // Ziehen lädt neu, auch im leeren Verlauf: Es gibt keinen Aktualisieren-Knopf.
+            history.messages.isEmpty() -> PullToRefreshBox(refreshing, onRefresh, Modifier.weight(1f).then(pullAction(onRefresh))) {
+                LazyColumn(Modifier.fillMaxSize()) {
+                    item {
+                        EmptyState(
+                            R.drawable.ic_chat,
+                            stringResource(R.string.info_empty_title),
+                            stringResource(if (history.canWrite) R.string.info_empty_writer else R.string.info_empty_reader),
+                            onRefresh = null,
+                            Modifier.fillParentMaxSize(),
+                        )
                     }
-                    if (history.next != null) {
-                        item(key = "aelter") {
-                            // Die nächste Seite lädt, sobald das Ende der geladenen erreicht ist; ging das schief, bleibt der Knopf.
-                            LaunchedEffect(history.messages.size) { onLoadOlder() }
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                if (!history.loadingMore) TextActionButton(stringResource(R.string.info_load_older), onLoadOlder)
+                }
+            }
+            else -> PullToRefreshBox(refreshing, onRefresh, Modifier.weight(1f).then(pullAction(onRefresh))) {
+                Column {
+                    RefreshError(refreshError)
+                    val rows = remember(history.messages) { historyRows(history.messages) }
+                    LazyColumn(
+                        Modifier.weight(1f).fillMaxWidth(),
+                        reverseLayout = true,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.s4, vertical = Spacing.s2),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s3),
+                    ) {
+                        items(rows, key = { if (it is HistoryRow.Message) it.message.id else "tag-${(it as HistoryRow.Day).date}" }) { row ->
+                            when (row) {
+                                is HistoryRow.Day -> DaySeparator(row.date)
+                                is HistoryRow.Message -> MessageRow(row.message, onEdit = { editing = it }, onDelete = { deleting = it })
+                            }
+                        }
+                        if (history.next != null) {
+                            // Ältere Mitteilungen laden von selbst, sobald das Ende der geladenen erreicht ist.
+                            item(key = "aelter") {
+                                LaunchedEffect(history.messages.size) { onLoadOlder() }
+                                if (history.loadingMore) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = Spacing.s2), contentAlignment = Alignment.Center) { Spinner() }
+                                }
                             }
                         }
                     }
@@ -299,7 +336,32 @@ private fun MessageRow(message: InfoMessage, onEdit: (InfoMessage) -> Unit, onDe
     }
 }
 
-/** Die Eingabe: neue Mitteilung an die ganze Einheit oder, nach «Bearbeiten», der Text der eigenen. Die Eingabe leert sich erst nach Erfolg. */
+/** Das Ziehen kennt kein Screenreader: Er bekommt dieselbe Aktion am Feld, in dem die Liste steht. */
+@Composable
+private fun pullAction(onRefresh: () -> Unit): Modifier {
+    val label = stringResource(R.string.refresh)
+    return Modifier.semantics { customActions = listOf(CustomAccessibilityAction(label) { onRefresh(); true }) }
+}
+
+/** Warum das Neuladen durch Ziehen nicht ging; der alte Stand bleibt stehen. */
+@Composable
+private fun RefreshError(error: ApiError?) {
+    error?.let {
+        NoticeBanner(
+            NoticeKind.ERROR,
+            stringResource(it.text),
+            Modifier.padding(start = Spacing.s3, end = Spacing.s3, bottom = Spacing.s2).semantics { liveRegion = LiveRegionMode.Polite },
+        )
+    }
+}
+
+/** Ab so vielen Zeichen zeigt die Eingabe den Zähler (das Limit steht bei [MAX_MESSAGE_CHARS]). */
+private const val COUNTER_FROM = 1800
+
+/**
+ * Die Eingabe wie in jedem Chat: ein abgerundetes Feld, das bis fünf Zeilen wächst, und rechts der runde Senden-Knopf. Beim Bearbeiten
+ * steht eine schmale Zeile darüber, die es abbrechen lässt. Die Eingabe leert sich erst nach Erfolg; der Fehler steht darüber.
+ */
 @Composable
 private fun Composer(
     editing: InfoMessage?,
@@ -309,34 +371,80 @@ private fun Composer(
     onCancelEdit: () -> Unit,
     onDone: () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
     var text by rememberSaveable(editing?.id) { mutableStateOf(editing?.text.orEmpty()) }
+    val label = stringResource(if (editing != null) R.string.info_edit_label else R.string.info_compose_label)
+    val canSend = text.isNotBlank() && !action.running
+    val submit = {
+        val trimmed = text.trim()
+        if (editing != null) onEdit(editing.id, trimmed) { text = ""; onDone() } else onSend(trimmed) { text = "" }
+    }
     Column(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).padding(Spacing.s4),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s2),
+        Modifier.fillMaxWidth().padding(start = Spacing.s3, end = Spacing.s3, top = Spacing.s2, bottom = Spacing.s2),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        LabeledTextField(
-            label = stringResource(if (editing != null) R.string.info_edit_label else R.string.info_compose_label),
-            value = text,
-            onValueChange = { text = it },
-            maxChars = MAX_MESSAGE_CHARS,
-            minLines = 2,
-            hint = stringResource(R.string.info_compose_hint),
-            enabled = !action.running,
-        )
         action.error?.let { NoticeBanner(NoticeKind.ERROR, stringResource(it.text)) }
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2), verticalAlignment = Alignment.CenterVertically) {
-            if (editing != null) TextActionButton(stringResource(R.string.cancel), onCancelEdit)
-            Box(Modifier.weight(1f))
-            PrimaryButton(
-                stringResource(if (editing != null) R.string.info_save else R.string.info_send),
-                onClick = {
-                    val trimmed = text.trim()
-                    if (editing != null) onEdit(editing.id, trimmed) { text = ""; onDone() } else onSend(trimmed) { text = "" }
+        if (editing != null) {
+            Row(Modifier.fillMaxWidth().padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                val cancel = stringResource(R.string.info_edit_cancel)
+                Box(
+                    Modifier.size(48.dp).clip(CircleShape).focusRing(CircleShape).clickable(role = Role.Button, onClick = onCancelEdit)
+                        .semantics { contentDescription = cancel },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(painterResource(R.drawable.ic_cross), contentDescription = null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(18.dp)) }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            BasicTextField(
+                value = text,
+                onValueChange = { if (it.length <= MAX_MESSAGE_CHARS) text = it },
+                enabled = !action.running,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
+                    .background(scheme.surfaceContainerHigh, RoundedCornerShape(24.dp))
+                    .semantics { contentDescription = label },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
+                cursorBrush = SolidColor(MaterialTheme.fire.accent),
+                maxLines = 5,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                decorationBox = { field ->
+                    Box(Modifier.padding(horizontal = 18.dp, vertical = 12.dp), contentAlignment = Alignment.CenterStart) {
+                        if (text.isEmpty()) {
+                            Text(stringResource(R.string.info_compose_placeholder), style = MaterialTheme.typography.bodyLarge, color = scheme.onSurfaceVariant)
+                        }
+                        field()
+                    }
                 },
-                icon = R.drawable.ic_send,
-                enabled = text.isNotBlank() && !action.running,
-                loading = action.running,
-                loadingText = stringResource(R.string.working),
+            )
+            val sendLabel = stringResource(if (editing != null) R.string.info_save else R.string.info_send)
+            Box(
+                Modifier
+                    .size(Sizes.touchTarget)
+                    .clip(CircleShape)
+                    .focusRing(CircleShape)
+                    .background(if (canSend || action.running) scheme.primary else scheme.surfaceContainerHigh)
+                    .clickable(enabled = canSend, role = Role.Button, onClick = submit)
+                    .semantics { contentDescription = sendLabel },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (action.running) {
+                    Spinner(size = 20.dp, color = scheme.onPrimary)
+                } else {
+                    Icon(
+                        painterResource(R.drawable.ic_send), contentDescription = null,
+                        tint = if (canSend) scheme.onPrimary else scheme.onSurfaceVariant, modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+        }
+        if (text.length >= COUNTER_FROM) {
+            Text(
+                "${text.length} / $MAX_MESSAGE_CHARS",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.End).padding(end = 12.dp),
             )
         }
     }

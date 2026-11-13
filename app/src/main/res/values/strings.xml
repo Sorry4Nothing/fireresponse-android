@@ -19,8 +19,9 @@
     <string name="info_empty_reader">Hier erscheinen die Mitteilungen deiner Einheit.</string>
     <string name="info_readonly">Nur Kommando und Leitung schreiben hier.</string>
     <string name="info_compose_label">Mitteilung an die Einheit</string>
+    <string name="info_compose_placeholder">Mitteilung schreiben</string>
+    <string name="info_edit_cancel">Bearbeiten abbrechen</string>
     <string name="info_edit_label">Mitteilung bearbeiten</string>
-    <string name="info_compose_hint">Geht an die ganze Einheit. Nur Text, Links sind möglich.</string>
     <string name="info_send">Senden</string>
     <string name="info_save">Speichern</string>
     <string name="info_edited">bearbeitet</string>
@@ -32,7 +33,6 @@
     <string name="info_delete_title">Mitteilung löschen?</string>
     <string name="info_delete_text">Sie verschwindet für alle, der Text wird gelöscht.</string>
     <string name="info_delete_confirm">Löschen</string>
-    <string name="info_load_older">Ältere Mitteilungen laden</string>
     <string name="info_today">Heute</string>
     <string name="info_yesterday">Gestern</string>
     <string name="info_message_by">Mitteilung von %1$s, %2$s</string>
