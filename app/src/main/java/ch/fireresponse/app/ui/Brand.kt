@@ -178,6 +178,23 @@ fun SquadMark(squadId: String, type: String, modifier: Modifier = Modifier, size
     }
 }
 
+/**
+ * Das Logo der Einheit gross und blass als Hintergrund (Chat): Es kommt wie bei [SquadMark] vom Server; ohne Logo, ohne Bildspeicher
+ * oder solange es lädt, steht nichts da (kein «JF»/«KF»-Ersatz). Dekoration: Der Name der Einheit steht im Kopf.
+ */
+@Composable
+fun SquadWatermark(squadId: String, modifier: Modifier = Modifier, size: Dp = 280.dp, alpha: Float = 0.1f) {
+    val images = LocalRankImages.current ?: return
+    val url = squadLogoPath(squadId)
+    val bitmap by produceState<Bitmap?>(null, url, images) { value = images.get(url) }
+    bitmap?.let {
+        Image(
+            it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, alpha = alpha,
+            modifier = modifier.size(size).clearAndSetSemantics {},
+        )
+    }
+}
+
 /** Initialen in einem runden Feld, wie bei den Teilnehmenden: Token `avatar` mit `onAvatar`, 12 sp fett (Entwurf: 36 dp). */
 @Composable
 fun InitialsBadge(name: String, modifier: Modifier = Modifier, size: Dp = 36.dp) {

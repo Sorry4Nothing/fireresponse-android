@@ -60,6 +60,7 @@ import ch.fireresponse.app.ui.LoadingSkeleton
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.SquadMark
+import ch.fireresponse.app.ui.SquadWatermark
 import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.UnreadBadge
 import ch.fireresponse.app.ui.focusRing
@@ -185,6 +186,7 @@ fun InfoChannelScreen(
             history.error != null -> ErrorState(history.error, onRetry)
             // Ziehen lädt neu, auch im leeren Verlauf: Es gibt keinen Aktualisieren-Knopf.
             history.messages.isEmpty() -> PullToRefreshBox(refreshing, onRefresh, Modifier.weight(1f).then(pullAction(onRefresh))) {
+                SquadWatermark(history.unitId, Modifier.align(Alignment.Center))
                 LazyColumn(Modifier.fillMaxSize()) {
                     item {
                         EmptyState(
@@ -198,6 +200,7 @@ fun InfoChannelScreen(
                 }
             }
             else -> PullToRefreshBox(refreshing, onRefresh, Modifier.weight(1f).then(pullAction(onRefresh))) {
+                SquadWatermark(history.unitId, Modifier.align(Alignment.Center))
                 Column {
                     RefreshError(refreshError)
                     val rows = remember(history.messages) { historyRows(history.messages) }
