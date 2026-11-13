@@ -217,7 +217,7 @@ private val infoMessages = listOf(
     InfoMessage("m4", "Heute Abend fällt das Training aus. Mehr dazu: https://example.org/training", false, false, "2026-11-13T14:30:00+01:00", MessageAuthor("Petra Beispiel", "kommando"), own = false, canDelete = true),
     InfoMessage("m3", null, true, false, "2026-11-13T09:10:00+01:00", null),
     InfoMessage("m2", "Bitte Handschuhe mitbringen.", false, true, "2026-11-12T18:00:00+01:00", MessageAuthor("Sarah Meier", "leitung"), own = true, canEdit = true, canDelete = true),
-    InfoMessage("m1", "Willkommen im Infokanal.", false, false, "2026-11-10T17:00:00+01:00", MessageAuthor("Petra Beispiel", "kommando")),
+    InfoMessage("m1", "Willkommen im Infokanal.", false, false, "2026-11-10T17:00:00+01:00", null),
 )
 
 @Composable

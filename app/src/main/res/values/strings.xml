@@ -25,6 +25,7 @@
     <string name="info_save">Speichern</string>
     <string name="info_edited">bearbeitet</string>
     <string name="info_deleted">Nachricht gelöscht</string>
+    <string name="info_author_gone">Ehemalige Person</string>
     <string name="info_edit">Bearbeiten</string>
     <string name="info_delete">Löschen</string>
     <string name="info_more">Mehr zur Mitteilung</string>
