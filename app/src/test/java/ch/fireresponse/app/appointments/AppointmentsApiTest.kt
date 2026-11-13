@@ -64,7 +64,6 @@ class AppointmentsApiTest {
         assertEquals(AppointmentSquad("e1", "JF Beispielstadt", "jf"), p.squad)
         assertEquals("2027-05-29", p.registrationFrom)
         assertEquals("Lager", p.kind)
-        assertTrue(p.registrable)
         assertFalse(p.attendanceOpen)
         assertEquals(
             listOf(AppointmentParticipant("k1", "Mia", "ja", Badge("R2", stars = 2)), AppointmentParticipant("k2", "Noah", null)),
@@ -130,7 +129,6 @@ class AppointmentsApiTest {
         assertNull("am Tag selbst ist es offen", p.registrationOpensOn(LocalDate.of(2027, 5, 29)))
         assertNull("offen: nichts anzukündigen", p.copy(attendanceOpen = true).registrationOpensOn(LocalDate.of(2027, 5, 1)))
         assertNull("abgesagt: nichts anzukündigen", p.copy(status = "abgesagt").registrationOpensOn(LocalDate.of(2027, 5, 1)))
-        assertNull("keine Anmeldung für die Art", p.copy(registrable = false).registrationOpensOn(LocalDate.of(2027, 5, 1)))
         assertNull("kein gültiger Tag", p.copy(registrationFrom = "bald").registrationOpensOn(LocalDate.of(2027, 5, 1)))
     }
 
@@ -163,19 +161,9 @@ class AppointmentsApiTest {
     }
 
     @Test
-    fun appointmentKindWithoutRegistrationGivesOwnError() {
-        server.enqueue(json(409, """{"code":"KEINE_ANMELDUNG","message":"Für diesen Termin gibt es keine Anmeldung."}"""))
-        assertEquals(
-            ApiResult.Failure(ApiError.NO_REGISTRATION, "KEINE_ANMELDUNG"),
-            runBlocking { appointments.setAttendance("p1", "k1", attending = true) },
-        )
-    }
-
-    @Test
-    fun appointmentWithoutRegistrationIsReadWithoutParticipants() {
-        server.enqueue(json(200, camp.replace("\"anmeldbar\":true", "\"anmeldbar\":false").replace("\"art\":\"Lager\"", "\"art\":null")))
+    fun appointmentWithoutKindIsRead() {
+        server.enqueue(json(200, camp.replace("\"art\":\"Lager\"", "\"art\":null")))
         val p = (runBlocking { appointments.read("x") } as ApiResult.Ok).value
-        assertFalse(p.registrable)
         assertNull(p.kind)
     }
 

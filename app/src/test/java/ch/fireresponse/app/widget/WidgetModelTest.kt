@@ -73,7 +73,6 @@ class WidgetModelTest {
             listOf(Person("Lena", Stand.YES), Person("Noah", Stand.NO), Person("Mia", Stand.OPEN), Person("Du", Stand.OPEN)),
             base.copy(participants = kids, ownRegistration = "offen").people("Du"),
         )
-        assertTrue(base.copy(registrable = false, participants = kids).people("Du").isEmpty())
     }
 
     @Test
@@ -93,11 +92,5 @@ class WidgetModelTest {
         assertFalse(Answers(1, 2).done)
         assertTrue(Answers(0, 2).open)
         assertFalse("ohne Antwort zu verlangen gibt es weder offen noch beantwortet", Answers(0, 0).open || Answers(0, 0).done)
-    }
-
-    @Test
-    fun anAppointmentWithoutRegistrationAsksForNoAnswer() {
-        val kids = listOf(AppointmentParticipant("k1", "Lena", null))
-        assertEquals(Answers(0, 0), timed("a", "2026-11-14T13:00:00.000Z", "2026-11-14T15:00:00.000Z").copy(registrable = false, participants = kids).answers())
     }
 }

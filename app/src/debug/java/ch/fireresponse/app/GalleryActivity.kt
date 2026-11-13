@@ -132,7 +132,7 @@ private val appointments = listOf(
         participants = listOf(AppointmentParticipant("k1", "Lena", null)),
     ),
     Appointment(
-        id = "a6", title = "Vorstandssitzung", status = "aktiv", allDay = false, kind = "Sitzung", registrable = false,
+        id = "a6", title = "Vorstandssitzung", status = "aktiv", allDay = false, kind = "Sitzung",
         start = "2027-01-20T18:00:00.000Z", end = "2027-01-20T19:30:00.000Z", squad = kfSquad,
     ),
 )
