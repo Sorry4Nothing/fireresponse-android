@@ -88,6 +88,9 @@ import ch.fireresponse.app.push.Notifications
 import ch.fireresponse.app.push.NotificationsScreen
 import ch.fireresponse.app.push.PushApi
 import ch.fireresponse.app.push.PushTarget
+import ch.fireresponse.app.maintenance.MaintenanceScreen
+import ch.fireresponse.app.maintenance.MaintenanceViewModel
+import ch.fireresponse.app.net.MaintenanceApi
 import ch.fireresponse.app.push.PushToken
 import ch.fireresponse.app.push.PushViewModel
 import ch.fireresponse.app.appointments.AppointmentDetailScreen
@@ -181,6 +184,10 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
         }
     }
     // Die Datenschutzerklärung vor der Einwilligung (Willkommen) zeigt die App selbst; der Text kommt vom Server.
+    // Wartung hat Vorrang vor allem: Meldet der Server 503 `WARTUNG`, liegt ihr Bildschirm über allem, bis `GET /api/v1/wartung` `aktiv: false` sagt.
+    val maintenance by client.maintenance.collectAsState()
+    val maintenanceModel = viewModel { MaintenanceViewModel(MaintenanceApi(client)) { client.maintenanceOver(); auth.start() } }
+    LaunchedEffect(maintenance) { if (maintenance) maintenanceModel.load() }
     val privacy = viewModel { PrivacyViewModel(authApi) }
     var welcomePrivacyOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(welcomePrivacyOpen) { if (welcomePrivacyOpen) privacy.load() }
@@ -263,8 +270,9 @@ private fun Root(client: ApiClient, lock: AppLock, prompter: BiometricPrompter, 
                 }
             }
         }
+        if (maintenance) MaintenanceScreen(maintenanceModel.state.collectAsState().value, maintenanceModel::check)
         // Über dem Start gibt es keinen zweiten Ladekreis.
-        BusyOverlay(busy = pending > 0 && state !is AuthState.Loading)
+        BusyOverlay(busy = pending > 0 && state !is AuthState.Loading && !maintenance)
     }
 }
 

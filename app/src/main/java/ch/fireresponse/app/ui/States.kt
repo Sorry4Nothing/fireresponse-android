@@ -60,6 +60,7 @@ enum class ErrorPage {
             ApiError.NOT_SIGNED_IN -> SESSION
             ApiError.APP_OUTDATED -> OUTDATED
             ApiError.TOO_MANY_REQUESTS, ApiError.REGISTRATION_CLOSED, ApiError.REGISTRATION_NOT_OPEN, ApiError.APPOINTMENT_STARTED,
+            ApiError.MAINTENANCE, // den Bildschirm der Wartung zeigt `Root` selbst über allem
             ApiError.UNKNOWN -> ERROR
         }
     }
