@@ -230,4 +230,26 @@ class InfoChannelViewModelTest {
         assertEquals("m9", history.messages.first().id)
         assertFalse("das Schreibrecht kommt vom Server", history.canWrite)
     }
+
+    @Test
+    fun pullingReloadsChannelsAndHistoryAndAFailureKeepsWhatIsThereAndSaysSo() {
+        viewModel.open("e1")
+        viewModel.history.await { it?.loading == false }
+        historyBody = """{"darfSchreiben":true,"mitteilungen":[
+            {"id":"m9","text":"Neu","geloescht":false,"bearbeitet":false,"erstelltAm":"2026-11-13T12:00:00+01:00","autor":null,"eigene":false,"darfBearbeiten":false,"darfLoeschen":false},
+            {"id":"m1","text":"Hallo","geloescht":false,"bearbeitet":false,"erstelltAm":"2026-11-13T10:00:00+01:00","autor":null,"eigene":false,"darfBearbeiten":false,"darfLoeschen":false}],"naechste":null}"""
+        viewModel.pullRefresh()
+        viewModel.history.await { it?.messages?.size == 2 }
+        assertFalse(viewModel.refreshing.await { !it })
+        assertNull(viewModel.refreshError.value)
+
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = json("{}", 500)
+        }
+        viewModel.pullRefresh()
+        viewModel.refreshError.await { it != null }
+        assertFalse(viewModel.refreshing.await { !it })
+        assertEquals("die Mitteilungen bleiben", 2, viewModel.history.value?.messages?.size)
+        assertTrue("die Kanäle bleiben", viewModel.channels.value is ApiResult.Ok)
+    }
 }

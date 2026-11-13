@@ -431,7 +431,7 @@ private fun MainContent(
                     val appointmentId = screen.appointmentId
                     BackHandler { viewingRegistrations = false }
                     val date = assignedAppointment?.startDay()?.let { "${weekdayShort(it)} ${it.dayOfMonth}.${it.monthValue}." }
-                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null; viewingRegistrations = false }) {
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null; viewingRegistrations = false }, destinations = destinations, badges = badges) {
                         ContentWidth {
                         RegistrationsScreen(
                             eyebrow = listOfNotNull(assignedAppointment?.title, date).joinToString(" · ").ifBlank { null },
@@ -445,7 +445,7 @@ private fun MainContent(
                 is Screen.Appointment -> {
                     val appointmentId = screen.appointmentId
                     BackHandler { openedAppointment = null }
-                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }) {
+                    MainScaffold(Destination.APPOINTMENTS, onDestination = { destination = it; openedAppointment = null }, destinations = destinations, badges = badges) {
                         detailPane(appointmentId)
                     }
                 }
@@ -464,7 +464,7 @@ private fun MainContent(
                 }
                 Screen.Privacy -> {
                     BackHandler { privacyOpen = false }
-                    MainScaffold(Destination.PROFILE, onDestination = { destination = it; privacyOpen = false }) {
+                    MainScaffold(Destination.PROFILE, onDestination = { destination = it; privacyOpen = false }, destinations = destinations, badges = badges) {
                         ContentWidth {
                             PrivacyScreen(
                                 privacy.state.collectAsState().value, stringResource(R.string.privacy_back_profile),
@@ -517,7 +517,12 @@ private fun MainContent(
                             val single = infoChannels.singleOrNull()
                             val unitId = single?.unit?.id ?: openedChannel
                             if (unitId == null) {
-                                InfoChannelListScreen(infoState, onOpen = { openedChannel = it }, onRetry = info::loadChannels)
+                                InfoChannelListScreen(
+                                    infoState, onOpen = { openedChannel = it }, onRetry = info::loadChannels,
+                                    refreshing = info.refreshing.collectAsState().value,
+                                    refreshError = info.refreshError.collectAsState().value,
+                                    onRefresh = info::pullRefresh,
+                                )
                             } else {
                                 LaunchedEffect(unitId) { info.open(unitId) }
                                 DisposableEffect(unitId) { onDispose { info.close() } }
@@ -533,6 +538,9 @@ private fun MainContent(
                                     onLoadOlder = info::loadOlder,
                                     onRetry = info::retry,
                                     onClearError = info::clearActionError,
+                                    refreshing = info.refreshing.collectAsState().value,
+                                    refreshError = info.refreshError.collectAsState().value,
+                                    onRefresh = info::pullRefresh,
                                 )
                             }
                         } else if (tab == Destination.PROFILE) ContentWidth {

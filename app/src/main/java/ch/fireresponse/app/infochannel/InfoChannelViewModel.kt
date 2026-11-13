@@ -41,6 +41,16 @@ class InfoChannelViewModel(private val api: InfoChannelApi) : ViewModel() {
     private val _action = MutableStateFlow(ChannelAction())
     val action: StateFlow<ChannelAction> = _action.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+
+    /** Wahr, solange die Person durch Ziehen neu lädt; die Anzeige bleibt dabei stehen. */
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
+    private val _refreshError = MutableStateFlow<ApiError?>(null)
+
+    /** Warum das Neuladen durch Ziehen nicht ging; der alte Stand bleibt. `null` nach einem Erfolg oder beim nächsten Versuch. */
+    val refreshError: StateFlow<ApiError?> = _refreshError.asStateFlow()
+
     init {
         loadChannels()
     }
@@ -65,6 +75,7 @@ class InfoChannelViewModel(private val api: InfoChannelApi) : ViewModel() {
         if (_history.value?.unitId == unitId) return
         _history.value = History(unitId)
         _action.value = ChannelAction()
+        _refreshError.value = null
         viewModelScope.launch {
             when (val result = api.messages(unitId)) {
                 is ApiResult.Failure -> if (_history.value?.unitId == unitId) _history.value = History(unitId, loading = false, error = result.error)
@@ -80,6 +91,7 @@ class InfoChannelViewModel(private val api: InfoChannelApi) : ViewModel() {
     fun close() {
         _history.value = null
         _action.value = ChannelAction()
+        _refreshError.value = null
     }
 
     /** Wiederholt das erste Laden nach einem Fehler. */
@@ -94,16 +106,43 @@ class InfoChannelViewModel(private val api: InfoChannelApi) : ViewModel() {
         val current = _history.value ?: return
         if (current.loading || _action.value.running) return
         viewModelScope.launch(Background()) {
-            val result = api.messages(current.unitId) as? ApiResult.Ok ?: return@launch
-            val now = _history.value ?: return@launch
-            if (now.unitId != current.unitId || _action.value.running) return@launch
-            val hadNew = result.value.messages.any { fresh -> now.messages.none { it.id == fresh.id } }
-            _history.value = now.copy(
-                canWrite = result.value.canWrite,
-                messages = mergeFirstPage(result.value.messages, now.messages),
-                next = if (now.messages.size > result.value.messages.size) now.next else result.value.next,
-            )
-            if (hadNew) markRead(current.unitId)
+            (api.messages(current.unitId) as? ApiResult.Ok)?.let { applyFirstPage(current.unitId, it.value) }
+        }
+    }
+
+    /** Übernimmt die frisch gelesene erste Seite; ist inzwischen etwas anderes offen oder läuft eine Aktion, verfällt sie. */
+    private fun applyFirstPage(unitId: String, page: MessagePage) {
+        val now = _history.value ?: return
+        if (now.unitId != unitId || _action.value.running) return
+        val hadNew = page.messages.any { fresh -> now.messages.none { it.id == fresh.id } }
+        _history.value = now.copy(
+            canWrite = page.canWrite,
+            messages = mergeFirstPage(page.messages, now.messages),
+            next = if (now.messages.size > page.messages.size) now.next else page.next,
+        )
+        if (hadNew) markRead(unitId)
+    }
+
+    /**
+     * Neuladen durch Ziehen: Kanäle und, wenn offen, der Verlauf; im Gegensatz zum Laden ohne Ladezustand, und ein Fehler lässt den
+     * alten Stand stehen und wird gemeldet.
+     */
+    fun pullRefresh() {
+        if (_refreshing.value) return
+        _refreshing.value = true
+        _refreshError.value = null
+        viewModelScope.launch {
+            when (val channels = fetchChannels()) {
+                is ApiResult.Ok -> _channels.value = channels
+                is ApiResult.Failure -> _refreshError.value = channels.error
+            }
+            _history.value?.takeIf { !it.loading }?.let { open ->
+                when (val page = api.messages(open.unitId)) {
+                    is ApiResult.Ok -> applyFirstPage(open.unitId, page.value)
+                    is ApiResult.Failure -> _refreshError.value = page.error
+                }
+            }
+            _refreshing.value = false
         }
     }
 
