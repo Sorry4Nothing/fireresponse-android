@@ -295,6 +295,19 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         }
     },
     "offline" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.NETWORK), {}, {}) } },
+    "infoload" to {
+        MainScaffold(Destination.INFO, {}, destinations = Destination.entries, badges = mapOf(Destination.INFO to 3)) {
+            InfoChannelScreen(
+                channel = infoChannels[0], history = null, action = ChannelAction(),
+                onBack = {}, onSend = { _, _ -> }, onEdit = { _, _, _ -> }, onDelete = {}, onLoadOlder = {}, onRetry = {}, onClearError = {},
+            )
+        }
+    },
+    "infolistload" to {
+        MainScaffold(Destination.INFO, {}, destinations = Destination.entries, badges = mapOf(Destination.INFO to 3)) {
+            InfoChannelListScreen(null, {}, {})
+        }
+    },
     "infolist" to {
         MainScaffold(Destination.INFO, {}, destinations = Destination.entries, badges = mapOf(Destination.INFO to 3)) {
             InfoChannelListScreen(ApiResult.Ok(infoChannels), {}, {})

@@ -56,7 +56,8 @@ import ch.fireresponse.app.ui.ErrorState
 import ch.fireresponse.app.ui.FireResponseDialog
 import ch.fireresponse.app.ui.Header
 import ch.fireresponse.app.ui.HeaderButton
-import ch.fireresponse.app.ui.LoadingSkeleton
+import ch.fireresponse.app.ui.CardListSkeleton
+import ch.fireresponse.app.ui.ChatSkeleton
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.SquadMark
@@ -95,7 +96,7 @@ fun InfoChannelListScreen(
     Column(Modifier.fillMaxSize()) {
         Header(title = stringResource(R.string.tab_info))
         when (state) {
-            null -> LoadingSkeleton(stringResource(R.string.info_loading))
+            null -> CardListSkeleton(stringResource(R.string.info_loading))
             is ApiResult.Failure -> ErrorState(state.error, onRetry)
             is ApiResult.Ok -> PullToRefreshBox(refreshing, onRefresh, pullAction(onRefresh)) {
                 Column {
@@ -182,7 +183,7 @@ fun InfoChannelScreen(
             back = onBack?.let { HeaderButton(R.drawable.ic_back, stringResource(R.string.info_back), it) },
         )
         when {
-            history == null || history.loading -> LoadingSkeleton(stringResource(R.string.info_loading))
+            history == null || history.loading -> ChatSkeleton(stringResource(R.string.info_loading))
             history.error != null -> ErrorState(history.error, onRetry)
             // Ziehen lädt neu, auch im leeren Verlauf: Es gibt keinen Aktualisieren-Knopf.
             history.messages.isEmpty() -> PullToRefreshBox(refreshing, onRefresh, Modifier.weight(1f).then(pullAction(onRefresh))) {

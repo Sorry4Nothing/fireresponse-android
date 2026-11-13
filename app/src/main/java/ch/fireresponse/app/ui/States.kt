@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -180,23 +182,7 @@ private fun Bar(barWidth: Int, barHeight: Int, modifier: Modifier = Modifier) {
  */
 @Composable
 fun LoadingSkeleton(description: String, modifier: Modifier = Modifier) {
-    var announced by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(1000)
-        announced = true
-    }
-    Column(
-        modifier.fillMaxWidth().padding(start = Spacing.s3, end = Spacing.s5).pulse().then(
-            if (announced) {
-                Modifier.semantics {
-                    contentDescription = description
-                    liveRegion = LiveRegionMode.Polite
-                }
-            } else {
-                Modifier.semantics { contentDescription = "" }
-            },
-        ),
-    ) {
+    SkeletonFrame(description, modifier.fillMaxWidth().padding(start = Spacing.s3, end = Spacing.s5)) {
         val days = listOf(listOf(0, 1), listOf(2), listOf(3))
         days.forEachIndexed { index, cards ->
             val isLast = index == days.lastIndex
@@ -231,5 +217,78 @@ private fun SkeletonCard(number: Int) {
         Bar(widths[0], 12)
         Bar(widths[1], 18)
         Bar(widths[2], 12)
+    }
+}
+
+/**
+ * Rahmen jedes Skeletts: pulsiert ruhig, und der Screenreader hört «wird geladen» erst nach einer Sekunde, damit kurze Ladezeiten
+ * nicht dazwischenreden.
+ */
+@Composable
+private fun SkeletonFrame(description: String, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    var announced by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(1000)
+        announced = true
+    }
+    Column(
+        modifier.pulse().then(
+            if (announced) {
+                Modifier.semantics {
+                    contentDescription = description
+                    liveRegion = LiveRegionMode.Polite
+                }
+            } else {
+                Modifier.semantics { contentDescription = "" }
+            },
+        ),
+        content = content,
+    )
+}
+
+/**
+ * Skelett für den Verlauf eines Chats: ein Tagestrenner und Reihen aus rundem Bild, Name und Textzeilen, unten ausgerichtet wie die
+ * Mitteilungen selbst (die neueste steht unten).
+ */
+@Composable
+fun ChatSkeleton(description: String, modifier: Modifier = Modifier) {
+    SkeletonFrame(description, modifier.fillMaxSize().padding(horizontal = Spacing.s4, vertical = Spacing.s2)) {
+        Spacer(Modifier.weight(1f))
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Bar(140, 24, Modifier.clip(CircleShape)) }
+        listOf(
+            listOf(110, 220, 160), listOf(90, 190), listOf(130, 240, 120), listOf(100, 230, 150), listOf(120, 200), listOf(90, 250, 190, 110), listOf(110, 170),
+        ).forEach { widths ->
+            Row(Modifier.padding(top = Spacing.s3), horizontalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+                Box(Modifier.size(36.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Bar(widths.first(), 12)
+                    widths.drop(1).forEach { Bar(it, 16) }
+                }
+            }
+        }
+    }
+}
+
+/** Skelett für eine Liste von Karten mit rundem Bild links (Liste der Infokanäle). */
+@Composable
+fun CardListSkeleton(description: String, modifier: Modifier = Modifier) {
+    SkeletonFrame(description, modifier.fillMaxWidth().padding(horizontal = Spacing.s4, vertical = Spacing.s2)) {
+        repeat(3) {
+            Row(
+                Modifier
+                    .padding(bottom = Spacing.s2)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.medium)
+                    .padding(horizontal = Spacing.s4, vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Bar(210, 16)
+                    Bar(90, 12)
+                }
+            }
+        }
     }
 }
