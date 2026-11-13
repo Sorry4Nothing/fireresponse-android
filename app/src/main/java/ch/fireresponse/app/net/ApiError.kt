@@ -15,9 +15,6 @@ enum class ApiError(@StringRes val text: Int) {
     /** 409 `ANMELDEFENSTER_NICHT_OFFEN`: Die Anmeldung öffnet erst später (6 Wochen vor dem Termin). */
     REGISTRATION_NOT_OPEN(R.string.error_registration_not_open),
 
-    /** 409 `KEINE_ANMELDUNG`: Die Einheit hat die Art des Termins nicht für die Anmeldung freigegeben. */
-    NO_REGISTRATION(R.string.error_no_registration),
-
     /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Termine gehen noch). */
     APPOINTMENT_STARTED(R.string.error_appointment_started),
     NETWORK(R.string.error_network),
@@ -32,7 +29,6 @@ enum class ApiError(@StringRes val text: Int) {
             409 -> when (code) {
                 "PROGRAMM_BEGONNEN" -> APPOINTMENT_STARTED
                 "ANMELDEFENSTER_NICHT_OFFEN" -> REGISTRATION_NOT_OPEN
-                "KEINE_ANMELDUNG" -> NO_REGISTRATION
                 else -> REGISTRATION_CLOSED // sonst PROGRAMM_GESCHLOSSEN
             }
             426 -> APP_OUTDATED

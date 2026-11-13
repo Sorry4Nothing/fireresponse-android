@@ -47,8 +47,6 @@ data class Appointment(
     @SerialName("teilnahmeOffen") val attendanceOpen: Boolean = false,
     /** Art des Termins laut Lodur (Sitzung, Übung, Kurs …); `null`, wenn die Quelle sie nicht liefert. */
     @SerialName("art") val kind: String? = null,
-    /** Falsch: Die Einheit hat die Art nicht für die Anmeldung freigegeben. Der Termin steht dann nur im Kalender. */
-    @SerialName("anmeldbar") val registrable: Boolean = true,
     @SerialName("einheit") val squad: AppointmentSquad,
     @SerialName("teilnehmende") val participants: List<AppointmentParticipant> = emptyList(),
     @SerialName("thema") val topic: String? = null,
@@ -87,6 +85,6 @@ fun Appointment.time(): Timing? = try {
     null
 }
 
-/** Der Tag, ab dem sich anmelden lässt, solange das noch aussteht (anmeldbar, aktiv, Fenster zu, Tag in der Zukunft); sonst `null`. */
+/** Der Tag, ab dem sich anmelden lässt, solange das noch aussteht (aktiv, Fenster zu, Tag in der Zukunft); sonst `null`. */
 fun Appointment.registrationOpensOn(today: LocalDate): LocalDate? =
-    registrationFrom?.let { runCatching { LocalDate.parse(it) }.getOrNull() }?.takeIf { registrable && !cancelled && !attendanceOpen && it.isAfter(today) }
+    registrationFrom?.let { runCatching { LocalDate.parse(it) }.getOrNull() }?.takeIf { !cancelled && !attendanceOpen && it.isAfter(today) }
