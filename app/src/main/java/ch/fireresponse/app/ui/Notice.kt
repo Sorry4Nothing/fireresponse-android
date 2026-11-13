@@ -2,6 +2,15 @@ package ch.fireresponse.app.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import ch.fireresponse.app.ui.theme.Pill
+import ch.fireresponse.app.ui.theme.Sizes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,7 +40,7 @@ enum class NoticeKind(@DrawableRes val icon: Int) {
 
 /** Banner im Inhalt: erklärt, warum etwas so ist, oder sagt, was schiefging. Immer Icon und Text. */
 @Composable
-fun NoticeBanner(kind: NoticeKind, text: String, modifier: Modifier = Modifier) {
+fun NoticeBanner(kind: NoticeKind, text: String, modifier: Modifier = Modifier, onDismiss: (() -> Unit)? = null) {
     val scheme = MaterialTheme.colorScheme
     val (surfaceColor, contentColor) = when (kind) {
         NoticeKind.ERROR -> scheme.errorContainer to scheme.onErrorContainer
@@ -48,6 +57,15 @@ fun NoticeBanner(kind: NoticeKind, text: String, modifier: Modifier = Modifier) 
         verticalAlignment = Alignment.Top,
     ) {
         Icon(painterResource(kind.icon), contentDescription = null, tint = contentColor, modifier = Modifier.size(18.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = contentColor)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = contentColor, modifier = Modifier.weight(1f))
+        // Ein Hinweis, der sich schliessen lässt: 48 dp gross, mit Namen für den Screenreader.
+        onDismiss?.let {
+            val close = stringResource(R.string.notice_close)
+            Box(
+                Modifier.size(Sizes.touchTarget).offset(x = 8.dp, y = (-12).dp).clip(Pill).focusRing(Pill)
+                    .clickable(role = Role.Button, onClick = it).semantics { contentDescription = close },
+                contentAlignment = Alignment.Center,
+            ) { Icon(painterResource(R.drawable.ic_cross), contentDescription = null, tint = contentColor, modifier = Modifier.size(18.dp)) }
+        }
     }
 }

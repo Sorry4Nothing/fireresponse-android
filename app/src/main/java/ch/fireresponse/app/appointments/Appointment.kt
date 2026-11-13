@@ -30,6 +30,20 @@ data class AppointmentParticipant(
     @SerialName("abzeichen") val badge: Badge? = null,
 )
 
+/**
+ * Die Leiter-Plätze eines selbst erstellten Termins mit Höchstzahl; nur Kommando und Leitung der Einheit bekommen sie (für alle anderen
+ * fehlt der Schlüssel `leitungPlaetze`, auch die Zahlen). `ownPosition` ist die eigene Nummer auf der Warteliste, 1 = als Nächste dran.
+ */
+@Serializable
+data class LeaderPlaces(
+    @SerialName("hoechstzahl") val max: Int,
+    @SerialName("belegt") val taken: Int,
+    @SerialName("frei") val free: Int,
+    @SerialName("voll") val full: Boolean,
+    @SerialName("wartende") val waiting: Int = 0,
+    @SerialName("eigenePosition") val ownPosition: Int? = null,
+)
+
 /** Listeneintrag und Detail der API. Die Felder ab `topic` liefert nur das Detail. */
 @Serializable
 data class Appointment(
@@ -54,11 +68,15 @@ data class Appointment(
     @SerialName("aufgebot") val callUp: String? = null,
     /** Die Kontaktperson des Termins; `null`, wenn die Einheit keine Kommandantin und keinen Kommandanten hat. */
     @SerialName("kontakt") val contact: Contact? = null,
-    /** «ja», «nein» oder «offen»; `null`, wenn die Person nicht zum Kommando oder zur Leitung der Einheit gehört. */
+    /** «ja», «nein», «offen» oder «warteliste»; `null`, wenn die Person nicht zum Kommando oder zur Leitung der Einheit gehört. */
     @SerialName("eigeneAnmeldung") val ownRegistration: String? = null,
+    @SerialName("leitungPlaetze") val places: LeaderPlaces? = null,
 ) {
     val cancelled get() = status == "abgesagt"
     val inReview get() = status == "pruefen"
+
+    /** Die eigene Anmeldung steht auf der Warteliste (Leiter-Plätze voll). */
+    val onWaitlist get() = ownRegistration == "warteliste"
 }
 
 @Serializable

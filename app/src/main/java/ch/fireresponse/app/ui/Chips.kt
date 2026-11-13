@@ -28,6 +28,15 @@ enum class ChipKind(@DrawableRes val icon: Int) {
     NO(R.drawable.ic_cross),
     PENDING(R.drawable.ic_question),
     REVIEW(R.drawable.ic_warning),
+
+    /** Auf der Warteliste (Leiter-Plätze). */
+    WAITLIST(R.drawable.ic_hourglass),
+
+    /** Alle Leiter-Plätze belegt. */
+    FULL(R.drawable.ic_lock),
+
+    /** Es sind noch Leiter-Plätze frei. */
+    FREE(R.drawable.ic_group),
 }
 
 /** Kleines Etikett für einen Zustand. Nicht bedienbar; bedienbar ist die Karte, auf der es sitzt. */
@@ -40,12 +49,15 @@ fun StatusChip(kind: ChipKind, text: String, modifier: Modifier = Modifier) {
         ChipKind.NO -> scheme.errorContainer to scheme.onErrorContainer
         ChipKind.PENDING -> Color.Transparent to scheme.onSurfaceVariant
         ChipKind.REVIEW -> colors.warningContainer to colors.onWarningContainer
+        ChipKind.WAITLIST -> Color.Transparent to scheme.onSurfaceVariant
+        ChipKind.FULL -> scheme.surfaceContainerHighest to scheme.onSurface
+        ChipKind.FREE -> scheme.surfaceContainerHigh to scheme.onSurfaceVariant
     }
     Row(
         modifier
             .heightIn(min = 28.dp)
             .background(surfaceColor, Pill)
-            .then(if (kind == ChipKind.PENDING) Modifier.border(1.dp, scheme.outline, Pill) else Modifier)
+            .then(if (kind == ChipKind.PENDING || kind == ChipKind.WAITLIST) Modifier.border(1.dp, scheme.outline, Pill) else Modifier)
             .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s1),

@@ -111,7 +111,7 @@ private fun RegistrationsContent(data: Registrations) {
                 if (data.leaders.isEmpty()) item { NoticeBanner(NoticeKind.INFO, stringResource(R.string.registrations_empty_leaders)) }
                 items(data.leaders, key = { it.id }) {
                     val role = stringResource(if (it.isCommand) R.string.role_commander else R.string.role_leader)
-                    PersonRow(it.name, role, it.imageUrl, it.status, it.badge)
+                    PersonRow(it.name, role, it.imageUrl, it.status, it.badge, it.position)
                 }
             }
         }
@@ -126,7 +126,8 @@ private fun Summary(counts: Counts, modifier: Modifier = Modifier) {
     val yes = MaterialTheme.fire.onSuccessContainer
     val no = scheme.onErrorContainer
     val open = scheme.onSurfaceVariant
-    val description = stringResource(R.string.registrations_summary, counts.ja, counts.nein, counts.offen, counts.total)
+    val waitlist = if (counts.warteliste > 0) ", " + stringResource(R.string.registrations_waitlist, counts.warteliste) else ""
+    val description = stringResource(R.string.registrations_summary, counts.ja, counts.nein, counts.offen, counts.total) + waitlist
     Column(modifier.clearAndSetSemantics { contentDescription = description }, verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         Row(Modifier.fillMaxWidth().height(14.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             if (counts.total == 0) {
@@ -141,6 +142,7 @@ private fun Summary(counts: Counts, modifier: Modifier = Modifier) {
             Count(R.drawable.ic_check, stringResource(R.string.registrations_yes, counts.ja), yes)
             Count(R.drawable.ic_cross, stringResource(R.string.registrations_no, counts.nein), no)
             Count(R.drawable.ic_question, stringResource(R.string.registrations_open, counts.offen), open)
+            if (counts.warteliste > 0) Count(R.drawable.ic_hourglass, stringResource(R.string.registrations_waitlist, counts.warteliste), open)
         }
     }
 }
@@ -188,16 +190,20 @@ internal fun TabPill(text: String, selected: Boolean, onClick: () -> Unit) {
 
 /** Eine Person: Profilbild oder Initiale, Name (bei Leitenden mit vollem Namen und Rolle darunter) und der Stand als Chip. Name und Stand lesen sich als ein Element. */
 @Composable
-private fun PersonRow(name: String, subtitle: String?, imageUrl: String?, status: String, rank: Badge? = null) {
+private fun PersonRow(name: String, subtitle: String?, imageUrl: String?, status: String, rank: Badge? = null, position: Int? = null) {
     val scheme = MaterialTheme.colorScheme
     val kind = registrationChip(status)
-    val word = stringResource(
-        when (kind) {
-            ChipKind.YES -> R.string.button_yes
-            ChipKind.NO -> R.string.button_no
-            else -> R.string.registrations_chip_open
-        },
-    )
+    val word = when {
+        kind == ChipKind.WAITLIST && position != null -> stringResource(R.string.waitlist_position, position)
+        else -> stringResource(
+            when (kind) {
+                ChipKind.YES -> R.string.button_yes
+                ChipKind.NO -> R.string.button_no
+                ChipKind.WAITLIST -> R.string.waitlist_title
+                else -> R.string.registrations_chip_open
+            },
+        )
+    }
     Row(
         Modifier
             .fillMaxWidth()

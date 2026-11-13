@@ -47,6 +47,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.fireresponse.app.R
 import ch.fireresponse.app.ui.ChipKind
+import ch.fireresponse.app.ui.DangerButton
+import ch.fireresponse.app.ui.DialogText
+import ch.fireresponse.app.ui.FireResponseDialog
+import ch.fireresponse.app.ui.TextActionButton
 import ch.fireresponse.app.ui.NoticeKind
 import ch.fireresponse.app.ui.NoticeBanner
 import ch.fireresponse.app.ui.SlowHint
@@ -71,6 +75,11 @@ fun RegistrationSection(
     /** Name und Profilbild des angemeldeten Kontos für die eigene Zeile; ohne Namen steht der Anfangsbuchstabe von «Du». */
     ownName: String = "",
     ownImageUrl: String? = null,
+    /** Leitende mit Zusage (Namen und Bilder für die Plätze), wenn der Termin Leiter-Plätze hat. */
+    taken: List<LeaderRegistration>? = null,
+    /** Die Person ist von der Warteliste nachgerückt (Hinweis, bis sie ihn schliesst). */
+    movedUp: Boolean = false,
+    onDismissMovedUp: () -> Unit = {},
 ) {
     // Das Gerät meldet kurz, wenn das Speichern fertig ist: Bestätigung oder Ablehnung. Nur beim Wechsel von «läuft» zu «fertig»,
     // nicht beim Öffnen der Übung.
@@ -86,7 +95,26 @@ fun RegistrationSection(
     val leader = appointment.ownRegistration
     if (appointment.participants.isEmpty() && leader == null) return
 
+    val places = appointment.places.takeIf { leader != null }
+    var confirmingLeave by remember { mutableStateOf(false) }
+    if (confirmingLeave) {
+        FireResponseDialog(
+            title = stringResource(R.string.leave_place_title),
+            onDismiss = { confirmingLeave = false },
+            dismissButton = { TextActionButton(stringResource(R.string.cancel), { confirmingLeave = false }) },
+            confirmButton = { DangerButton(stringResource(R.string.leave_place_confirm), { confirmingLeave = false; onLeader(false) }) },
+        ) { DialogText(stringResource(if ((places?.waiting ?: 0) > 0) R.string.leave_place_text_waiting else R.string.leave_place_text)) }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+        places?.let { PlacesCard(it, taken) }
+        if (movedUp) NoticeBanner(NoticeKind.INFO, stringResource(R.string.moved_up), onDismiss = onDismissMovedUp)
+        if (rsvp.lastSeatTaken) {
+            NoticeBanner(
+                NoticeKind.WARNING,
+                rsvp.waitlistPosition?.let { stringResource(R.string.last_seat_taken, it) } ?: stringResource(R.string.last_seat_taken_no_position),
+            )
+        }
         Text(
             stringResource(if (appointment.participants.isEmpty()) R.string.section_leader_registration else R.string.section_participants),
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp),
@@ -110,17 +138,31 @@ fun RegistrationSection(
             )
         }
         if (leader != null) {
-            RsvpRow(
-                name = stringResource(R.string.message_you),
-                answer = leader.takeIf { it == "ja" || it == "nein" },
-                isOpen = appointment.attendanceOpen,
-                locked = rsvp.running,
-                pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == LEADER_KEY },
-                sentAt = rsvp.sentAt[LEADER_KEY],
-                onRsvp = onLeader,
-                avatarName = ownName.takeIf { it.isNotBlank() },
-                avatarImageUrl = ownImageUrl,
-            )
+            if (places != null && (appointment.onWaitlist || (places.full && leader != "ja"))) {
+                // Voll oder wartend: statt der Pillen der Block der Warteliste.
+                WaitlistBlock(
+                    onWaitlist = appointment.onWaitlist,
+                    position = places.ownPosition,
+                    open = appointment.attendanceOpen,
+                    running = rsvp.running,
+                    onJoin = { onLeader(true) },
+                    onLeave = { onLeader(false) },
+                )
+            } else {
+                RsvpRow(
+                    name = stringResource(R.string.message_you),
+                    answer = leader.takeIf { it == "ja" || it == "nein" },
+                    isOpen = appointment.attendanceOpen,
+                    locked = rsvp.running,
+                    pending = rsvp.pendingAttending.takeIf { rsvp.pendingKey == LEADER_KEY },
+                    sentAt = rsvp.sentAt[LEADER_KEY],
+                    // Wer einen Platz hat und absagt, gibt ihn frei: erst nach Bestätigung.
+                    onRsvp = { attending -> if (!attending && places != null && leader == "ja") confirmingLeave = true else onLeader(attending) },
+                    avatarName = ownName.takeIf { it.isNotBlank() },
+                    avatarImageUrl = ownImageUrl,
+                )
+                if (places != null && leader == "ja") OwnPlaceHint(places)
+            }
         }
 
         SlowHint(rsvp.running)

@@ -136,7 +136,7 @@ private fun Timeline(days: List<Day>, onOpen: (String) -> Unit, state: LazyListS
             group.month?.let { month ->
                 val label = monthLabel(month, previousMonth)
                 previousMonth = month
-                item(key = "monat-$month") { MonthHeader(label) }
+                item(key = "monat-$groupIndex-$month") { MonthHeader(label) }
             }
             // Die Linie verbindet die Daten und endet nur beim allerletzten; die Monats-Überschrift sitzt zwischen zwei Stücken.
             itemsIndexed(group.days, key = { _, day -> day.appointments.first().id }) { index, day ->
@@ -211,6 +211,11 @@ private fun statusLines(appointment: Appointment): List<StatusLine> {
         when (it) {
             "ja" -> StatusLine(R.drawable.ic_check, stringResource(R.string.own_status_yes), colors.onSuccessContainer)
             "nein" -> StatusLine(R.drawable.ic_cross, stringResource(R.string.own_status_no), scheme.onErrorContainer)
+            "warteliste" -> StatusLine(
+                R.drawable.ic_hourglass,
+                appointment.places?.ownPosition?.let { stringResource(R.string.waitlist_position, it) } ?: stringResource(R.string.waitlist_title),
+                scheme.onSurfaceVariant,
+            )
             else -> StatusLine(R.drawable.ic_question, stringResource(R.string.own_status_open), scheme.onSurfaceVariant)
         }
     }
@@ -230,9 +235,10 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
         stringResource(R.string.status_review).takeIf { appointment.inReview },
     )
     val opensOn = appointment.registrationOpensOn(LocalDate.now(SWISS_ZONE))?.let { stringResource(R.string.registration_from, dayAndMonth(it)) }
+    val placesText = if (appointment.cancelled) null else appointment.places?.let { placesSpoken(it) }
     val spoken = (
         listOfNotNull(appointment.startDay()?.let(::spokenDay), headerLine, appointment.title, appointment.squad.name) +
-            chips + lines.map { it.text } + listOfNotNull(opensOn)
+            chips + lines.map { it.text } + listOfNotNull(opensOn, placesText)
         ).filter { it.isNotBlank() }.joinToString(", ")
     Box(
         Modifier
@@ -278,6 +284,7 @@ private fun AppointmentCard(appointment: Appointment, onOpen: (String) -> Unit) 
                     Text(opensOn, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            if (!appointment.cancelled) appointment.places?.let { PlacesChip(it, Modifier.padding(top = 6.dp)) }
             AppointmentStatus(appointment, Modifier.padding(top = 6.dp))
         }
         SquadMark(appointment.squad.id, appointment.squad.type, Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = Spacing.s3))
@@ -315,6 +322,10 @@ fun AppointmentDetailScreen(
     /** Name und Profilbild des angemeldeten Kontos für die eigene Antwortzeile. */
     ownName: String = "",
     ownImageUrl: String? = null,
+    /** Leitende mit Zusage für die Leiter-Plätze (nur bei Terminen mit Plätzen). */
+    taken: List<LeaderRegistration>? = null,
+    movedUp: Boolean = false,
+    onDismissMovedUp: () -> Unit = {},
 ) {
     val back = HeaderButton(R.drawable.ic_back, stringResource(R.string.back_to_appointments), onBack)
     Column(Modifier.fillMaxSize()) {
@@ -327,7 +338,9 @@ fun AppointmentDetailScreen(
                 Header(title = null, back = back)
                 ErrorState(state.error, onRetry, onToAppointments = onBack)
             }
-            is ApiResult.Ok -> AppointmentContent(state.value, rsvp, canSeeRegistrations, back, onParticipant, onLeader, onRegistrations, ownName, ownImageUrl)
+            is ApiResult.Ok -> AppointmentContent(
+                state.value, rsvp, canSeeRegistrations, back, onParticipant, onLeader, onRegistrations, ownName, ownImageUrl, taken, movedUp, onDismissMovedUp,
+            )
         }
     }
 }
@@ -343,6 +356,9 @@ private fun AppointmentContent(
     onRegistrations: () -> Unit,
     ownName: String,
     ownImageUrl: String?,
+    taken: List<LeaderRegistration>?,
+    movedUp: Boolean,
+    onDismissMovedUp: () -> Unit,
 ) {
     val context = LocalContext.current
     val calendar = calendarIntent(appointment)
@@ -367,7 +383,7 @@ private fun AppointmentContent(
             AppointmentStatus(appointment)
             Facts(appointment)
             ContactSection(appointment)
-            RegistrationSection(appointment, rsvp, onParticipant, onLeader, ownName, ownImageUrl)
+            RegistrationSection(appointment, rsvp, onParticipant, onLeader, ownName, ownImageUrl, taken, movedUp, onDismissMovedUp)
             LeaderSection(canSeeRegistrations, onRegistrations)
             Box(Modifier.height(Spacing.s4))
         }

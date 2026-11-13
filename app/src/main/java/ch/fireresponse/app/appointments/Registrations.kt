@@ -8,7 +8,13 @@ import kotlinx.serialization.Serializable
 
 /** Wie viele «ja», «nein» und «offen» (noch keine Antwort) gesagt haben. */
 @Serializable
-data class Counts(val ja: Int = 0, val nein: Int = 0, val offen: Int = 0) {
+data class Counts(
+    val ja: Int = 0,
+    val nein: Int = 0,
+    val offen: Int = 0,
+    /** Nur bei den Leitenden: Wartende auf einen Platz; sie zählen nicht in `total`. */
+    val warteliste: Int = 0,
+) {
     val total get() = ja + nein + offen
 }
 
@@ -36,6 +42,8 @@ data class LeaderRegistration(
     val name: String,
     @SerialName("rolle") val role: String,
     val status: String,
+    /** Nummer auf der Warteliste, wenn `status` «warteliste» ist (1 = als Nächste dran). */
+    val position: Int? = null,
     /** Pfad zum Profilbild (`GET /api/v1/personen/{id}/bild`); `null` ohne Bild. Teilnehmende haben keins. */
     @SerialName("bildUrl") val imageUrl: String? = null,
     @SerialName("abzeichen") val badge: Badge? = null,
@@ -49,12 +57,15 @@ data class Registrations(
     @SerialName("zahlen") val counts: RegistrationCounts,
     @SerialName("teilnehmende") val participants: List<ParticipantRegistration>,
     @SerialName("leitende") val leaders: List<LeaderRegistration> = emptyList(),
+    /** Die Leiter-Plätze des Termins, wenn er welche hat (selbst erstellt, mit Höchstzahl). */
+    @SerialName("leitungPlaetze") val places: LeaderPlaces? = null,
 )
 
-/** «ja», «nein» oder «offen» als Chip. Was der Server sonst schickt, gilt als offen. */
+/** «ja», «nein», «warteliste» oder «offen» als Chip. Was der Server sonst schickt, gilt als offen. */
 fun registrationChip(status: String): ChipKind = when (status) {
     "ja" -> ChipKind.YES
     "nein" -> ChipKind.NO
+    "warteliste" -> ChipKind.WAITLIST
     else -> ChipKind.PENDING
 }
 

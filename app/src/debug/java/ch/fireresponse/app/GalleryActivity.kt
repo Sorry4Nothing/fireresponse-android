@@ -30,6 +30,7 @@ import ch.fireresponse.app.appointments.AppointmentListScreen
 import ch.fireresponse.app.appointments.AppointmentParticipant
 import ch.fireresponse.app.appointments.AppointmentSquad
 import ch.fireresponse.app.appointments.Counts
+import ch.fireresponse.app.appointments.LeaderPlaces
 import ch.fireresponse.app.appointments.LeaderRegistration
 import ch.fireresponse.app.appointments.ParticipantRegistration
 import ch.fireresponse.app.appointments.RegistrationCounts
@@ -135,10 +136,28 @@ private val appointments = listOf(
         participants = listOf(AppointmentParticipant("k1", "Lena", null)),
     ),
     Appointment(
+        id = "p1", title = "Löschen mit der Kübelspritze", status = "aktiv", allDay = false,
+        start = "2026-11-28T13:00:00.000Z", end = "2026-11-28T16:00:00.000Z",
+        registrationFrom = "2026-10-17", attendanceOpen = true, squad = squad, ownRegistration = "offen",
+        places = LeaderPlaces(max = 4, taken = 2, free = 2, full = false),
+    ),
+    Appointment(
+        id = "p2", title = "Geländespiel im Wald", status = "aktiv", allDay = false,
+        start = "2026-11-21T12:30:00.000Z", end = "2026-11-21T16:30:00.000Z",
+        registrationFrom = "2026-10-10", attendanceOpen = true, squad = squad, ownRegistration = "offen",
+        places = LeaderPlaces(max = 4, taken = 4, free = 0, full = true, waiting = 1),
+    ),
+    Appointment(
+        id = "p3", title = "Funkübung", status = "aktiv", allDay = false,
+        start = "2026-11-21T17:30:00.000Z", end = "2026-11-21T19:00:00.000Z",
+        registrationFrom = "2026-10-10", attendanceOpen = true, squad = squad, ownRegistration = "warteliste",
+        places = LeaderPlaces(max = 4, taken = 4, free = 0, full = true, waiting = 2, ownPosition = 2),
+    ),
+    Appointment(
         id = "a6", title = "Vorstandssitzung", status = "aktiv", allDay = false, kind = "Sitzung",
         start = "2027-01-20T18:00:00.000Z", end = "2027-01-20T19:30:00.000Z", squad = kfSquad,
     ),
-)
+).sortedBy { it.start ?: it.dayFrom } // wie der Server: nach Beginn
 
 private val profile = Profile(
     id = "u1", name = "Sandra Muster", username = "smuster", consented = true,
@@ -168,6 +187,18 @@ private val registrations = Registrations(
     ),
     leaders = listOf(LeaderRegistration("l1", "Petra Beispiel", "kommandant", "ja", badge = Badge("Gfr", imageUrl = RANK_URL))),
 )
+
+/** Das Detail einer Übung mit Leiter-Plätzen; die belegten Plätze haben Namen wie aus der Übersicht der Anmeldungen. */
+@Composable
+private fun PlacesDetail(appointment: Appointment) {
+    val taken = listOf("Lea Meier", "Marco Keller", "Nina Frei", "Dario Huber").map { LeaderRegistration(it, it, "leitung", "ja") }
+    MainScaffold(Destination.APPOINTMENTS, {}) {
+        AppointmentDetailScreen(
+            ApiResult.Ok(appointment), RsvpState(), canSeeRegistrations = true,
+            onParticipant = { _, _ -> }, onLeader = {}, onRegistrations = {}, onBack = {}, onRetry = {}, taken = taken,
+        )
+    }
+}
 
 private val screens: Map<String, @Composable () -> Unit> = mapOf(
     "login" to { LoginScreen(FormState()) { _, _ -> } },
@@ -234,6 +265,9 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
         }
     },
     "offline" to { MainScaffold(Destination.APPOINTMENTS, {}) { AppointmentListScreen(ApiResult.Failure(ApiError.NETWORK), {}, {}) } },
+    "placesfree" to { PlacesDetail(appointments.first { it.id == "p1" }) },
+    "placesfull" to { PlacesDetail(appointments.first { it.id == "p2" }) },
+    "placeswait" to { PlacesDetail(appointments.first { it.id == "p3" }) },
     "detail" to {
         MainScaffold(Destination.APPOINTMENTS, {}) {
             AppointmentDetailScreen(
