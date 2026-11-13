@@ -56,6 +56,9 @@ import ch.fireresponse.app.net.ApiResult
 import ch.fireresponse.app.profile.Profile
 import ch.fireresponse.app.profile.ProfileParticipant
 import ch.fireresponse.app.profile.ProfileSquad
+import ch.fireresponse.app.maintenance.MaintenanceScreen
+import ch.fireresponse.app.maintenance.MaintenanceState
+import ch.fireresponse.app.net.MaintenanceStatus
 import ch.fireresponse.app.push.NotificationsScreen
 import ch.fireresponse.app.push.PushViewModel
 import ch.fireresponse.app.ui.Destination
@@ -285,6 +288,9 @@ private val screens: Map<String, @Composable () -> Unit> = mapOf(
                 onOpenNotifications = {}, onOpenPrivacy = {}, onSignOut = {}, onLeave = {}, lockAvailable = true, lockEnabled = true,
             )
         }
+    },
+    "maintenance" to {
+        MaintenanceScreen(MaintenanceState(MaintenanceStatus(aktiv = true, ende = "2026-11-13T22:00:00+01:00")), onCheck = {})
     },
     "notifications" to {
         NotificationsScreen(PushViewModel.Switches(appointments = true, registrations = false), FormState(), {}, {}, {})

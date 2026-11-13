@@ -40,6 +40,13 @@
     <string name="registrations_waitlist">Warteliste %1$d</string>
     <string name="widget_full">Voll</string>
     <string name="widget_waitlist">Warteliste</string>
+    <string name="error_maintenance">Fire-Response wird gerade gewartet. Bitte versuche es später noch einmal.</string>
+    <string name="maintenance_title">Wartungsarbeiten</string>
+    <string name="maintenance_default">Fire-Response wird gerade gewartet. Bitte versuche es später noch einmal.</string>
+    <string name="maintenance_until">Voraussichtlich bis %1$s.</string>
+    <string name="maintenance_saved">Deine Zusagen bleiben gespeichert.</string>
+    <string name="maintenance_check">Erneut prüfen</string>
+    <string name="maintenance_still">Noch in Wartung.</string>
 
     <string name="loading">Wird geladen …</string>
     <string name="retry">Nochmals versuchen</string>

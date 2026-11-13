@@ -17,11 +17,14 @@ enum class ApiError(@StringRes val text: Int) {
 
     /** 409 `PROGRAMM_BEGONNEN`: Die Leitung kann sich nach dem Beginn nicht mehr ändern (abgesagte Termine gehen noch). */
     APPOINTMENT_STARTED(R.string.error_appointment_started),
+
+    /** 503 `WARTUNG`: Das ganze System ist in Wartung. Die App zeigt dafür einen eigenen Bildschirm (`MaintenanceScreen`). */
+    MAINTENANCE(R.string.error_maintenance),
     NETWORK(R.string.error_network),
     UNKNOWN(R.string.error_unknown);
 
     companion object {
-        /** `code` ist der Fehlercode des Servers (bei 409 und 400); er unterscheidet dort die Fälle. */
+        /** `code` ist der Fehlercode des Servers (bei 400, 409 und 503); er unterscheidet dort die Fälle. */
         fun from(status: Int, code: String? = null): ApiError = when (status) {
             401 -> NOT_SIGNED_IN
             403 -> FORBIDDEN
@@ -32,6 +35,7 @@ enum class ApiError(@StringRes val text: Int) {
                 else -> REGISTRATION_CLOSED // sonst PROGRAMM_GESCHLOSSEN
             }
             426 -> APP_OUTDATED
+            503 -> if (code == "WARTUNG") MAINTENANCE else UNKNOWN
             429 -> TOO_MANY_REQUESTS
             else -> UNKNOWN
         }
