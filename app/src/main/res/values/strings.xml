@@ -9,6 +9,13 @@
     <string name="error_registration_not_open">Die Anmeldung ist noch nicht offen.</string>
     <string name="error_network">Keine Verbindung. Prüfe dein Internet und versuche es nochmals.</string>
     <string name="error_unknown">Etwas ist schiefgelaufen. Bitte versuche es nochmals.</string>
+    <string name="error_maintenance">Fire-Response wird gerade gewartet. Bitte versuche es später noch einmal.</string>
+    <string name="maintenance_title">Wartungsarbeiten</string>
+    <string name="maintenance_default">Fire-Response wird gerade gewartet. Bitte versuche es später noch einmal.</string>
+    <string name="maintenance_until">Voraussichtlich bis %1$s.</string>
+    <string name="maintenance_saved">Deine Zusagen bleiben gespeichert.</string>
+    <string name="maintenance_check">Erneut prüfen</string>
+    <string name="maintenance_still">Noch in Wartung.</string>
 
     <string name="loading">Wird geladen …</string>
     <string name="retry">Nochmals versuchen</string>

@@ -57,6 +57,16 @@ class ApiClient(
     /** Meldet jedes 403 unter `/api/v1`: Es kann «kein Recht» heissen oder «Passwortwechsel offen» (der Server sagt es nicht im Status). */
     val forbidden: SharedFlow<Unit> = _forbidden.asSharedFlow()
 
+    private val _maintenance = MutableStateFlow(false)
+
+    /** Wahr, sobald ein Aufruf mit 503 `WARTUNG` antwortet: Das ganze System ist in Wartung, die App zeigt nur den Wartungsbildschirm. */
+    val maintenance: StateFlow<Boolean> = _maintenance.asStateFlow()
+
+    /** Die Wartung ist vorbei (der Server meldet `aktiv: false`): Die App geht weiter. */
+    fun maintenanceOver() {
+        _maintenance.value = false
+    }
+
     private val _pending = MutableStateFlow(0)
 
     /** Anzahl der laufenden Anfragen, die eine Person ausgelöst hat (ohne [Background]); über 0 sperrt die App und zeigt den Ladekreis. */
@@ -153,9 +163,11 @@ class ApiClient(
         if (!response.isSuccessful) {
             if (response.code == 401 && !response.request.url.encodedPath.startsWith(SIGN_IN_PATH)) _unauthorized.tryEmit(Unit)
             if (response.code == 403 && response.request.url.encodedPath.startsWith(API_PATH)) _forbidden.tryEmit(Unit)
-            val code = if (response.code == 400 || response.code == 409) errorCode(response) else null
+            val code = if (response.code == 400 || response.code == 409 || response.code == 503) errorCode(response) else null
             val retryAfter = if (response.code == 429) response.header(RETRY_AFTER)?.toIntOrNull()?.coerceIn(1, MAX_RETRY_AFTER) else null
-            return ApiResult.Failure(ApiError.from(response.code, code), code, retryAfter)
+            val error = ApiError.from(response.code, code)
+            if (error == ApiError.MAINTENANCE) _maintenance.value = true
+            return ApiResult.Failure(error, code, retryAfter)
         }
         return try {
             ApiResult.Ok(decode(response))
