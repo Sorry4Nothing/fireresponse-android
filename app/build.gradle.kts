@@ -19,8 +19,8 @@ android {
         minSdk = 26
         targetSdk = 37
         // versionCode = Major·10000 + Minor·100 + Patch; versionName im Format x.y.z, das das Backend verlangt (sonst 426).
-        versionCode = 900
-        versionName = "0.9.0"
+        versionCode = 901
+        versionName = "0.9.1"
 
         // Echte Adresse nur lokal (~/.gradle/gradle.properties oder -PfireresponseApiBaseUrl), nie im Repo.
         val apiBaseUrl = providers.gradleProperty("fireresponseApiBaseUrl").getOrElse("https://api.example.org")
